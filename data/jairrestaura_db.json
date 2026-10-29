@@ -115,12 +115,40 @@
       "expedientesIds": [
         "exp-2026-002"
       ]
+    },
+    {
+      "id": "cli-morales-03",
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "00.000.003",
+      "nombreCompletoORazonSocial": "Persona Natural de Prueba No. 2 (Ficticia)",
+      "emailPrincipal": "usuario.demo2@jairrestaura-demo.internal",
+      "emailNotificacionesJudiciales": "usuario.demo2.notif@jairrestaura-demo.internal",
+      "telefono": "+57 320 000 0003",
+      "direccion": "Transversal Ficticia No. 2-00 Oficina Demo 303",
+      "ciudad": "Bogotá D.C. (Datos de Prueba)",
+      "departamento": "Cundinamarca",
+      "estado": "ACTIVO",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Demostración: Pendiente de suscripción y acuse formal según Ley 1581 de 2012.",
+        "soporteId": "PENDIENTE-FIRMA-DEMO"
+      },
+      "notasInternas": "Registro demostrativo con fines de prueba y validación de software.",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-04-10T09:00:00Z",
+      "fechaActualizacion": "2026-10-26T08:15:00Z",
+      "expedientesIds": [
+        "exp-2026-003"
+      ]
     }
   ],
   "expedientes": [
     {
       "id": "exp-2026-001",
-      "codigoInterno": "EXP-DEMO-001",
+      "codigoInterno": "EXP-2026-001",
       "radicadoJudicial": "00000000000020260000100",
       "despachoJudicial": "Juzgado Civil del Circuito de Prueba (Demostración)",
       "clienteId": "cli-andinas-01",
@@ -147,6 +175,60 @@
       "notasPrivadas": "Notas internas protegidas por secreto profesional demostrativo.",
       "fechaInicio": "2024-09-12T10:00:00Z",
       "fechaActualizacion": "2026-10-29T01:17:07.974Z",
+      "organizacionId": "org-jairrestaura-001",
+      "abogadoResponsableId": "usr-jair-01",
+      "abogadoResponsableNombre": "Dr. Jair"
+    },
+    {
+      "id": "exp-2026-002",
+      "codigoInterno": "EXP-2026-002",
+      "radicadoJudicial": "00000000000020260000200",
+      "despachoJudicial": "Tribunal Administrativo Oral de Prueba (Demostración)",
+      "clienteId": "cli-cardona-02",
+      "clienteNombre": "Persona Natural de Prueba No. 1 (Ficticia)",
+      "areaJuridica": "ADMINISTRATIVO",
+      "jurisdiccion": "CONTENCIOSO_ADMINISTRATIVO",
+      "autoridadCompetente": "Magistrada Ponente Demostrativa",
+      "partes": {
+        "demandanteOAccionante": "Persona Natural de Prueba No. 1 (Ficticia)",
+        "apoderadoDemandante": "Dra. Marcela Gómez (T.P. 000.002)",
+        "demandadoOAccionado": "Entidad Pública Hospitalaria Ficticia (Demostración)",
+        "apoderadoDemandado": "Apoderado Ficticio de la Entidad"
+      },
+      "sintesisHechos": "Demanda demostrativa de nulidad y restablecimiento del derecho solicitando reconocimiento de contrato realidad laboral ficto.",
+      "pretensionesUObjetivos": "Reconocimiento ficto de prestaciones sociales derivadas de vinculación demostrativa por $195.000.000 COP.",
+      "cuantiaEstimadaCOP": 195000000,
+      "esMayorCuantia": true,
+      "estado": "CONTESTACION_TRASLADO",
+      "estrategiaDefensiva": "Acreditación probatoria ficticia de subordinación funcional y cumplimiento de turnos continuos.",
+      "fechaInicio": "2025-05-18T08:30:00Z",
+      "fechaActualizacion": "2026-10-24T12:00:00Z",
+      "organizacionId": "org-jairrestaura-001",
+      "abogadoResponsableId": "usr-marcela-02",
+      "abogadoResponsableNombre": "Dra. Marcela Gómez"
+    },
+    {
+      "id": "exp-2026-003",
+      "codigoInterno": "EXP-2026-003",
+      "radicadoJudicial": "00000000000020260000300",
+      "despachoJudicial": "Juzgado Cuarto Laboral del Circuito de Prueba (Demostración)",
+      "clienteId": "cli-morales-03",
+      "clienteNombre": "Persona Natural de Prueba No. 2 (Ficticia)",
+      "areaJuridica": "LABORAL_SEGURIDAD_SOCIAL",
+      "jurisdiccion": "ORDINARIA",
+      "autoridadCompetente": "Juez Cuarto Laboral de Prueba",
+      "partes": {
+        "demandanteOAccionante": "Persona Natural de Prueba No. 2 (Ficticia)",
+        "apoderadoDemandante": "Dr. Jair (T.P. 000.001)",
+        "demandadoOAccionado": "Entidad Administradora de Salud Ficticia (Demostración)"
+      },
+      "sintesisHechos": "Acción demostrativa laboral ordinaria y transitoria por reconocimiento de subsidio de incapacidad continua de prueba.",
+      "pretensionesUObjetivos": "Orden demostrativa de pago retroactivo de subsidio de incapacidad fijado en $38.500.000 COP.",
+      "cuantiaEstimadaCOP": 38500000,
+      "esMayorCuantia": false,
+      "estado": "ADMITIDO",
+      "fechaInicio": "2026-02-10T11:00:00Z",
+      "fechaActualizacion": "2026-10-27T09:00:00Z",
       "organizacionId": "org-jairrestaura-001",
       "abogadoResponsableId": "usr-jair-01",
       "abogadoResponsableNombre": "Dr. Jair"
@@ -218,13 +300,65 @@
         "creadoPor": "Dr. Jair",
         "fechaCreacion": "2026-10-15T16:00:00Z"
       }
+    ],
+    "exp-2026-002": [
+      {
+        "id": "act-002-1",
+        "expedienteId": "exp-2026-002",
+        "fechaActuacion": "2025-05-18",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "MEMORIAL_PARTE",
+        "anotacion": "Radicación demostrativa de demanda de nulidad y restablecimiento del derecho.",
+        "tieneTermino": false,
+        "creadoPor": "Dra. Marcela Gómez",
+        "fechaCreacion": "2025-05-18T08:30:00Z"
+      },
+      {
+        "id": "act-002-2",
+        "expedienteId": "exp-2026-002",
+        "fechaActuacion": "2026-10-18",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "AUTO_INTERLOCUTORIO",
+        "anotacion": "Corre traslado de excepciones de mérito por el término de treinta (30) días hábiles judiciales conforme al CPACA.",
+        "tieneTermino": true,
+        "terminoDias": 30,
+        "tipoDias": "HABILES",
+        "creadoPor": "Dra. Marcela Gómez",
+        "fechaCreacion": "2026-10-18T10:00:00Z"
+      }
+    ],
+    "exp-2026-003": [
+      {
+        "id": "act-003-1",
+        "expedienteId": "exp-2026-003",
+        "fechaActuacion": "2026-02-10",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "MEMORIAL_PARTE",
+        "anotacion": "Apertura y radicación demostrativa de acción ordinaria laboral.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair",
+        "fechaCreacion": "2026-02-10T11:00:00Z"
+      },
+      {
+        "id": "act-003-2",
+        "expedienteId": "exp-2026-003",
+        "fechaActuacion": "2026-10-24",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "AUTO_INTERLOCUTORIO",
+        "anotacion": "Ordena subsanación formal de demanda por el término perentorio de cinco (5) días hábiles judiciales (Art. 90 CGP).",
+        "tieneTermino": true,
+        "terminoDias": 5,
+        "tipoDias": "HABILES",
+        "creadoPor": "Dr. Jair",
+        "fechaCreacion": "2026-10-24T14:00:00Z"
+      }
     ]
   },
   "terminos": [
     {
       "id": "term-001",
       "expedienteId": "exp-2026-001",
-      "expedienteCodigo": "EXP-DEMO-001",
+      "expedienteCodigo": "EXP-2026-001",
       "clienteId": "cli-andinas-01",
       "clienteNombre": "Sociedad Comercial Demostrativa S.A.S. (Ficticia)",
       "titulo": "Audiencia Inicial Art. 372 CGP (Virtual vía Teams)",

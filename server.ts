@@ -841,13 +841,13 @@ app.get('/api/auth/me', requireAuth, (req: Request, res: Response) => {
 // 4. RUTAS PROTEGIDAS CON AISLAMIENTO DE TENANT Y RBAC
 // ============================================================
 
-// GET /api/dashboard/stats — Indicadores reales filtrados por organización
+// GET /api/dashboard/stats — Indicadores reales y listas vinculadas bajo fuente única de verdad
 app.get('/api/dashboard/stats', requireAuth, (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const orgId = authReq.user.organizacionId;
   const db = leerDB();
 
-  // Filtrado estricto por organización
+  // Filtrado estricto por organización (Aislamiento de Tenant)
   const clientesOrg = db.clientes.filter((c) => c.organizacionId === orgId);
   const expedientesOrg = db.expedientes.filter((e) => e.organizacionId === orgId);
   const terminosOrg = db.terminos.filter((t) => t.organizacionId === orgId);
@@ -856,31 +856,72 @@ app.get('/api/dashboard/stats', requireAuth, (req: Request, res: Response) => {
   const auditoriaOrg = db.auditoria.filter((a) => a.organizacionId === orgId);
 
   const totalClientes = clientesOrg.filter((c) => c.estado === 'ACTIVO').length;
+  const clientesConHabeasData = clientesOrg.filter((c) => c.consentimientoLey1581 && c.consentimientoLey1581.autorizado).length;
+
   const expedientesActivos = expedientesOrg.filter(
     (e) => e.estado !== 'ARCHIVADO' && e.estado !== 'TERMINADO_CONCILIACION'
   ).length;
 
   const hoyStr = new Date().toISOString().split('T')[0];
+
+  // Términos según estado procesal estricto
   const terminosPendientes = terminosOrg.filter((t) => t.estado === 'PENDIENTE' || t.estado === 'VERIFICADO');
+  const terminosCumplidos = terminosOrg.filter((t) => t.estado === 'CUMPLIDO');
+  const terminosVencidos = terminosOrg.filter(
+    (t) => t.estado !== 'CUMPLIDO' && t.fechaVencimientoCalculada < hoyStr
+  );
   const terminosCriticos = terminosPendientes.filter(
     (t) => t.fechaVencimientoCalculada <= hoyStr || t.prioridad === 'ALTA'
   );
 
-  const totalHonorariosPactados = honorariosOrg.reduce((acc, h) => acc + h.valorAcordadoCOP, 0);
-  const totalHonorariosRecaudados = honorariosOrg.reduce((acc, h) => acc + h.valorPagadoCOP, 0);
-  const saldoPorCobrar = totalHonorariosPactados - totalHonorariosRecaudados;
+  // Ordenar próximos términos cronológicamente por vencimiento más próximo
+  const proximosTerminosOrdenados = [...terminosPendientes].sort((a, b) => 
+    a.fechaVencimientoCalculada.localeCompare(b.fechaVencimientoCalculada)
+  );
+
+  // Expedientes enriquecidos con su última actuación procesal y próximo término
+  const expedientesEnriquecidos = [...expedientesOrg]
+    .sort((a, b) => (b.fechaActualizacion || b.fechaInicio).localeCompare(a.fechaActualizacion || a.fechaInicio))
+    .slice(0, 5)
+    .map((exp) => {
+      const actuacionesExp = db.actuaciones[exp.id] || [];
+      const ultimaActuacion = actuacionesExp.length > 0 ? actuacionesExp[0] : null;
+      const terminosExp = terminosPendientes
+        .filter((t) => t.expedienteId === exp.id)
+        .sort((a, b) => a.fechaVencimientoCalculada.localeCompare(b.fechaVencimientoCalculada));
+      const proximoTermino = terminosExp.length > 0 ? terminosExp[0] : null;
+      const clienteAsociado = clientesOrg.find((c) => c.id === exp.clienteId);
+
+      return {
+        ...exp,
+        ultimaActuacion,
+        proximoTermino,
+        clienteAutorizadoHabeasData: !!clienteAsociado?.consentimientoLey1581?.autorizado,
+      };
+    });
+
+  // Fórmulas financieras transparentes sin duplicación de pagos ni datos ficticios
+  const totalHonorariosPactados = honorariosOrg.reduce((acc, h) => acc + (h.valorAcordadoCOP || 0), 0);
+  const totalHonorariosRecaudados = honorariosOrg.reduce((acc, h) => acc + (h.valorPagadoCOP || 0), 0);
+  const saldoPorCobrar = Math.max(0, totalHonorariosPactados - totalHonorariosRecaudados);
+  const totalHonorariosFacturados = totalHonorariosPactados;
 
   res.json({
     totalClientes,
+    clientesConHabeasData,
     expedientesActivos,
+    totalExpedientes: expedientesOrg.length,
     terminosPendientesTotal: terminosPendientes.length,
     terminosCriticosTotal: terminosCriticos.length,
+    terminosVencidosTotal: terminosVencidos.length,
+    terminosCumplidosTotal: terminosCumplidos.length,
     totalDocumentos: documentosOrg.length,
     totalHonorariosPactados,
+    totalHonorariosFacturados,
     totalHonorariosRecaudados,
     saldoPorCobrar,
-    proximosTerminos: terminosPendientes.slice(0, 5),
-    expedientesRecientes: expedientesOrg.slice(0, 5),
+    proximosTerminos: proximosTerminosOrdenados.slice(0, 5),
+    expedientesRecientes: expedientesEnriquecidos,
     actividadReciente: auditoriaOrg.slice(0, 6),
   });
 });
@@ -1330,6 +1371,72 @@ app.post('/api/terminos/:id/verify', requireAuth, requireRole('ADMIN_TITULAR', '
     'CONFIRM_TERM',
     'AGENDA',
     `Abogado confirmó cómputo de término: ${termino.titulo}`,
+    id,
+    authReq.user.organizacionId
+  );
+
+  res.json({ termino });
+});
+
+// Alias compatible para confirmar término procesal
+app.post('/api/terminos/:id/confirm', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+  const db = leerDB();
+  const termino = db.terminos.find((t) => t.id === id);
+
+  if (!termino) {
+    return res.status(404).json({ error: 'Término no encontrado' });
+  }
+
+  if (!verificarAislamientoTenant(authReq, res, termino.organizacionId, 'término procesal')) {
+    return;
+  }
+
+  termino.calculoConfirmadoPorAbogado = true;
+  termino.abogadoQueConfirmo = req.body?.abogadoNombre || authReq.user.nombre;
+  termino.estado = 'VERIFICADO';
+  guardarDB(db);
+
+  registrarAuditoria(
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
+    'CONFIRM_TERM',
+    'AGENDA',
+    `Abogado titular verificó cómputo de término: ${termino.titulo}`,
+    id,
+    authReq.user.organizacionId
+  );
+
+  res.json({ termino });
+});
+
+// Marcar término como cumplido en la agenda
+app.post('/api/terminos/:id/complete', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO', 'ASISTENTE_JUDICIAL'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+  const db = leerDB();
+  const termino = db.terminos.find((t) => t.id === id);
+
+  if (!termino) {
+    return res.status(404).json({ error: 'Término no encontrado' });
+  }
+
+  if (!verificarAislamientoTenant(authReq, res, termino.organizacionId, 'término procesal')) {
+    return;
+  }
+
+  termino.estado = 'CUMPLIDO';
+  guardarDB(db);
+
+  registrarAuditoria(
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
+    'UPDATE',
+    'AGENDA',
+    `Término procesal marcado como CUMPLIDO: ${termino.titulo}`,
     id,
     authReq.user.organizacionId
   );
