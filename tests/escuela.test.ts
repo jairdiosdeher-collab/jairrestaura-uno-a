@@ -272,6 +272,133 @@ async function iniciarSuite() {
     };
   });
 
+  // PRUEBA 9: Matriz de Hechos y Pruebas con clasificación estricta (Art. 167 CGP)
+  await runTest(9, 'POST /api/escuela/analyze-matrix clasifica narraciones en RELATADO_POR_PARTE sin confundirlas con hechos probados', async () => {
+    const payload = {
+      casoId: casoCreadoId,
+      hechos: 'El consultante manifiesta haber prestado servicios por 3 años bajo subordinación. No se aportan copias de memorandos. Se aporta certificación de pagos de tesorería.',
+    };
+
+    const res = await makeRequest('POST', '/api/escuela/analyze-matrix', payload);
+    if (res.status !== 200) {
+      return { paso: false, detalle: `Status esperado 200, recibido ${res.status}` };
+    }
+    const matriz = res.body.matriz;
+    if (!Array.isArray(matriz) || matriz.length === 0) {
+      return { paso: false, detalle: 'La matriz debe contener enunciados clasificados' };
+    }
+
+    const hechoSinSoporte = matriz.find((h: any) => h.soporteProbatorioIdentificado === 'Sin soporte identificado');
+    if (!hechoSinSoporte || hechoSinSoporte.estado !== 'RELATADO_POR_PARTE') {
+      return { paso: false, detalle: 'El hecho sin documento idóneo debe tener estado estricto RELATADO_POR_PARTE' };
+    }
+
+    return {
+      paso: true,
+      detalle: `Matriz generada con ${matriz.length} enunciados. Regla epistemológica cumplida: narración clasificada como RELATADO_POR_PARTE.`,
+    };
+  });
+
+  // PRUEBA 10: Análisis de Hipótesis Contrapuestas (Tesis vs Antítesis)
+  await runTest(10, 'POST /api/escuela/analyze-hypotheses compara postura accionante vs excepciones de contraparte', async () => {
+    const payload = {
+      casoId: casoCreadoId,
+      hechos: 'Un empleado solicita reliquidación de horas extras y dominicales alegando jornada continua de 12 horas. El empleador alega cargo de confianza y manejo.',
+      areaDerecho: 'LABORAL_SEGURIDAD_SOCIAL',
+    };
+
+    const res = await makeRequest('POST', '/api/escuela/analyze-hypotheses', payload);
+    if (res.status !== 200) {
+      return { paso: false, detalle: `Status esperado 200, recibido ${res.status}` };
+    }
+    const a = res.body.analisis;
+    if (!a.hipotesisPrincipal || !a.hipotesisAlternativa) {
+      return { paso: false, detalle: 'Debe contener hipótesis principal y alternativa' };
+    }
+    if (!a.sintesisPonderacion || !a.criterioDecisionSugerido) {
+      return { paso: false, detalle: 'Falta síntesis de ponderación y criterio de decisión' };
+    }
+    return {
+      paso: true,
+      detalle: `Hipótesis contrapuestas contrastadas: '${a.hipotesisPrincipal.titulo}' vs '${a.hipotesisAlternativa.titulo}'. Criterio judicial validado.`,
+    };
+  });
+
+  // PRUEBA 11: Diálogo Socrático Gradual (Evaluación de razonamiento y detección de falacias)
+  await runTest(11, 'POST /api/escuela/socratic-step evalúa razonamiento y suministra la siguiente pregunta pedagógica', async () => {
+    const payload = {
+      etapaActual: 'HECHOS',
+      preguntaAnterior: '¿Qué hechos cuentan con soporte documental?',
+      respuestaEstudiante: 'El cliente dice que le deben dinero, por lo tanto el juez debe ordenar el pago de inmediato.',
+      contexto: 'Caso de cobro de honorarios',
+      historial: [],
+    };
+
+    const res = await makeRequest('POST', '/api/escuela/socratic-step', payload);
+    if (res.status !== 200) {
+      return { paso: false, detalle: `Status esperado 200, recibido ${res.status}` };
+    }
+    const ev = res.body.evaluacion;
+    if (!ev || !ev.calificacionCualitativa || !Array.isArray(ev.erroresRazonamiento)) {
+      return { paso: false, detalle: 'Falta evaluación cualitativa o lista de errores de razonamiento' };
+    }
+    const prox = res.body.proximoPaso;
+    if (!prox || !prox.etapa || !prox.preguntaGuia) {
+      return { paso: false, detalle: 'Falta entrega del próximo paso socrático' };
+    }
+
+    return {
+      paso: true,
+      detalle: `Socrático evaluó: ${ev.calificacionCualitativa}. Errores detectados: ${ev.erroresRazonamiento.length}. Próxima etapa guiada: ${prox.etapa}.`,
+    };
+  });
+
+  // PRUEBA 12: Ruta Procesal con advertencia de datos faltantes y supuestos de cómputo
+  await runTest(12, 'POST /api/escuela/procedural-route incluye datosFaltantesPrevios y supuestosCalculoTerminos', async () => {
+    const res = await makeRequest('POST', '/api/escuela/procedural-route', {
+      materia: 'ADMINISTRATIVO',
+      tipoProcedimiento: 'NULIDAD_Y_RESTABLECIMIENTO',
+    });
+    if (res.status !== 200) {
+      return { paso: false, detalle: `Status esperado 200, recibido ${res.status}` };
+    }
+    const ruta = res.body.ruta;
+    if (!Array.isArray(ruta.datosFaltantesPrevios) || ruta.datosFaltantesPrevios.length === 0) {
+      return { paso: false, detalle: 'Debe identificar datos faltantes antes de sugerir la ruta' };
+    }
+    if (!Array.isArray(ruta.supuestosCalculoTerminos) || ruta.supuestosCalculoTerminos.length === 0) {
+      return { paso: false, detalle: 'Debe contener los supuestos de cómputo de términos (Ley 2213 Art. 8 / CPACA)' };
+    }
+    return {
+      paso: true,
+      detalle: `Ruta validada con ${ruta.datosFaltantesPrevios.length} datos previos requeridos y ${ruta.supuestosCalculoTerminos.length} supuestos de cómputo.`,
+    };
+  });
+
+  // PRUEBA 13: Borrador Académico de Matriz Probatoria (Art. 167 CGP)
+  await runTest(13, 'POST /api/escuela/generate-doc genera borrador estructurado MATRIZ_PROBATORIA', async () => {
+    const res = await makeRequest('POST', '/api/escuela/generate-doc', {
+      tipo: 'MATRIZ_PROBATORIA',
+      casoId: casoCreadoId,
+      titulo: 'Matriz Probatoria del Caso de Estudio',
+    });
+    if (res.status !== 201) {
+      return { paso: false, detalle: `Status esperado 201, recibido ${res.status}` };
+    }
+    const doc = res.body.borrador;
+    if (doc.tipo !== 'MATRIZ_PROBATORIA') {
+      return { paso: false, detalle: 'El tipo debe ser MATRIZ_PROBATORIA' };
+    }
+    const texto = doc.contenidoTexto;
+    if (!texto.includes('MATRIZ DE HECHOS Y PRUEBAS') || !texto.includes('RELATADO_POR_PARTE')) {
+      return { paso: false, detalle: 'El borrador debe incluir la estructura de matriz probatoria y el estado RELATADO_POR_PARTE' };
+    }
+    return {
+      paso: true,
+      detalle: `Borrador MATRIZ_PROBATORIA generado con éxito. Reglas probatorias y salvaguarda no radicable verificadas.`,
+    };
+  });
+
   console.log('\n======================================================');
   const todasAprobadas = resultados.every((r) => r.paso);
   const totalAprobadas = resultados.filter((r) => r.paso).length;

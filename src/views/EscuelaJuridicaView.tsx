@@ -2,8 +2,9 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  * JAIRRESTAURA UNO A — ESCUELA JURÍDICA INTELIGENTE
- * Módulo pedagógico y de formación para estudiantes de Derecho, consultorios jurídicos y semilleros de investigación.
- * Conectado con Investigación Jurídica Oficial, Tutor Académico IA y generador de borradores didácticos.
+ * Módulo pedagógico interactivo de formación práctica y litigio estratégico para estudiantes de Derecho en Colombia.
+ * Incluye: Análisis Socrático, Matriz de Hechos y Pruebas (Art. 167 CGP), Hipótesis Contrapuestas,
+ * Ruta Procesal con cómputo de términos (Ley 2213 de 2022), Catálogo Oficial Verificado y Borradores Didácticos.
  * Espacio de estudio rigurosamente separado de los expedientes de clientes reales.
  */
 
@@ -32,7 +33,16 @@ import {
   FileCheck2,
   Trash2,
   Save,
-  BookMarked
+  BookMarked,
+  GitCompare,
+  MessageSquareCode,
+  Layers,
+  ArrowRightCircle,
+  AlertOctagon,
+  RefreshCw,
+  Send,
+  CornerDownRight,
+  CheckSquare
 } from 'lucide-react';
 import type {
   CasoAcademico,
@@ -41,10 +51,15 @@ import type {
   TutorAcademicoModo,
   DocumentoAcademicoTipo,
   DocumentoAcademicoBorrador,
-  FuenteJuridicaOficial
+  FuenteJuridicaOficial,
+  HechoMatrizProbatoria,
+  EstadoHechoProbatorio,
+  AnalisisHipotesisCaso,
+  EtapaSocratica,
+  PasoSocratico
 } from '../types/legal';
 
-type TabView = 'casos' | 'ruta' | 'tutor' | 'investigacion' | 'borradores';
+type TabView = 'casos' | 'matriz' | 'socratica' | 'hipotesis' | 'ruta' | 'tutor' | 'investigacion' | 'borradores';
 
 export const EscuelaJuridicaView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabView>('casos');
@@ -61,6 +76,40 @@ export const EscuelaJuridicaView: React.FC = () => {
   const [nuevoHechos, setNuevoHechos] = useState<string>('');
   const [analizandoCaso, setAnalizandoCaso] = useState<boolean>(false);
   const [analisisTemp, setAnalisisTemp] = useState<any>(null);
+
+  // Estados para Matriz de Hechos y Pruebas
+  const [cargandoMatriz, setCargandoMatriz] = useState<boolean>(false);
+  const [nuevoHechoTexto, setNuevoHechoTexto] = useState<string>('');
+  const [nuevoHechoOrigen, setNuevoHechoOrigen] = useState<string>('Relato del estudiante');
+  const [nuevoHechoSoporte, setNuevoHechoSoporte] = useState<string>('Sin soporte identificado');
+  const [nuevoHechoEstado, setNuevoHechoEstado] = useState<EstadoHechoProbatorio>('RELATADO_POR_PARTE');
+  const [nuevoHechoFaltante, setNuevoHechoFaltante] = useState<string>('');
+
+  // Estados para Análisis Socrático Interactivo
+  const [etapaSocraticaActual, setEtapaSocraticaActual] = useState<EtapaSocratica>('HECHOS');
+  const [preguntaSocratica, setPreguntaSocratica] = useState<string>(
+    'Paso 1: ¿Cuáles de los hechos relatados por el consultante cuentan con un soporte probatorio auténtico e idóneo, y cuáles constituyen meras afirmaciones subjetivas de parte?'
+  );
+  const [respuestaEstudiante, setRespuestaEstudiante] = useState<string>('');
+  const [evaluandoSocratico, setEvaluandoSocratico] = useState<boolean>(false);
+  const [evaluacionSocraticaReciente, setEvaluacionSocraticaReciente] = useState<{
+    evaluacion: {
+      calificacionCualitativa: string;
+      erroresRazonamiento: string[];
+      aspectosPositivos: string[];
+      recomendacionPedagogica: string;
+    };
+    proximoPaso?: {
+      etapa: EtapaSocratica;
+      preguntaGuia: string;
+      pistaPedagogica: string;
+      criterioEvaluacion: string;
+    };
+  } | null>(null);
+
+  // Estados para Hipótesis Contrapuestas
+  const [cargandoHipotesis, setCargandoHipotesis] = useState<boolean>(false);
+  const [analisisHipotesisActual, setAnalisisHipotesisActual] = useState<AnalisisHipotesisCaso | null>(null);
 
   // Estados para Ruta Procesal
   const [rutaMateria, setRutaMateria] = useState<string>('CONSTITUCIONAL');
@@ -82,7 +131,7 @@ export const EscuelaJuridicaView: React.FC = () => {
   const [cargandoFuentes, setCargandoFuentes] = useState<boolean>(false);
 
   // Estados para Borradores Académicos
-  const [tipoBorrador, setTipoBorrador] = useState<DocumentoAcademicoTipo>('FICHA_JURISPRUDENCIAL');
+  const [tipoBorrador, setTipoBorrador] = useState<DocumentoAcademicoTipo>('MATRIZ_PROBATORIA');
   const [borradorGenerado, setBorradorGenerado] = useState<DocumentoAcademicoBorrador | null>(null);
   const [generandoBorrador, setGenerandoBorrador] = useState<boolean>(false);
 
@@ -100,6 +149,9 @@ export const EscuelaJuridicaView: React.FC = () => {
         setCasos(data.casos || []);
         if (data.casos && data.casos.length > 0 && !selectedCasoId) {
           setSelectedCasoId(data.casos[0].id);
+          if (data.casos[0].analisisHipotesis) {
+            setAnalisisHipotesisActual(data.casos[0].analisisHipotesis);
+          }
         }
       }
     } catch (e) {
@@ -110,6 +162,22 @@ export const EscuelaJuridicaView: React.FC = () => {
   };
 
   const casoSeleccionado = casos.find((c) => c.id === selectedCasoId) || casos[0] || null;
+
+  // Sincronizar hipótesis y diálogo al cambiar de caso
+  useEffect(() => {
+    if (casoSeleccionado) {
+      if (casoSeleccionado.analisisHipotesis) {
+        setAnalisisHipotesisActual(casoSeleccionado.analisisHipotesis);
+      } else {
+        setAnalisisHipotesisActual(null);
+      }
+      if (casoSeleccionado.dialogoSocratico && casoSeleccionado.dialogoSocratico.length > 0) {
+        const ultimoPaso = casoSeleccionado.dialogoSocratico[casoSeleccionado.dialogoSocratico.length - 1];
+        setEtapaSocraticaActual(ultimoPaso.etapa);
+        setPreguntaSocratica(ultimoPaso.preguntaDocente || ultimoPaso.preguntaGuia);
+      }
+    }
+  }, [selectedCasoId]);
 
   // Analizar caso fáctico con IA docente
   const handleAnalizarCasoIA = async () => {
@@ -146,7 +214,7 @@ export const EscuelaJuridicaView: React.FC = () => {
         areaDerecho: nuevoArea as any,
         materiaEspecifica: nuevoMateria || 'General',
         hechosOriginales: nuevoHechos,
-        hechosAcreditados: analisisTemp?.hechosAcreditados || [nuevoHechos],
+        hechosAcreditados: analisisTemp?.hechosAcreditados || [],
         inferenciasJuridicas: analisisTemp?.inferenciasJuridicas || [],
         informacionFaltanteYPorVerificar: analisisTemp?.informacionFaltanteYPorVerificar || [],
         problemasJuridicos: analisisTemp?.problemasJuridicos || [],
@@ -158,7 +226,9 @@ export const EscuelaJuridicaView: React.FC = () => {
         tareasInvestigacion: [
           { id: 'tar-1', descripcion: 'Verificar normas y jurisprudencia aplicables en catálogo oficial', completada: false },
           { id: 'tar-2', descripcion: 'Comprobar términos de caducidad o prescripción', completada: false },
-          { id: 'tar-3', descripcion: 'Elaborar borrador de concepto o ficha jurídica', completada: false },
+          { id: 'tar-3', descripcion: 'Elaborar matriz de hechos y pruebas (Art. 167 CGP)', completada: false },
+          { id: 'tar-4', descripcion: 'Resolver cuestionario socrático de controversias y reglas', completada: false },
+          { id: 'tar-5', descripcion: 'Elaborar borrador de concepto o ficha jurídica', completada: false },
         ],
       };
 
@@ -180,6 +250,212 @@ export const EscuelaJuridicaView: React.FC = () => {
       }
     } catch (e) {
       console.error('Error guardando caso:', e);
+    }
+  };
+
+  // Generar o regenerar Matriz de Hechos y Pruebas con clasificación estricta
+  const handleGenerarMatrizProbatoria = async () => {
+    if (!casoSeleccionado) return;
+    try {
+      setCargandoMatriz(true);
+      const res = await fetch('/api/escuela/analyze-matrix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          casoId: casoSeleccionado.id,
+          hechos: casoSeleccionado.hechosOriginales,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const matrizActualizada = data.matriz;
+        const casoActualizado = { ...casoSeleccionado, matrizHechosYPruebas: matrizActualizada };
+
+        // Guardar en backend
+        await fetch(`/api/escuela/casos/${casoSeleccionado.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matrizHechosYPruebas: matrizActualizada }),
+        });
+
+        setCasos(casos.map((c) => (c.id === casoSeleccionado.id ? casoActualizado : c)));
+      }
+    } catch (e) {
+      console.error('Error generando matriz probatoria:', e);
+    } finally {
+      setCargandoMatriz(false);
+    }
+  };
+
+  // Agregar hecho manual a la matriz
+  const handleAgregarHechoManual = async () => {
+    if (!casoSeleccionado || !nuevoHechoTexto.trim()) return;
+
+    const nuevoItem: HechoMatrizProbatoria = {
+      id: `hch-${Date.now()}`,
+      texto: nuevoHechoTexto.trim(),
+      textoHecho: nuevoHechoTexto.trim(),
+      origenInformacion: nuevoHechoOrigen.trim() || 'Manifestación de parte',
+      origenFuente: nuevoHechoOrigen.trim() || 'Manifestación de parte',
+      soporteProbatorio: nuevoHechoSoporte.trim() || 'Sin soporte identificado',
+      soporteProbatorioIdentificado: nuevoHechoSoporte.trim() || 'Sin soporte identificado',
+      estado: nuevoHechoEstado,
+      inferenciasAsociadas: ['Inferencia procesal sujeta a práctica de pruebas'],
+      informacionFaltante: nuevoHechoFaltante.trim() || 'Verificar contradicción procesal',
+    };
+
+    const matrizActual = casoSeleccionado.matrizHechosYPruebas || [];
+    const nuevaMatriz = [...matrizActual, nuevoItem];
+
+    try {
+      const res = await fetch(`/api/escuela/casos/${casoSeleccionado.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matrizHechosYPruebas: nuevaMatriz }),
+      });
+
+      if (res.ok) {
+        setCasos(casos.map((c) => (c.id === casoSeleccionado.id ? { ...c, matrizHechosYPruebas: nuevaMatriz } : c)));
+        setNuevoHechoTexto('');
+        setNuevoHechoSoporte('Sin soporte identificado');
+        setNuevoHechoEstado('RELATADO_POR_PARTE');
+        setNuevoHechoFaltante('');
+      }
+    } catch (e) {
+      console.error('Error agregando hecho:', e);
+    }
+  };
+
+  // Enviar respuesta en Diálogo Socrático
+  const handleEnviarPasoSocratico = async () => {
+    if (!casoSeleccionado || !respuestaEstudiante.trim()) return;
+
+    try {
+      setEvaluandoSocratico(true);
+      const res = await fetch('/api/escuela/socratic-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          etapaActual: etapaSocraticaActual,
+          preguntaAnterior: preguntaSocratica,
+          respuestaEstudiante: respuestaEstudiante.trim(),
+          contexto: `Caso: ${casoSeleccionado.titulo}. Área: ${casoSeleccionado.areaDerecho}. Hechos: ${casoSeleccionado.hechosOriginales.substring(0, 300)}...`,
+          historial: casoSeleccionado.dialogoSocratico || [],
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setEvaluacionSocraticaReciente(data);
+
+        // Crear registro en historial socrático
+        const nuevoPaso: PasoSocratico = {
+          id: `paso-${Date.now()}`,
+          orden: (casoSeleccionado.dialogoSocratico?.length || 0) + 1,
+          etapa: etapaSocraticaActual,
+          preguntaGuia: preguntaSocratica,
+          preguntaDocente: preguntaSocratica,
+          contextoNormativo: 'Art. 167 CGP: Carga de la prueba',
+          respuestaEstudiante: respuestaEstudiante.trim(),
+          evaluacionDocente: {
+            esAcierto: data.evaluacion?.calificacionCualitativa !== 'REQUERIR_CORRECCION_TOTAL',
+            esValido: data.evaluacion?.calificacionCualitativa !== 'REQUERIR_CORRECCION_TOTAL',
+            analisisCritico: data.evaluacion?.analisisCritico || 'Evaluación pedagógica socrática.',
+            falaciasOVaciosIdentificados: data.evaluacion?.erroresRazonamiento || [],
+            orientacionMejora: data.evaluacion?.recomendacionPedagogica || 'Continúa profundizando.',
+            sugerenciaMejora: data.evaluacion?.recomendacionPedagogica || 'Continúa profundizando.',
+          },
+          retroalimentacionCompletada: true,
+          fechaRegistro: new Date().toISOString(),
+        };
+
+        const dialogosPrevios = casoSeleccionado.dialogoSocratico || [];
+        const nuevoDialogo = [...dialogosPrevios, nuevoPaso];
+
+        // Guardar en el caso
+        await fetch(`/api/escuela/casos/${casoSeleccionado.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dialogoSocratico: nuevoDialogo }),
+        });
+
+        setCasos(casos.map((c) => (c.id === casoSeleccionado.id ? { ...c, dialogoSocratico: nuevoDialogo } : c)));
+
+        // Si hay próximo paso sugerido, prepararlo
+        if (data.proximoPaso) {
+          setEtapaSocraticaActual(data.proximoPaso.etapa);
+          setPreguntaSocratica(data.proximoPaso.preguntaGuia);
+          setRespuestaEstudiante('');
+        }
+      }
+    } catch (e) {
+      console.error('Error evaluando paso socrático:', e);
+    } finally {
+      setEvaluandoSocratico(false);
+    }
+  };
+
+  // Generar Análisis de Hipótesis Contrapuestas
+  const handleGenerarHipotesis = async () => {
+    if (!casoSeleccionado) return;
+    try {
+      setCargandoHipotesis(true);
+      const res = await fetch('/api/escuela/analyze-hypotheses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          casoId: casoSeleccionado.id,
+          hechos: casoSeleccionado.hechosOriginales,
+          areaDerecho: casoSeleccionado.areaDerecho,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAnalisisHipotesisActual(data.analisis);
+
+        // Guardar en backend
+        await fetch(`/api/escuela/casos/${casoSeleccionado.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ analisisHipotesis: data.analisis }),
+        });
+
+        setCasos(casos.map((c) => (c.id === casoSeleccionado.id ? { ...c, analisisHipotesis: data.analisis } : c)));
+      }
+    } catch (e) {
+      console.error('Error analizando hipótesis contrapuestas:', e);
+    } finally {
+      setCargandoHipotesis(false);
+    }
+  };
+
+  // Vincular fuente oficial a problemas jurídicos del caso
+  const handleVincularFuenteAlCaso = async (fuente: FuenteJuridicaOficial) => {
+    if (!casoSeleccionado) return;
+    const nuevoVinculo = {
+      problemaJuridico: casoSeleccionado.problemasJuridicos?.[0] || 'Carga probatoria y procedencia sustancial',
+      fuenteIdentificador: fuente.identificador,
+      justificacionPertinencia: `${fuente.epigrafeOTitulo} - ${fuente.articulosOFundamentosClave}`,
+    };
+    const existentes = casoSeleccionado.fuentesVinculadasAProblemas || [];
+    if (existentes.some((v) => v.fuenteIdentificador === fuente.identificador)) return;
+
+    const actualizadas = [...existentes, nuevoVinculo];
+    try {
+      const res = await fetch(`/api/escuela/casos/${casoSeleccionado.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fuentesVinculadasAProblemas: actualizadas }),
+      });
+      if (res.ok) {
+        setCasos(casos.map((c) => (c.id === casoSeleccionado.id ? { ...c, fuentesVinculadasAProblemas: actualizadas } : c)));
+        setCopiado(`vinculo-${fuente.id}`);
+        setTimeout(() => setCopiado(null), 2500);
+      }
+    } catch (e) {
+      console.error('Error vinculando fuente:', e);
     }
   };
 
@@ -334,6 +610,29 @@ export const EscuelaJuridicaView: React.FC = () => {
     { id: 'ARGUMENTACION', label: 'Test de Proporcionalidad', desc: 'Idoneidad, necesidad y ponderación estricta' },
   ];
 
+  const etapasSocraticas = [
+    { id: 'HECHOS', label: '1. Hechos & Pruebas' },
+    { id: 'CONTROVERSIA', label: '2. Puntos de Controversia' },
+    { id: 'REGLA_JURIDICA', label: '3. Regla de Derecho' },
+    { id: 'PRUEBAS', label: '4. Conducencia Probatoria' },
+    { id: 'INFERENCIAS', label: '5. Juicio de Subsunción' },
+    { id: 'CONCLUSION', label: '6. Conclusión & Preclusión' },
+  ];
+
+  const getEstadoBadgeStyle = (estado: EstadoHechoProbatorio) => {
+    switch (estado) {
+      case 'RESPALDADO_POR_SOPORTE':
+        return 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700';
+      case 'RELATADO_POR_PARTE':
+        return 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700';
+      case 'CONTROVERTIDO':
+        return 'bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700';
+      case 'PENDIENTE_CORROBORACION':
+      default:
+        return 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-700';
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* 1. Header y Banner Institucional de la Escuela Jurídica */}
@@ -347,14 +646,14 @@ export const EscuelaJuridicaView: React.FC = () => {
                 ESCUELA JURÍDICA INTELIGENTE
               </span>
               <span className="text-xs text-amber-300 font-mono tracking-wide flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" /> Entorno Pedagógico Separado
+                <ShieldCheck className="w-3.5 h-3.5" /> Entorno Pedagógico Separado (Sin Afectar Expedientes Reales)
               </span>
             </div>
             <h1 className="text-2xl font-bold text-white tracking-tight">
-              Formación Práctica & Litigio Estratégico Colombiano
+              Formación Pedagógica, Análisis Socrático & Litigio Estratégico
             </h1>
             <p className="text-sm text-slate-300 max-w-3xl leading-relaxed">
-              Módulo formativo para estudiantes de Derecho, consultorios jurídicos y semilleros. Desarrolla el pensamiento analítico mediante descomposición socrática de hechos, rutas procesales orientativas, tutor interactivo y borradores técnicos supervisados.
+              Herramienta formativa para estudiantes y consultorios jurídicos en Colombia. Enseña a descomponer hechos, estructurar matrices probatorias (Art. 167 CGP), contrastar hipótesis simétricas, computar términos judiciales con reglas de la Ley 2213 de 2022 y redactar borradores supervisados.
             </p>
           </div>
 
@@ -370,7 +669,7 @@ export const EscuelaJuridicaView: React.FC = () => {
               Analizar Nuevo Caso
             </button>
             <div className="text-[11px] text-slate-400 text-center font-mono">
-              Aislamiento estricto (Ley 1581 / Ley 1123)
+              Aislamiento estricto de expedientes de clientes
             </div>
           </div>
         </div>
@@ -378,26 +677,27 @@ export const EscuelaJuridicaView: React.FC = () => {
         {/* 5 Botones de Acceso Rápido */}
         <div className="mt-6 pt-5 border-t border-slate-700/60 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
           <button
-            onClick={() => {
-              setActiveTab('casos');
-              setMostrarModalNuevoCaso(true);
-            }}
+            onClick={() => setActiveTab('matriz')}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40"
           >
-            <BrainCircuit className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Analizar un caso</span>
+            <Layers className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">Matriz de Hechos & Pruebas</span>
           </button>
 
           <button
-            onClick={() => {
-              setActiveTab('investigacion');
-              setQueryInvestigacion('Ley 1564');
-              handleBuscarFuentes();
-            }}
+            onClick={() => setActiveTab('socratica')}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40"
           >
-            <Search className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Consultar una norma</span>
+            <MessageSquareCode className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">Diálogo Socrático Gradual</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('hipotesis')}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40"
+          >
+            <GitCompare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">Hipótesis Contrapuestas</span>
           </button>
 
           <button
@@ -408,75 +708,100 @@ export const EscuelaJuridicaView: React.FC = () => {
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40"
           >
             <RouteIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Construir ruta procesal</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab('investigacion');
-              setQueryInvestigacion('C-590 de 2005');
-              handleBuscarFuentes();
-            }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40"
-          >
-            <Scale className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Estudiar jurisprudencia</span>
+            <span className="truncate">Ruta Procesal & Términos</span>
           </button>
 
           <button
             onClick={() => {
               setActiveTab('borradores');
+              setTipoBorrador('MATRIZ_PROBATORIA');
               handleGenerarBorrador();
             }}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40 col-span-2 sm:col-span-1"
           >
             <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Crear ficha jurídica</span>
+            <span className="truncate">Generar Borrador Didáctico</span>
           </button>
         </div>
       </div>
 
       {/* 2. Barra de Navegación de Pestañas */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
+      <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1 text-xs">
         <button
           onClick={() => setActiveTab('casos')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all border-b-2 ${
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
             activeTab === 'casos'
               ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <BookMarked className="w-4 h-4" />
-          Casos Académicos & Análisis ({casos.length})
+          Casos de Estudio ({casos.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('matriz')}
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
+            activeTab === 'matriz'
+              ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+              : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          Matriz Hechos & Pruebas
+        </button>
+
+        <button
+          onClick={() => setActiveTab('socratica')}
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
+            activeTab === 'socratica'
+              ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+              : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <MessageSquareCode className="w-4 h-4" />
+          Diálogo Socrático Gradual
+        </button>
+
+        <button
+          onClick={() => setActiveTab('hipotesis')}
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
+            activeTab === 'hipotesis'
+              ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+              : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <GitCompare className="w-4 h-4" />
+          Hipótesis Contrapuestas
         </button>
 
         <button
           onClick={() => setActiveTab('ruta')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all border-b-2 ${
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
             activeTab === 'ruta'
               ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <RouteIcon className="w-4 h-4" />
-          Ruta Procesal Orientativa
+          Ruta Procesal & Términos
         </button>
 
         <button
           onClick={() => setActiveTab('tutor')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all border-b-2 ${
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
             activeTab === 'tutor'
               ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          Tutor Académico Interactivo
+          Tutor Académico (8 Modos)
         </button>
 
         <button
           onClick={() => setActiveTab('investigacion')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all border-b-2 ${
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
             activeTab === 'investigacion'
               ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -488,18 +813,18 @@ export const EscuelaJuridicaView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('borradores')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all border-b-2 ${
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
             activeTab === 'borradores'
               ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
               : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
           }`}
         >
           <FileCheck2 className="w-4 h-4" />
-          Borradores Académicos (No Radicables)
+          Borradores Didácticos
         </button>
       </div>
 
-      {/* 3. PESTAÑA 1: CASOS ACADÉMICOS & ANÁLISIS */}
+      {/* 3. PESTAÑA 1: CASOS ACADÉMICOS & RESUMEN */}
       {activeTab === 'casos' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Columna Izquierda: Lista de Casos Académicos */}
@@ -603,11 +928,36 @@ export const EscuelaJuridicaView: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Acciones directas sobre el caso */}
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      onClick={() => setActiveTab('matriz')}
+                      className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-blue-100 transition-all"
+                    >
+                      <Layers className="w-3.5 h-3.5" /> Abrir Matriz Probatoria
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('socratica')}
+                      className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-amber-100 transition-all"
+                    >
+                      <MessageSquareCode className="w-3.5 h-3.5" /> Iniciar Diálogo Socrático
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('hipotesis');
+                        if (!analisisHipotesisActual) handleGenerarHipotesis();
+                      }}
+                      className="px-3 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-purple-100 transition-all"
+                    >
+                      <GitCompare className="w-3.5 h-3.5" /> Analizar Hipótesis Contrapuestas
+                    </button>
+                  </div>
+
                   {/* Hechos Originales */}
                   <div className="p-3.5 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800/80">
                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-amber-500" />
-                      Hechos Descritos por el Estudiante
+                      Hechos Descritos por el Estudiante / Consultante
                     </div>
                     <p className="text-xs text-slate-750 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                       {casoSeleccionado.hechosOriginales}
@@ -615,20 +965,20 @@ export const EscuelaJuridicaView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Descomposición Socrática: Hechos Acreditados vs Inferencias vs Faltantes */}
+                {/* Descomposición Socrática preliminar */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Hechos Acreditados */}
                   <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-emerald-200 dark:border-emerald-950/60 shadow-sm space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Hechos Acreditados
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Hechos Demostrados
                       </span>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 rounded">
                         {casoSeleccionado.hechosAcreditados?.length || 0}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Afirmaciones fácticas demostradas con soporte objetivo inmediato:
+                      Soportados en medios de prueba idóneos y auténticos:
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                       {casoSeleccionado.hechosAcreditados?.map((h, i) => (
@@ -644,14 +994,14 @@ export const EscuelaJuridicaView: React.FC = () => {
                   <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-blue-200 dark:border-blue-950/60 shadow-sm space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                        <BrainCircuit className="w-3.5 h-3.5" /> Inferencias Jurídicas
+                        <BrainCircuit className="w-3.5 h-3.5" /> Inferencias & Deducciones
                       </span>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 bg-blue-50 dark:bg-blue-950/50 text-blue-600 rounded">
                         {casoSeleccionado.inferenciasJuridicas?.length || 0}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Deducciones lógicas a corroborar con prueba o precedente:
+                      Reglas de experiencia e indicios pendientes de corroborar:
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                       {casoSeleccionado.inferenciasJuridicas?.map((inf, i) => (
@@ -667,14 +1017,14 @@ export const EscuelaJuridicaView: React.FC = () => {
                   <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-200 dark:border-amber-950/60 shadow-sm space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Requiere Verificación
+                        <AlertTriangle className="w-3.5 h-3.5" /> Datos por Comprobar
                       </span>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 bg-amber-50 dark:bg-amber-950/50 text-amber-600 rounded">
                         {casoSeleccionado.informacionFaltanteYPorVerificar?.length || 0}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Fechas, notificaciones o presupuestos pendientes antes de litigar:
+                      Fechas, traslados o constancias previas exigidas por la ley:
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                       {casoSeleccionado.informacionFaltanteYPorVerificar?.map((falt, i) => (
@@ -687,106 +1037,31 @@ export const EscuelaJuridicaView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Problemas Jurídicos y Preguntas por Resolver */}
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <Scale className="w-4 h-4 text-amber-500" />
-                    Problemas Jurídicos & Preguntas Dogmáticas
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <span className="text-[11px] font-semibold text-slate-500">Problemas Jurídicos Formulados</span>
-                      {casoSeleccionado.problemasJuridicos?.map((pj, i) => (
-                        <div key={i} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 font-medium italic">
-                          "{pj}"
-                        </div>
-                      ))}
+                {/* Fuentes Vinculadas a Problemas Jurídicos */}
+                {casoSeleccionado.fuentesVinculadasAProblemas && casoSeleccionado.fuentesVinculadasAProblemas.length > 0 && (
+                  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                        <BookmarkCheck className="w-4 h-4 text-emerald-500" />
+                        Fuentes Jurídicas Vinculadas a los Problemas del Caso
+                      </h3>
+                      <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">
+                        {casoSeleccionado.fuentesVinculadasAProblemas.length} vinculadas
+                      </span>
                     </div>
-
-                    <div className="space-y-2">
-                      <span className="text-[11px] font-semibold text-slate-500">Preguntas que Deben Resolverse</span>
-                      {casoSeleccionado.preguntasPorResolver?.map((pr, i) => (
-                        <div key={i} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
-                          <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                          <span>{pr}</span>
-                        </div>
+                    <ul className="space-y-1.5 text-xs">
+                      {casoSeleccionado.fuentesVinculadasAProblemas.map((vinc, i) => (
+                        <li key={i} className="p-2.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-slate-800 dark:text-slate-200">
+                          <strong className="text-emerald-700 dark:text-emerald-400 font-bold">{vinc.fuenteIdentificador}: </strong>
+                          <span>{vinc.justificacionPertinencia}</span>
+                          <div className="text-[10px] text-slate-500 font-mono mt-0.5">Problema jurídico: {vinc.problemaJuridico}</div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </div>
-                </div>
+                )}
 
-                {/* Líneas de Análisis Jurídico (Pros y Limitaciones) */}
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <RouteIcon className="w-4 h-4 text-amber-500" />
-                    Líneas de Análisis & Estrategia Comparada
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {casoSeleccionado.lineasAnalisis?.map((linea, i) => (
-                      <div key={i} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-2">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">{linea.titulo}</h4>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                          <strong className="text-amber-600 dark:text-amber-400 font-medium">Fundamento: </strong>
-                          {linea.fundamentoJuridico}
-                        </p>
-                        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px] space-y-1">
-                          <p className="text-emerald-700 dark:text-emerald-400">
-                            <strong>Ventajas: </strong>{linea.pros}
-                          </p>
-                          <p className="text-amber-700 dark:text-amber-400">
-                            <strong>Riesgos / Limitaciones: </strong>{linea.limitacionesORiesgos}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Fuentes Oficiales Verificables Conectadas */}
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                      <BookmarkCheck className="w-4 h-4 text-emerald-500" />
-                      Fuentes Oficiales Recomendadas para el Caso
-                    </h3>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
-                      Cotejadas con SUIN-Juriscol / Corte Constitucional
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {casoSeleccionado.fuentesRecomendadas?.map((f, i) => (
-                      <div key={i} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/30 dark:bg-slate-950/20">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-slate-900 dark:text-slate-100">{f.identificador}</span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
-                              {f.tipo}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {f.motivoPertinencia}
-                          </p>
-                        </div>
-
-                        {f.enlaceOficial && (
-                          <a
-                            href={f.enlaceOficial}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2.5 py-1 text-xs bg-slate-900 dark:bg-amber-400 text-white dark:text-slate-950 rounded-lg font-medium flex items-center gap-1 shrink-0 hover:opacity-90"
-                          >
-                            <ExternalLink className="w-3 h-3" /> Abrir Fuente
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tareas de Investigación Académica */}
+                {/* Bitácora de Tareas Académicas */}
                 <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-amber-500" />
@@ -823,7 +1098,565 @@ export const EscuelaJuridicaView: React.FC = () => {
         </div>
       )}
 
-      {/* 4. PESTAÑA 2: RUTA PROCESAL ORIENTATIVA */}
+      {/* 4. PESTAÑA 2: MATRIZ DE HECHOS Y PRUEBAS (Art. 167 CGP) */}
+      {activeTab === 'matriz' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-blue-600 text-white rounded">
+                  CARGA DE LA PRUEBA (ART. 167 CGP)
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Caso: {casoSeleccionado?.titulo || 'Sin caso'}
+                </span>
+              </div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-blue-500" />
+                Matriz de Hechos vs Soportes Probatorios
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Distingue estrictamente entre meras afirmaciones de parte, hechos respaldados en soportes idóneos y hechos controvertidos.
+              </p>
+            </div>
+
+            <button
+              onClick={handleGenerarMatrizProbatoria}
+              disabled={cargandoMatriz || !casoSeleccionado}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow transition-all shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${cargandoMatriz ? 'animate-spin' : ''}`} />
+              {cargandoMatriz ? 'Estructurando Matriz...' : 'Auto-estructurar Matriz con IA'}
+            </button>
+          </div>
+
+          {/* Advertencia Deontológica y Epistemológica */}
+          <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-3">
+            <AlertOctagon className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <strong className="font-bold">Regla de Rigor Probatorio Forense:</strong>
+              <p className="leading-relaxed">
+                Jamás clasifiques un hecho como «acreditado» por la simple manifestación unilateral del consultante o cliente.
+                Toda afirmación fáctica sin prueba auténtica aportada tiene la condición estricta de <span className="font-mono font-bold bg-amber-200 dark:bg-amber-900 px-1 py-0.5 rounded text-[11px]">RELATADO_POR_PARTE</span> y requiere comprobación mediante documento auténtico, peritaje, inspección judicial o testimonio decretado.
+              </p>
+            </div>
+          </div>
+
+          {/* Tabla de Matriz de Hechos */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                Inventario de Hechos y Estado Probatorio ({casoSeleccionado?.matrizHechosYPruebas?.length || 0} enunciados)
+              </h3>
+              <span className="text-[11px] font-mono text-slate-400">
+                Criterios del Código General del Proceso & CPACA
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 text-[11px]">
+                  <tr>
+                    <th className="py-3 px-3">#</th>
+                    <th className="py-3 px-3 min-w-[240px]">Enunciado Fáctico</th>
+                    <th className="py-3 px-3 min-w-[140px]">Origen de la Fuente</th>
+                    <th className="py-3 px-3 min-w-[180px]">Soporte Probatorio Identificado</th>
+                    <th className="py-3 px-3 min-w-[150px]">Estado Probatorio</th>
+                    <th className="py-3 px-3 min-w-[180px]">Inferencias / Deducción</th>
+                    <th className="py-3 px-3 min-w-[180px]">Información Faltante</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                  {casoSeleccionado?.matrizHechosYPruebas && casoSeleccionado.matrizHechosYPruebas.length > 0 ? (
+                    casoSeleccionado.matrizHechosYPruebas.map((h, i) => (
+                      <tr key={h.id || i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                        <td className="py-3 px-3 font-mono font-bold text-slate-400">{i + 1}</td>
+                        <td className="py-3 px-3 text-slate-900 dark:text-slate-100 font-medium leading-relaxed">
+                          {h.textoHecho}
+                        </td>
+                        <td className="py-3 px-3 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                          {h.origenFuente}
+                        </td>
+                        <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
+                          {h.soporteProbatorioIdentificado === 'Sin soporte identificado' ? (
+                            <span className="text-amber-600 dark:text-amber-400 italic flex items-center gap-1 font-mono text-[11px]">
+                              <AlertTriangle className="w-3 h-3" /> Sin soporte identificado
+                            </span>
+                          ) : (
+                            <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" /> {h.soporteProbatorioIdentificado}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className={`px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold ${getEstadoBadgeStyle(h.estado)}`}>
+                            {h.estado}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-slate-600 dark:text-slate-400 text-[11px]">
+                          {h.inferenciasAsociadas?.join('; ') || '—'}
+                        </td>
+                        <td className="py-3 px-3 text-amber-700 dark:text-amber-400 text-[11px]">
+                          {h.informacionFaltante || 'Ninguna'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                        No hay hechos en la matriz. Presiona «Auto-estructurar Matriz con IA» o ingresa hechos manualmente abajo.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Formulario para agregar hecho manual a la matriz */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 space-y-3">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                Agregar Enunciado Fáctico Manual a la Matriz
+              </span>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                <div className="md:col-span-2">
+                  <input
+                    type="text"
+                    value={nuevoHechoTexto}
+                    onChange={(e) => setNuevoHechoTexto(e.target.value)}
+                    placeholder="Descripción fáctica precisa..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    value={nuevoHechoSoporte}
+                    onChange={(e) => setNuevoHechoSoporte(e.target.value)}
+                    placeholder="Soporte probatorio o 'Sin soporte'..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  />
+                </div>
+                <div>
+                  <select
+                    value={nuevoHechoEstado}
+                    onChange={(e) => setNuevoHechoEstado(e.target.value as EstadoHechoProbatorio)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold"
+                  >
+                    <option value="RELATADO_POR_PARTE">RELATADO_POR_PARTE</option>
+                    <option value="RESPALDADO_POR_SOPORTE">RESPALDADO_POR_SOPORTE</option>
+                    <option value="CONTROVERTIDO">CONTROVERTIDO</option>
+                    <option value="PENDIENTE_CORROBORACION">PENDIENTE_CORROBORACION</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <input
+                  type="text"
+                  value={nuevoHechoFaltante}
+                  onChange={(e) => setNuevoHechoFaltante(e.target.value)}
+                  placeholder="Información faltante o documento que se requiere aportar..."
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                />
+                <button
+                  onClick={handleAgregarHechoManual}
+                  disabled={!nuevoHechoTexto.trim()}
+                  className="px-4 py-2 bg-slate-900 dark:bg-amber-400 text-white dark:text-slate-950 font-bold text-xs rounded-xl flex items-center gap-1 shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Agregar a Matriz
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. PESTAÑA 3: DIÁLOGO SOCRÁTICO GRADUAL */}
+      {activeTab === 'socratica' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-amber-500 text-slate-950 rounded">
+                  MÉTODO SOCRÁTICO GRADUAL
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Caso: {casoSeleccionado?.titulo || 'Sin caso'}
+                </span>
+              </div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 flex items-center gap-2">
+                <MessageSquareCode className="w-4 h-4 text-amber-500" />
+                Interrogatorio Socrático Dirigido
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                La IA no te da la conclusión dogmática; formula preguntas secuenciales para guiar tu propio razonamiento jurídico y detectar falacias lógicas.
+              </p>
+            </div>
+          </div>
+
+          {/* Pasos / Stepper de la Secuencia Socrática */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {etapasSocraticas.map((et, idx) => {
+              const esActual = et.id === etapaSocraticaActual;
+              return (
+                <div
+                  key={et.id}
+                  className={`p-3 rounded-xl border text-center transition-all ${
+                    esActual
+                      ? 'bg-amber-400 text-slate-950 font-bold border-amber-400 shadow-md ring-2 ring-amber-400/30'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <div className="text-[11px] font-bold">{et.label}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Área de Pregunta Docente Actual & Respuesta del Estudiante */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                  <BrainCircuit className="w-4 h-4" /> Pregunta Socrática Docente ({etapaSocraticaActual})
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  Responde con fundamentación jurídica
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                {preguntaSocratica}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Tu Respuesta Razonada:
+              </label>
+              <textarea
+                rows={4}
+                value={respuestaEstudiante}
+                onChange={(e) => setRespuestaEstudiante(e.target.value)}
+                placeholder="Escribe tu razonamiento jurídico identificando hechos objetivos, normas aplicables o errores que detectes..."
+                className="w-full text-xs p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 leading-relaxed font-sans"
+              />
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-slate-400 italic">
+                  Sé riguroso: evita falacias de afirmación de consecuente o suposiciones sin sustento.
+                </span>
+                <button
+                  onClick={handleEnviarPasoSocratico}
+                  disabled={evaluandoSocratico || !respuestaEstudiante.trim()}
+                  className="px-5 py-2.5 bg-slate-900 dark:bg-amber-400 text-white dark:text-slate-950 font-bold text-xs rounded-xl shadow transition-all flex items-center gap-2"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {evaluandoSocratico ? 'Evaluando Razonamiento...' : 'Evaluar mi Respuesta'}
+                </button>
+              </div>
+            </div>
+
+            {/* Retroalimentación y Crítica a Errores de Razonamiento */}
+            {evaluacionSocraticaReciente && (
+              <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 space-y-3 animate-in fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5 uppercase">
+                    <Sparkles className="w-4 h-4 text-amber-500" /> Evaluación del Razonamiento Jurídico
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-200 dark:bg-blue-900 text-blue-900 dark:text-blue-200">
+                    {evaluacionSocraticaReciente.evaluacion.calificacionCualitativa}
+                  </span>
+                </div>
+
+                {evaluacionSocraticaReciente.evaluacion.aspectosPositivos?.length > 0 && (
+                  <div className="text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+                    <strong>Puntos acertados: </strong>
+                    <ul className="list-disc list-inside">
+                      {evaluacionSocraticaReciente.evaluacion.aspectosPositivos.map((pos, i) => (
+                        <li key={i}>{pos}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {evaluacionSocraticaReciente.evaluacion.erroresRazonamiento?.length > 0 && (
+                  <div className="text-xs text-amber-800 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-950/40 p-2.5 rounded-lg border border-amber-200 dark:border-amber-900 space-y-1">
+                    <strong className="flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" /> Errores de razonamiento o vacíos detectados:
+                    </strong>
+                    <ul className="list-disc list-inside text-[11px]">
+                      {evaluacionSocraticaReciente.evaluacion.erroresRazonamiento.map((err, i) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                  <strong className="text-slate-900 dark:text-slate-100">Orientación Docente: </strong>
+                  {evaluacionSocraticaReciente.evaluacion.recomendacionPedagogica}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Historial del Diálogo Socrático en este Caso */}
+          {casoSeleccionado?.dialogoSocratico && casoSeleccionado.dialogoSocratico.length > 0 && (
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                Historial de Avance Socrático ({casoSeleccionado.dialogoSocratico.length} pasos completados)
+              </h3>
+              <div className="space-y-3">
+                {casoSeleccionado.dialogoSocratico.map((paso, i) => (
+                  <div key={i} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-amber-600 dark:text-amber-400 uppercase font-mono">
+                        Paso {i + 1}: {paso.etapa}
+                      </span>
+                      <span className="text-slate-400 font-mono text-[10px]">
+                        {new Date(paso.fechaRegistro || Date.now()).toLocaleTimeString('es-CO')}
+                      </span>
+                    </div>
+                    <div className="text-slate-800 dark:text-slate-200 font-medium">
+                      <strong>Pregunta: </strong>{paso.preguntaDocente || paso.preguntaGuia}
+                    </div>
+                    <div className="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 italic">
+                      <strong>Tu respuesta: </strong>"{paso.respuestaEstudiante}"
+                    </div>
+                    {paso.evaluacionDocente && (
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400">
+                        <span className="text-blue-600 font-semibold">Retroalimentación: </span>
+                        {paso.evaluacionDocente.sugerenciaMejora || paso.evaluacionDocente.orientacionMejora}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 6. PESTAÑA 4: HIPÓTESIS CONTRAPUESTAS */}
+      {activeTab === 'hipotesis' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 text-[10px] font-bold uppercase bg-purple-600 text-white rounded">
+                  DIALÉCTICA FORENSE
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Caso: {casoSeleccionado?.titulo || 'Sin caso'}
+                </span>
+              </div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 flex items-center gap-2">
+                <GitCompare className="w-4 h-4 text-purple-500" />
+                Análisis de Hipótesis Contrapuestas (Tesis vs Antítesis)
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Estructura simétrica que compara la postura favorable a las pretensiones contra la posición defensiva de la contraparte.
+              </p>
+            </div>
+
+            <button
+              onClick={handleGenerarHipotesis}
+              disabled={cargandoHipotesis || !casoSeleccionado}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow transition-all shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${cargandoHipotesis ? 'animate-spin' : ''}`} />
+              {cargandoHipotesis ? 'Analizando Contrapuestos...' : 'Generar / Actualizar Hipótesis'}
+            </button>
+          </div>
+
+          {analisisHipotesisActual ? (
+            <div className="space-y-6">
+              {/* Comparación Simétrica en 2 Columnas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Columna Hipótesis Principal */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-blue-200 dark:border-blue-900/60 p-5 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-blue-100 dark:border-blue-900/40 pb-3">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded font-mono uppercase">
+                      POSTURA PRINCIPAL (ACCIONANTE)
+                    </span>
+                    <span className="text-[10px] font-mono text-blue-600 dark:text-blue-400 font-semibold">
+                      Tesis Activa
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                      {analisisHipotesisActual.hipotesisPrincipal.titulo}
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                      {analisisHipotesisActual.hipotesisPrincipal.descripcion}
+                    </p>
+                  </div>
+
+                  {/* Argumentos a Favor */}
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+                      Argumentos a Favor:
+                    </span>
+                    <ul className="space-y-1 text-xs text-slate-700 dark:text-slate-300">
+                      {analisisHipotesisActual.hipotesisPrincipal.argumentosAFavor.map((arg, i) => (
+                        <li key={i} className="flex items-start gap-1.5 p-1 rounded bg-emerald-50/50 dark:bg-emerald-950/20">
+                          <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{arg}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Pruebas que Confirman */}
+                  <div className="space-y-1.5 text-xs">
+                    <span className="font-bold text-blue-700 dark:text-blue-400">Pruebas que la respaldan:</span>
+                    <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 text-[11px]">
+                      {(analisisHipotesisActual.hipotesisPrincipal.pruebasQueConfirman || analisisHipotesisActual.hipotesisPrincipal.elementosConfirmacionProbatoria || []).map((p, i) => (
+                        <li key={i}>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Fundamento Normativo */}
+                  <div className="p-3 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs">
+                    <strong className="text-blue-800 dark:text-blue-300">Normas & Precedentes: </strong>
+                    <span className="text-slate-700 dark:text-slate-300 font-mono text-[11px]">
+                      {analisisHipotesisActual.hipotesisPrincipal.reglasJuridicasAplicables.join('; ')}
+                    </span>
+                  </div>
+
+                  {/* Limitaciones */}
+                  <div className="space-y-1 text-xs text-amber-700 dark:text-amber-400">
+                    <strong className="flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" /> Incertidumbres o riesgos:
+                    </strong>
+                    <ul className="list-disc list-inside text-[11px] text-slate-600 dark:text-slate-400">
+                      {analisisHipotesisActual.hipotesisPrincipal.incertidumbresYLimitaciones.map((inc, i) => (
+                        <li key={i}>{inc}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Columna Hipótesis Alternativa / Defensiva */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-amber-900/60 p-5 space-y-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-amber-100 dark:border-amber-900/40 pb-3">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded font-mono uppercase">
+                      POSTURA ALTERNATIVA (CONTRAPARTE / DEFENSA)
+                    </span>
+                    <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-semibold">
+                      Antítesis / Excepciones
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                      {analisisHipotesisActual.hipotesisAlternativa.titulo}
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                      {analisisHipotesisActual.hipotesisAlternativa.descripcion}
+                    </p>
+                  </div>
+
+                  {/* Argumentos a Favor de Contraparte */}
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+                      Argumentos de Contraparte / Excepciones:
+                    </span>
+                    <ul className="space-y-1 text-xs text-slate-700 dark:text-slate-300">
+                      {analisisHipotesisActual.hipotesisAlternativa.argumentosAFavor.map((arg, i) => (
+                        <li key={i} className="flex items-start gap-1.5 p-1 rounded bg-amber-50/50 dark:bg-amber-950/20">
+                          <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                          <span>{arg}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Pruebas que Desvirtúan la Tesis Principal */}
+                  <div className="space-y-1.5 text-xs">
+                    <span className="font-bold text-amber-700 dark:text-amber-400">Pruebas o vacíos que la favorecen:</span>
+                    <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 text-[11px]">
+                      {(analisisHipotesisActual.hipotesisAlternativa.pruebasQueConfirman || analisisHipotesisActual.hipotesisAlternativa.elementosConfirmacionProbatoria || []).map((p, i) => (
+                        <li key={i}>{p}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Fundamento Normativo de Contraparte */}
+                  <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs">
+                    <strong className="text-amber-800 dark:text-amber-300">Normas & Precedentes Defensivos: </strong>
+                    <span className="text-slate-700 dark:text-slate-300 font-mono text-[11px]">
+                      {analisisHipotesisActual.hipotesisAlternativa.reglasJuridicasAplicables.join('; ')}
+                    </span>
+                  </div>
+
+                  {/* Limitaciones de la Tesis Alternativa */}
+                  <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
+                    <strong className="flex items-center gap-1 text-slate-800 dark:text-slate-200">
+                      <AlertTriangle className="w-3.5 h-3.5" /> Limitaciones de esta defensa:
+                    </strong>
+                    <ul className="list-disc list-inside text-[11px]">
+                      {analisisHipotesisActual.hipotesisAlternativa.incertidumbresYLimitaciones.map((inc, i) => (
+                        <li key={i}>{inc}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ponderación Judicial & Preguntas de Profundización */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-purple-500" />
+                  Juicio de Ponderación & Criterio de Decisión Judicial
+                </h3>
+
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                  {analisisHipotesisActual.sintesisPonderacion}
+                </p>
+
+                <div className="p-3.5 rounded-xl bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900 text-xs space-y-1">
+                  <strong className="text-purple-800 dark:text-purple-300">Criterio que define el litigio: </strong>
+                  <span className="text-slate-800 dark:text-slate-200">
+                    {analisisHipotesisActual.criterioDecisionSugerido}
+                  </span>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase">
+                    Preguntas para Profundizar en Audiencia o Alegatos:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {analisisHipotesisActual.preguntasParaProfundizar?.map((preg, i) => (
+                      <div key={i} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 flex items-start gap-2">
+                        <HelpCircle className="w-3.5 h-3.5 text-purple-500 shrink-0 mt-0.5" />
+                        <span>{preg}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+              <GitCompare className="w-12 h-12 text-slate-400 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">Sin análisis de hipótesis</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Genera un examen dialéctico para comparar la tesis del accionante contra las excepciones y argumentos de la contraparte.
+              </p>
+              <button
+                onClick={handleGenerarHipotesis}
+                disabled={cargandoHipotesis || !casoSeleccionado}
+                className="px-4 py-2 bg-purple-600 text-white font-bold text-xs rounded-xl"
+              >
+                Generar Hipótesis Contrapuestas
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 7. PESTAÑA 5: RUTA PROCESAL & TÉRMINOS */}
       {activeTab === 'ruta' && (
         <div className="space-y-6">
           {/* Selector de Materia */}
@@ -831,10 +1664,10 @@ export const EscuelaJuridicaView: React.FC = () => {
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <RouteIcon className="w-4 h-4 text-amber-500" />
-                Generador de Ruta Procesal Colombiana
+                Ruta Procesal Orientativa & Cómputo de Términos
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Flujograma secuencial de etapas procesales, términos perentorios, reglas de cómputo y requisitos previos.
+                Flujograma secuencial de etapas procesales con advertencia de datos faltantes previos y supuestos de cómputo (Ley 2213 de 2022).
               </p>
             </div>
 
@@ -865,6 +1698,42 @@ export const EscuelaJuridicaView: React.FC = () => {
           {/* Resultado de la Ruta Procesal */}
           {rutaData && (
             <div className="space-y-6">
+              {/* Presupuestos y Datos Faltantes Previos a la Ruta */}
+              {rutaData.datosFaltantesPrevios && rutaData.datosFaltantesPrevios.length > 0 && (
+                <div className="bg-amber-50/70 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-300 dark:border-amber-800 shadow-sm space-y-2">
+                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs uppercase">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    Datos Faltantes que Deben Precisarse Antes de Iniciar esta Ruta:
+                  </div>
+                  <ul className="space-y-1 text-xs text-amber-900 dark:text-amber-200">
+                    {rutaData.datosFaltantesPrevios.map((df, i) => (
+                      <li key={i} className="flex items-start gap-1.5">
+                        <span className="font-bold">•</span>
+                        <span>{df}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Supuestos Explícitos de Cómputo de Términos */}
+              {rutaData.supuestosCalculoTerminos && rutaData.supuestosCalculoTerminos.length > 0 && (
+                <div className="bg-blue-50/70 dark:bg-blue-950/30 p-4 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-sm space-y-2">
+                  <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300 font-bold text-xs uppercase">
+                    <Clock className="w-4 h-4 text-blue-600" />
+                    Supuestos Normativos para el Cómputo de Términos:
+                  </div>
+                  <ul className="space-y-1 text-xs text-slate-700 dark:text-slate-300">
+                    {rutaData.supuestosCalculoTerminos.map((sup, i) => (
+                      <li key={i} className="flex items-start gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
+                        <span>{sup}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {/* Resumen de Competencia y Requisitos */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
@@ -971,18 +1840,17 @@ export const EscuelaJuridicaView: React.FC = () => {
         </div>
       )}
 
-      {/* 5. PESTAÑA 3: TUTOR ACADÉMICO INTERACTIVO */}
+      {/* 8. PESTAÑA 6: TUTOR ACADÉMICO (8 MODOS) */}
       {activeTab === 'tutor' && (
         <div className="space-y-6">
-          {/* Selector de Modo del Tutor */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                Tutor Jurídico Socrático — 8 Modos de Aprendizaje
+                Tutor Jurídico Catedrático — 8 Modos de Aprendizaje
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Selecciona una modalidad didáctica para profundizar en el razonamiento dogmático y procesal colombiano.
+                Modalidades didácticas universitarias para profundizar en razonamiento dogmático, silogismo e interpretación de sentencias.
               </p>
             </div>
 
@@ -1005,7 +1873,6 @@ export const EscuelaJuridicaView: React.FC = () => {
               ))}
             </div>
 
-            {/* Input de Consulta */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <input
                 type="text"
@@ -1112,13 +1979,13 @@ export const EscuelaJuridicaView: React.FC = () => {
         </div>
       )}
 
-      {/* 6. PESTAÑA 4: CATÁLOGO OFICIAL CONECTADO */}
+      {/* 9. PESTAÑA 7: CATÁLOGO OFICIAL CONECTADO */}
       {activeTab === 'investigacion' && (
         <div className="space-y-4">
           <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
             <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Search className="w-4 h-4 text-amber-500" />
-              Búsqueda en el Catálogo Jurídico Colombiano Oficial
+              Búsqueda en el Catálogo Jurídico Colombiano Oficial Verificado
             </h2>
             <div className="flex flex-col sm:flex-row gap-2">
               <input
@@ -1163,22 +2030,42 @@ export const EscuelaJuridicaView: React.FC = () => {
                     <span className="text-[10px] font-mono px-1.5 py-0.2 bg-amber-400/20 text-amber-700 dark:text-amber-300 rounded font-semibold">
                       {item.tipoNormaOProvidencia}
                     </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded border border-emerald-300 dark:border-emerald-800 font-semibold flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> CATALOGO_LOCAL_VERIFICADO
+                    </span>
                   </div>
-                  <a
-                    href={item.enlaceVerificado}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                  >
-                    Fuente Oficial <ExternalLink className="w-3 h-3" />
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleVincularFuenteAlCaso(item)}
+                      disabled={!casoSeleccionado}
+                      className="text-xs px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-lg font-semibold flex items-center gap-1 transition-all"
+                    >
+                      {copiado === `vinculo-${item.id}` ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" /> ¡Vinculada al caso!
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3 h-3" /> Vincular al Caso Activo
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href={item.enlaceVerificado}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                      Fuente Oficial <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                 </div>
 
                 <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">{item.epigrafeOTitulo}</p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{item.articulosOFundamentosClave}</p>
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
                   <span>Emisor: {item.autoridadEmisora}</span>
-                  <span className="font-mono">Cotejo: {item.fechaUltimaConsulta}</span>
+                  <span className="font-mono">Fecha de Cotejo: {item.fechaUltimaConsulta}</span>
                 </div>
               </div>
             ))}
@@ -1186,17 +2073,17 @@ export const EscuelaJuridicaView: React.FC = () => {
         </div>
       )}
 
-      {/* 7. PESTAÑA 5: BORRADORES ACADÉMICOS (NO RADICABLES) */}
+      {/* 10. PESTAÑA 8: BORRADORES ACADÉMICOS (NO RADICABLES) */}
       {activeTab === 'borradores' && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <FileCheck2 className="w-4 h-4 text-amber-500" />
-                Generador de Borradores Jurídico-Académicos
+                Generador de Borradores Didácticos Estructurados
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Crea fichas jurisprudenciales, resúmenes normativos, matrices analíticas y conceptos con marca de agua académica obligatoria.
+                Crea matrices probatorias, fichas jurisprudenciales, conceptos académicos y esquemas procesales con advertencia deontológica obligatoria.
               </p>
             </div>
 
@@ -1206,9 +2093,10 @@ export const EscuelaJuridicaView: React.FC = () => {
                 onChange={(e) => setTipoBorrador(e.target.value as DocumentoAcademicoTipo)}
                 className="text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold"
               >
-                <option value="FICHA_JURISPRUDENCIAL">Ficha Jurisprudencial</option>
-                <option value="MATRIZ_ANALISIS">Matriz de Análisis Jurídico</option>
-                <option value="CONCEPTO_ACADEMICO">Concepto Jurídico Académico</option>
+                <option value="MATRIZ_PROBATORIA">Matriz Probatoria Rigurosa (Art. 167 CGP)</option>
+                <option value="FICHA_JURISPRUDENCIAL">Ficha Jurisprudencial Oficial</option>
+                <option value="CONCEPTO_ACADEMICO">Concepto Jurídico de Clínica / Consultorio</option>
+                <option value="MATRIZ_ANALISIS">Matriz de Análisis Comparativo</option>
                 <option value="LINEA_TIEMPO">Línea de Tiempo Procesal</option>
               </select>
 

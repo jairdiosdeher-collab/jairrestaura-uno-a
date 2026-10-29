@@ -27,7 +27,12 @@ import type {
   RutaProcesalAcademica,
   TutorAcademicoModo,
   DocumentoAcademicoTipo,
-  DocumentoAcademicoBorrador
+  DocumentoAcademicoBorrador,
+  HechoMatrizProbatoria,
+  AnalisisHipotesisCaso,
+  PasoSocratico,
+  EtapaSocratica,
+  EstadoHechoProbatorio
 } from './src/types/legal.ts';
 
 dotenv.config();
@@ -1943,6 +1948,11 @@ app.post('/api/escuela/casos', requireAuth, (req: Request, res: Response) => {
     preguntasPorResolver: Array.isArray(body.preguntasPorResolver) ? body.preguntasPorResolver : [],
     fuentesRecomendadas: Array.isArray(body.fuentesRecomendadas) ? body.fuentesRecomendadas : [],
     lineasAnalisis: Array.isArray(body.lineasAnalisis) ? body.lineasAnalisis : [],
+    matrizHechosYPruebas: Array.isArray(body.matrizHechosYPruebas) ? body.matrizHechosYPruebas : [],
+    analisisHipotesis: body.analisisHipotesis || undefined,
+    dialogoSocratico: Array.isArray(body.dialogoSocratico) ? body.dialogoSocratico : [],
+    datosFaltantesAntesDeRuta: Array.isArray(body.datosFaltantesAntesDeRuta) ? body.datosFaltantesAntesDeRuta : [],
+    fuentesVinculadasAProblemas: Array.isArray(body.fuentesVinculadasAProblemas) ? body.fuentesVinculadasAProblemas : [],
     estadoEstudio: body.estadoEstudio || 'EN_ANALISIS',
     tareasInvestigacion: Array.isArray(body.tareasInvestigacion) ? body.tareasInvestigacion : [],
     proximaActividadAcademica: body.proximaActividadAcademica || 'Revisar fuentes normativas y jurisprudenciales aplicables',
@@ -1981,7 +1991,7 @@ app.post('/api/escuela/casos', requireAuth, (req: Request, res: Response) => {
   res.status(201).json({ caso: nuevoCaso });
 });
 
-// Actualizar caso académico (tareas, estado, notas)
+// Actualizar caso académico (tareas, estado, notas, matriz, socrático e hipótesis)
 app.put('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
@@ -2008,6 +2018,11 @@ app.put('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => 
     preguntasPorResolver,
     fuentesRecomendadas,
     lineasAnalisis,
+    matrizHechosYPruebas,
+    analisisHipotesis,
+    dialogoSocratico,
+    datosFaltantesAntesDeRuta,
+    fuentesVinculadasAProblemas,
     estadoEstudio,
     tareasInvestigacion,
     proximaActividadAcademica,
@@ -2025,6 +2040,11 @@ app.put('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => 
   if (preguntasPorResolver !== undefined) caso.preguntasPorResolver = preguntasPorResolver;
   if (fuentesRecomendadas !== undefined) caso.fuentesRecomendadas = fuentesRecomendadas;
   if (lineasAnalisis !== undefined) caso.lineasAnalisis = lineasAnalisis;
+  if (matrizHechosYPruebas !== undefined) caso.matrizHechosYPruebas = matrizHechosYPruebas;
+  if (analisisHipotesis !== undefined) caso.analisisHipotesis = analisisHipotesis;
+  if (dialogoSocratico !== undefined) caso.dialogoSocratico = dialogoSocratico;
+  if (datosFaltantesAntesDeRuta !== undefined) caso.datosFaltantesAntesDeRuta = datosFaltantesAntesDeRuta;
+  if (fuentesVinculadasAProblemas !== undefined) caso.fuentesVinculadasAProblemas = fuentesVinculadasAProblemas;
   if (estadoEstudio !== undefined) caso.estadoEstudio = estadoEstudio;
   if (tareasInvestigacion !== undefined) caso.tareasInvestigacion = tareasInvestigacion;
   if (proximaActividadAcademica !== undefined) caso.proximaActividadAcademica = proximaActividadAcademica;
@@ -2085,6 +2105,455 @@ app.delete('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) 
   );
 
   res.json({ success: true, message: 'Caso académico eliminado correctamente' });
+});
+
+// B. MATRIZ DE HECHOS Y PRUEBAS CON TRAZABILIDAD PROBATORIA
+app.post('/api/escuela/analyze-matrix', requireAuth, async (req: Request, res: Response) => {
+  const { hechos, areaDerecho, titulo } = req.body;
+  if (!hechos || hechos.trim().length < 15) {
+    return res.status(400).json({ error: 'La relación de hechos es obligatoria para construir la matriz probatoria (mínimo 15 caracteres)' });
+  }
+
+  const area = areaDerecho || 'CONSTITUCIONAL';
+
+  if (aiClient) {
+    try {
+      const prompt = `Actúa como juez y profesor de Derecho Procesal y Probatorio en Colombia.
+Tu tarea es construir una MATRIZ DE HECHOS Y PRUEBAS con trazabilidad forense estricta a partir del siguiente caso académico:
+
+ÁREA DEL DERECHO: ${area}
+TÍTULO DEL CASO: ${titulo || 'Caso de Estudio'}
+RELATO DE HECHOS:
+"""
+${hechos}
+"""
+
+REGLA DE ORO PROBATORIA OBLIGATORIA:
+- NUNCA clasifiques como "RESPALDADO_POR_SOPORTE" una simple afirmación escrita en el relato.
+- Si el relato dice "el trabajador cumplía horario", eso es "RELATADO_POR_PARTE" y su soporte es "Sin soporte identificado en el relato".
+- Solo cataloga como "RESPALDADO_POR_SOPORTE" si se menciona expresamente un documento auténtico, providencia judicial, acta o dictamen verificable.
+- Estados válidos:
+  * "RELATADO_POR_PARTE": Afirmación formulada por el consultante o sujeto procesal sin prueba objetiva anexa.
+  * "RESPALDADO_POR_SOPORTE": Hecho respaldado por documento auténtico, providencia o constancia técnica citada.
+  * "CONTROVERTIDO": Hecho negado o debatido por la contraparte.
+  * "PENDIENTE_CORROBORACION": Hecho cuya existencia depende de una prueba aún no recaudada.
+
+Responde ÚNICAMENTE en JSON con un arreglo con la siguiente estructura:
+{
+  "matriz": [
+    {
+      "id": "h-1",
+      "texto": "string (enunciado fáctico puntual)",
+      "origenInformacion": "string (e.g. 'Relato del consultante', 'Fallo de primera instancia', 'Contestación de demanda')",
+      "soporteProbatorio": "string (soporte específico o 'Sin soporte identificado')",
+      "estado": "RELATADO_POR_PARTE" | "CONTROVERTIDO" | "RESPALDADO_POR_SOPORTE" | "PENDIENTE_CORROBORACION",
+      "inferenciasAsociadas": ["string"],
+      "informacionFaltante": ["string"]
+    }
+  ],
+  "sintesisProbatoriaDocente": "string"
+}`;
+
+      const response = await aiClient.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+
+      const parsed = JSON.parse(response.text || '{}');
+      return res.json({ matriz: parsed.matriz || [], sintesis: parsed.sintesisProbatoriaDocente || '', origen: 'GEMINI_AI_PROBATORIO' });
+    } catch (err) {
+      console.warn('Error llamando Gemini AI para matriz probatoria, usando motor heurístico:', err);
+    }
+  }
+
+  // Motor Heurístico Probatorio de Respaldo
+  const oraciones = hechos
+    .split(/[.\n]+/)
+    .map((s: string) => s.trim())
+    .filter((s: string) => s.length > 15);
+
+  const matriz: HechoMatrizProbatoria[] = oraciones.map((oracion: string, idx: number) => {
+    const oLower = oracion.toLowerCase();
+    const mencionaDocumento = oLower.includes('sentencia') || oLower.includes('contrato') || oLower.includes('acta') || oLower.includes('informe') || oLower.includes('memorando') || oLower.includes('resolución') || oLower.includes('resolucion');
+    const mencionaConflicto = oLower.includes('niega') || oLower.includes('rechaza') || oLower.includes('revocó') || oLower.includes('revoco') || oLower.includes('alega') || oLower.includes('controversia');
+
+    let estado: EstadoHechoProbatorio = 'RELATADO_POR_PARTE';
+    let soporte = 'Sin soporte identificado';
+    let origen = 'Relato fáctico aportado por el estudiante';
+
+    if (mencionaDocumento) {
+      estado = 'RESPALDADO_POR_SOPORTE';
+      soporte = 'Documento o providencia referenciada en la narración fáctica';
+      origen = 'Medio probatorio documental o procesal aludido';
+    } else if (mencionaConflicto) {
+      estado = 'CONTROVERTIDO';
+      soporte = 'Alegación controvertida pendiente de debate en etapa probatoria';
+      origen = 'Postura en disputa entre demandante y demandado';
+    }
+
+    return {
+      id: `h-${idx + 1}`,
+      texto: oracion,
+      textoHecho: oracion,
+      origenInformacion: origen,
+      origenFuente: origen,
+      soporteProbatorio: soporte,
+      soporteProbatorioIdentificado: soporte,
+      estado,
+      inferenciasAsociadas: [
+        `Relevancia para la configuración de los presupuestos sustanciales en ${area}.`,
+        'Necesidad de verificar conducencia y pertinencia conforme al Art. 168 CGP.',
+      ],
+      informacionFaltante: [
+        'Acreditar autenticidad conforme a los artículos 243-246 del CGP.',
+        'Constatar si fue oportunamente aportado, solicitado o decretado en el proceso.',
+      ],
+    };
+  });
+
+  res.json({
+    matriz,
+    sintesis: 'Matriz estructurada con discriminación formal de hechos según su soporte probatorio objetivo conforme al CGP.',
+    origen: 'MOTOR_HEURISTICO_PROBATORIO_COLOMBIANO',
+  });
+});
+
+// C. ANÁLISIS DE HIPÓTESIS CONTRAPUESTAS
+app.post('/api/escuela/analyze-hypotheses', requireAuth, async (req: Request, res: Response) => {
+  const { hechos, areaDerecho, titulo } = req.body;
+  if (!hechos || hechos.trim().length < 15) {
+    return res.status(400).json({ error: 'La relación de hechos es obligatoria para formular hipótesis contrapuestas' });
+  }
+
+  const area = areaDerecho || 'CONSTITUCIONAL';
+
+  if (aiClient) {
+    try {
+      const prompt = `Actúa como profesor titular de Litigio Estratégico y Teoría del Caso en Colombia.
+Para el siguiente caso académico, formula un ANÁLISIS DE HIPÓTESIS CONTRAPUESTAS (Teoría del Caso Principal vs Teoría Alternativa/Contraria):
+
+ÁREA DEL DERECHO: ${area}
+TÍTULO: ${titulo || 'Caso de Estudio'}
+HECHOS:
+"""
+${hechos}
+"""
+
+REGLAS DE RIGOR JURÍDICO COLOMBIANO:
+- Presenta una Hipótesis Principal (tesis favorable a la acción o pretensión).
+- Presenta una Hipótesis Alternativa (tesis de la contraparte o excepción de mérito).
+- Para cada una, expón:
+  * Argumentos a favor y en contra.
+  * Elementos probatorios que confirmarían o refutarían la hipótesis.
+  * Reglas jurídicas relevantes del ordenamiento colombiano (CGP, CPACA, CST o Constitución).
+  * Incertidumbres y limitaciones procesales.
+- Formula preguntas adicionales que el estudiante debe resolver para contrastar ambas hipótesis.
+
+Responde ÚNICAMENTE en JSON con la siguiente estructura:
+{
+  "analisisHipotesis": {
+    "hipotesisPrincipal": {
+      "id": "hip-principal",
+      "titulo": "string",
+      "esPrincipal": true,
+      "tesisJuridica": "string",
+      "argumentosAFavor": ["string"],
+      "argumentosEnContra": ["string"],
+      "elementosConfirmacionProbatoria": ["string"],
+      "elementosRefutacionProbatoria": ["string"],
+      "reglasJuridicasAplicables": ["string"],
+      "incertidumbresYLimitaciones": ["string"]
+    },
+    "hipotesisAlternativa": {
+      "id": "hip-alternativa",
+      "titulo": "string",
+      "esPrincipal": false,
+      "tesisJuridica": "string",
+      "argumentosAFavor": ["string"],
+      "argumentosEnContra": ["string"],
+      "elementosConfirmacionProbatoria": ["string"],
+      "elementosRefutacionProbatoria": ["string"],
+      "reglasJuridicasAplicables": ["string"],
+      "incertidumbresYLimitaciones": ["string"]
+    },
+    "preguntasAdicionalesPorResolver": ["string"],
+    "sintesisDocente": "string"
+  }
+}`;
+
+      const response = await aiClient.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+
+      const parsed = JSON.parse(response.text || '{}');
+      return res.json({
+        analisisHipotesis: parsed.analisisHipotesis,
+        origen: 'GEMINI_AI_HIPOTESIS',
+      });
+    } catch (err) {
+      console.warn('Error llamando Gemini AI para hipótesis contrapuestas, usando motor heurístico:', err);
+    }
+  }
+
+  // Motor Heurístico de Hipótesis Contrapuestas
+  const analisisFallback: AnalisisHipotesisCaso = {
+    hipotesisPrincipal: {
+      id: 'hip-principal',
+      titulo: `Hipótesis Principal: Prosperidad de la Pretensión en Materia de ${area}`,
+      esPrincipal: true,
+      tesisJuridica: `Se configuran de manera concurrente los supuestos sustanciales y probatorios exigidos por la ley colombiana para ordenar el amparo o reconocimiento solicitado en ${area}.`,
+      descripcion: `Se configuran de manera concurrente los supuestos sustanciales y probatorios exigidos por la ley colombiana para ordenar el amparo o reconocimiento solicitado en ${area}.`,
+      argumentosAFavor: [
+        'Principio de prevalencia del derecho sustancial sobre las formalidades procesales (Art. 228 CP).',
+        'Carga de la prueba satisfecha preliminarmente con los documentos indiciarios y principios de buena fe.',
+        'Línea jurisprudencial vinculante protectora de la confianza legítima y el debido proceso.',
+      ],
+      argumentosEnContra: [
+        'Exigencia estricta de prueba idónea para acreditar perjuicios o subordinación.',
+        'Riesgo de formulación de excepciones previas o de mérito por falta de legitimación o caducidad.',
+      ],
+      elementosConfirmacionProbatoria: [
+        'Documentos auténticos que acrediten la causal invocada de forma directa y concluyente.',
+        'Declaraciones de testigos presenciales no sospechosos con ratificación en audiencia.',
+      ],
+      pruebasQueConfirman: [
+        'Documentos auténticos que acrediten la causal invocada de forma directa y concluyente.',
+        'Declaraciones de testigos presenciales no sospechosos con ratificación en audiencia.',
+      ],
+      elementosRefutacionProbatoria: [
+        'Constancia de terminación por mutuo acuerdo o transacción previa con efecto de cosa juzgada.',
+        'Prueba de fuerza mayor o hecho exclusivo de la víctima/tercero.',
+      ],
+      pruebasQueDesvirtuan: [
+        'Constancia de terminación por mutuo acuerdo o transacción previa con efecto de cosa juzgada.',
+        'Prueba de fuerza mayor o hecho exclusivo de la víctima/tercero.',
+      ],
+      reglasJuridicasAplicables: [
+        'Constitución Política de Colombia (Art. 29, 86, 228 y 229)',
+        'Código General del Proceso (Art. 167 - Carga de la prueba)',
+        'Estatuto de Conciliación (Ley 2220 de 2022)',
+      ],
+      incertidumbresYLimitaciones: [
+        'Verificar si los términos de caducidad o prescripción ya se consumaron con anterioridad a la presentación.',
+        'Determinar la suficiencia cuantitativa del daño para fijar la competencia del despacho judicial.',
+      ],
+    },
+    hipotesisAlternativa: {
+      id: 'hip-alternativa',
+      titulo: 'Hipótesis Alternativa: Improcedencia por Subsidiariedad, Falta de Causa o Excepción de Fondo',
+      esPrincipal: false,
+      tesisJuridica: 'La pretensión debe ser desestimada por prosperidad de excepciones de fondo, falta de legitimación pasiva o incumplimiento de requisitos previos de procedibilidad obligatorios.',
+      descripcion: 'La pretensión debe ser desestimada por prosperidad de excepciones de fondo, falta de legitimación pasiva o incumplimiento de requisitos previos de procedibilidad obligatorios.',
+      argumentosAFavor: [
+        'Autonomía judicial y principio de legalidad contractual de las partes.',
+        'Ausencia de prueba idónea y oportuna sobre los elementos determinantes del litigio.',
+        'Improcedencia de mecanismos sumarios si existen vías ordinarias de contradicción procesal.',
+      ],
+      argumentosEnContra: [
+        'La primacía de la realidad constitucional prevalece sobre acuerdos puramente formales.',
+        'El juez debe evitar el exceso ritual manifiesto para garantizar la justicia material.',
+      ],
+      elementosConfirmacionProbatoria: [
+        'Contratos u órdenes de servicios ejecutadas con plena autonomía y sin horario prefijado.',
+        'Actos administrativos debidamente notificados con transcurso del término de caducidad sin demanda.',
+      ],
+      pruebasQueConfirman: [
+        'Contratos u órdenes de servicios ejecutadas con plena autonomía y sin horario prefijado.',
+        'Actos administrativos debidamente notificados con transcurso del término de caducidad sin demanda.',
+      ],
+      elementosRefutacionProbatoria: [
+        'Comunicaciones internas que impartían órdenes perentorias y turnos asistenciales continuos.',
+      ],
+      pruebasQueDesvirtuan: [
+        'Comunicaciones internas que impartían órdenes perentorias y turnos asistenciales continuos.',
+      ],
+      reglasJuridicasAplicables: [
+        'Código General del Proceso (Art. 175 - Medios de prueba y exclusión de ilícitas)',
+        'Código Civil / CPACA según jurisdicción aplicable',
+      ],
+      incertidumbresYLimitaciones: [
+        'Confirmar si el demandado cuenta con prueba documental en su archivo que desvirtúe la afirmación del actor.',
+      ],
+    },
+    preguntasAdicionalesPorResolver: [
+      '¿Qué medio probatorio es insustituible para inclinar la balanza hacia la hipótesis principal?',
+      '¿Qué excepciones previas del Art. 100 del CGP o Art. 180 del CPACA podrían frustrar el litigio en audiencia inicial?',
+      '¿Se agotó el requisito de procedibilidad de conciliación previa conforme a la Ley 2220 de 2022?',
+    ],
+    preguntasParaProfundizar: [
+      '¿Qué medio probatorio es insustituible para inclinar la balanza hacia la hipótesis principal?',
+      '¿Qué excepciones previas del Art. 100 del CGP o Art. 180 del CPACA podrían frustrar el litigio en audiencia inicial?',
+      '¿Se agotó el requisito de procedibilidad de conciliación previa conforme a la Ley 2220 de 2022?',
+    ],
+    sintesisDocente: 'El estudiante debe aprender a litigar anticipando la mejor defensa de su contraparte. Nunca asumas que tu hipótesis principal carece de fisuras probatorias.',
+    sintesisPonderacion: 'Ponderación entre la pretensión principal y las excepciones formales y sustanciales de la contraparte.',
+    criterioDecisionSugerido: 'Criterio de prevalencia de la verdad real sobre las formas y suficiencia probatoria (Art. 167 CGP).',
+  };
+
+  res.json({
+    analisis: analisisFallback,
+    analisisHipotesis: analisisFallback,
+    origen: 'MOTOR_HEURISTICO_HIPOTESIS_COLOMBIANO',
+  });
+});
+
+// A. ANÁLISIS SOCRÁTICO INTERACTIVO — EVALUACIÓN GRADUAL DEL RAZONAMIENTO
+app.post('/api/escuela/socratic-step', requireAuth, async (req: Request, res: Response) => {
+  const { casoId, orden, etapa, etapaActual, preguntaGuia, preguntaAnterior, respuestaEstudiante, hechosCaso, contexto, areaDerecho } = req.body;
+  if (!respuestaEstudiante || respuestaEstudiante.trim().length < 5) {
+    return res.status(400).json({ error: 'La respuesta del estudiante es obligatoria para recibir retroalimentación socrática' });
+  }
+
+  const ordenPaso = Number(orden) || 1;
+  const etapaPaso: EtapaSocratica = (etapa || etapaActual || 'HECHOS') as EtapaSocratica;
+  const preguntaUtilizada = preguntaGuia || preguntaAnterior || 'Analiza la situación fáctica';
+
+  if (aiClient) {
+    try {
+      const prompt = `Actúa como catedrático universitario de Derecho en Colombia aplicando el MÉTODO SOCRÁTICO.
+El estudiante está analizando el siguiente caso:
+HECHOS: """${hechosCaso || contexto || 'Caso de estudio jurídico'}"""
+ÁREA: ${areaDerecho || 'General'}
+
+ETAPA ACTUAL: ${etapaPaso}
+PREGUNTA QUE SE LE FORMULÓ AL ESTUDIANTE:
+"${preguntaUtilizada}"
+
+RESPUESTA DADA POR EL ESTUDIANTE:
+"""
+${respuestaEstudiante}
+"""
+
+TU MISIÓN DOCENTE:
+1. Evalúa si la respuesta del estudiante es acertada o si incurre en errores comunes (e.g. asumir hechos no probados, confundir pretensión con derecho, ignorar términos de caducidad, omitir requisitos de procedibilidad).
+2. Explica con claridad pedagógica el acierto o el error sin dar respuestas descalificadoras.
+3. Señala si incurre en alguna falacia o vacío probatorio.
+4. Formula la SIGUIENTE PREGUNTA SOCRÁTICA en la progresión metodológica:
+   Secuencia: HECHOS -> CONTROVERSIA -> REGLA_JURIDICA -> PRUEBAS -> INFERENCIAS -> CONCLUSION.
+
+Responde ÚNICAMENTE en JSON con la siguiente estructura:
+{
+  "evaluacion": {
+    "esAcierto": true | false,
+    "calificacionCualitativa": "SOBRESALIENTE" | "ACEPTABLE_CON_OBSERVACIONES" | "REQUERIR_CORRECCION_TOTAL",
+    "analisisCritico": "string",
+    "erroresRazonamiento": ["string"],
+    "aspectosPositivos": ["string"],
+    "falaciasOVaciosIdentificados": ["string"],
+    "orientacionMejora": "string",
+    "recomendacionPedagogica": "string"
+  },
+  "proximoPaso": {
+    "orden": ${ordenPaso + 1},
+    "etapa": "string (siguiente etapa lógica)",
+    "preguntaGuia": "string (pregunta gradual siguiente)",
+    "pistaPedagogica": "string",
+    "criterioEvaluacion": "string",
+    "contextoNormativo": "string (fundamento en la ley colombiana)"
+  }
+}`;
+
+      const response = await aiClient.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+
+      const parsed = JSON.parse(response.text || '{}');
+      const pasoProx = parsed.proximoPaso || parsed.siguientePaso;
+      return res.json({
+        evaluacion: parsed.evaluacion,
+        proximoPaso: pasoProx,
+        siguientePaso: pasoProx ? { ...pasoProx, id: `paso-${Date.now()}`, retroalimentacionCompletada: false } : null,
+        origen: 'GEMINI_AI_SOCRATICO',
+      });
+    } catch (err) {
+      console.warn('Error en diálogo socrático Gemini AI, usando tutor heurístico:', err);
+    }
+  }
+
+  // Motor Socrático Heurístico de Progresión
+  const etapasSecuencia: EtapaSocratica[] = ['HECHOS', 'CONTROVERSIA', 'REGLA_JURIDICA', 'PRUEBAS', 'INFERENCIAS', 'CONCLUSION'];
+  const indiceActual = etapasSecuencia.indexOf(etapaPaso);
+  const siguienteEtapa = indiceActual >= 0 && indiceActual < etapasSecuencia.length - 1 ? etapasSecuencia[indiceActual + 1] : 'CONCLUSION';
+
+  const rLower = respuestaEstudiante.toLowerCase();
+  const esAcierto = rLower.length > 20 && !rLower.includes('no sé') && !rLower.includes('no se');
+
+  const preguntasPorEtapa: Record<EtapaSocratica, { pregunta: string; contexto: string }> = {
+    HECHOS: {
+      pregunta: '¿Cuáles de los hechos señalados cuentan con soporte documental explícito y cuáles constituyen meras afirmaciones de parte que requieren comprobación en juicio?',
+      contexto: 'Art. 167 CGP: Distinción cardinal entre la alegación fáctica y el medio de prueba.',
+    },
+    CONTROVERSIA: {
+      pregunta: '¿Cuál es el problema jurídico central y en qué punto exacto radican los intereses contrapuestos de las partes?',
+      contexto: 'Fijación del litigio en Audiencia Inicial (Art. 372 CGP / Art. 180 CPACA).',
+    },
+    REGLA_JURIDICA: {
+      pregunta: '¿Qué norma sustantiva o providencia unificada de las Altas Cortes regula la consecuencia jurídica pretendida?',
+      contexto: 'Art. 230 de la Constitución Política: El imperio de la ley y el precedente vinculante.',
+    },
+    PRUEBAS: {
+      pregunta: '¿Qué medio probatorio idóneo (documental, testimonial, dictamen pericial o inspección) debe aportar el demandante para satisfacer su carga de la prueba?',
+      contexto: 'Art. 164-168 del CGP: Necesidad, conducencia y pertinencia probatoria.',
+    },
+    INFERENCIAS: {
+      pregunta: '¿Qué inferencias lógicas o presunciones legales operan si la contraparte no contesta la demanda o guarda silencio?',
+      contexto: 'Art. 97 del CGP: Presunción de veracidad por falta de contestación.',
+    },
+    CONCLUSION: {
+      pregunta: 'A partir del contraste entre hechos demostrados y normas aplicables, ¿cuál es tu conclusión procesal definitiva y qué remedio judicial recomiendas?',
+      contexto: 'Sentencia de mérito con valor de cosa juzgada formal y material.',
+    },
+  };
+
+  const pasoSiguienteData = preguntasPorEtapa[siguienteEtapa];
+
+  const evalHeuristica = {
+    esAcierto,
+    calificacionCualitativa: esAcierto ? 'SOBRESALIENTE' : 'ACEPTABLE_CON_OBSERVACIONES',
+    analisisCritico: esAcierto
+      ? `Buen planteamiento en la etapa de ${etapaPaso}. Identificaste aspectos sustantivos clave del razonamiento forense.`
+      : `Tu respuesta requiere mayor fundamentación procesal en la etapa de ${etapaPaso}. Recuerda no dar por sentado ningún hecho que no tenga soporte demostrable.`,
+    erroresRazonamiento: esAcierto
+      ? []
+      : ['Confusión entre afirmación de parte y hecho probado', 'Omitir citar el fundamento legal colombiano pertinente'],
+    aspectosPositivos: esAcierto
+      ? ['Identificó correctamente el supuesto fáctico']
+      : ['Identificó el conflicto fáctico'],
+    falaciasOVaciosIdentificados: esAcierto
+      ? []
+      : ['Confusión entre afirmación de parte y hecho probado', 'Omitir citar el fundamento legal colombiano pertinente'],
+    orientacionMejora: 'Profundiza en la relación entre el medio de prueba y la norma jurídica aplicable antes de formular una conclusión categórica.',
+    recomendacionPedagogica: 'Profundiza en la relación entre el medio de prueba y la norma jurídica aplicable antes de formular una conclusión categórica.',
+  };
+
+  const proxPasoHeuristico = {
+    id: `paso-${Date.now()}`,
+    orden: ordenPaso + 1,
+    etapa: siguienteEtapa,
+    preguntaGuia: pasoSiguienteData.pregunta,
+    pistaPedagogica: pasoSiguienteData.contexto,
+    contextoNormativo: pasoSiguienteData.contexto,
+    criterioEvaluacion: 'Art. 167 CGP: Distinción entre afirmación y prueba auténtica.',
+    retroalimentacionCompletada: false,
+  };
+
+  res.json({
+    evaluacion: evalHeuristica,
+    proximoPaso: proxPasoHeuristico,
+    siguientePaso: proxPasoHeuristico,
+    origen: 'MOTOR_HEURISTICO_SOCRATICO_COLOMBIANO',
+  });
 });
 
 // Análisis pedagógico estructurado de casos (IA + Motor Jurídico Colombiano)
@@ -2327,6 +2796,17 @@ app.post('/api/escuela/procedural-route', requireAuth, (req: Request, res: Respo
           tipo: 'JURISPRUDENCIA',
         },
       ],
+      datosFaltantesPrevios: [
+        'Fecha exacta del hecho vulnerador para cómputo estricto del principio de inmediatez constitucional.',
+        'Copia de peticiones previas dirigidas a la autoridad o particular accionado y sus respectivas constancias de radicación/silencio.',
+        'Acreditación de la condición de indefensión o subordinación si la tutela se dirige contra particulares (Art. 42 Dec. 2591/91).',
+        'Valoración de si existen medios ordinarios de defensa judicial idóneos y eficaces o si se configura perjuicio irremediable.'
+      ],
+      supuestosCalculoTerminos: [
+        'Término improrrogable de 10 días hábiles judiciales para fallo de primera instancia (Art. 86 CP y Art. 29 Dec. 2591/91).',
+        'Término perentorio de 3 días hábiles siguientes a la notificación para interponer impugnación (Art. 31 Dec. 2591/91).',
+        'Los términos constitucionales de tutela no se suspenden por vacaciones colectivas judiciales ni acuerdos entre partes.'
+      ],
       advertenciaDeontologica: 'Ruta orientativa con propósitos estrictamente pedagógicos. Los términos constitucionales son perentorios e improrrogables.',
     };
   } else if (materiaNorm.includes('ADMINISTRATIVO')) {
@@ -2339,6 +2819,17 @@ app.post('/api/escuela/procedural-route', requireAuth, (req: Request, res: Respo
         'Agotamiento obligatorio de recursos en sede administrativa cuando procedan (reposición o apelación obligatoria, Art. 76 CPACA).',
         'Conciliación prejudicial obligatoria ante la Procuraduría Judicial (Ley 2220 de 2022 y Art. 161 CPACA).',
         'Presentación dentro del término estricto de caducidad de 4 meses (Art. 164 num. 2 lit. d CPACA).',
+      ],
+      datosFaltantesPrevios: [
+        'Constancia de notificación personal electrónica del acto administrativo demandado (con certificación de fecha y hora).',
+        'Constancia o acta expedida por la Procuraduría que acredite el agotamiento de la conciliación prejudicial obligatoria.',
+        'Poder especial con facultades expresas otorgado por mensaje de datos (Art. 5 Ley 2213 de 2022 y Art. 159 CPACA).',
+        'Liquidación individualizada del restablecimiento patrimonial pretendido con metodología de indexación DANE.'
+      ],
+      supuestosCalculoTerminos: [
+        'Caducidad improrrogable de 4 meses contados a partir del día siguiente a la notificación del acto (Art. 164 CPACA).',
+        'Suspensión legal de caducidad hasta por 3 meses calendario durante el trámite de conciliación prejudicial ante la Procuraduría (Ley 2220/22).',
+        'Traslado de 30 días hábiles judiciales para contestación computados tras surtirse notificación conforme a Ley 2213 de 2022 Art. 8.'
       ],
       etapas: [
         {
@@ -2418,6 +2909,18 @@ app.post('/api/escuela/procedural-route', requireAuth, (req: Request, res: Respo
         'Presentación del poder especial mediante mensaje de datos sin necesidad de presentación personal o firma digital avanzada (Art. 5 Ley 2213 de 2022).',
         'Juramento estimatorio de las indemnizaciones o frutos pretendidos (Art. 206 CGP).',
         'Acreditación de la dirección electrónica de notificaciones bajo gravedad de juramento (Art. 8 Ley 2213 de 2022).',
+      ],
+      datosFaltantesPrevios: [
+        'Certificado de existencia y representación legal vigente del demandado (si es persona jurídica) con menos de 30 días de expedición.',
+        'Constancia de intento de conciliación prejudicial ante centro autorizado o notaría (Ley 2220 de 2022).',
+        'Determinación líquida de la cuantía procesal para fijar competencia de juez municipal o del circuito (Art. 25-26 CGP).',
+        'Copia digital auténtica del contrato o documento base de la obligación con acuse de recibo de comunicaciones previas.'
+      ],
+      supuestosCalculoTerminos: [
+        'Días hábiles judiciales conforme al calendario de la Rama Judicial (excluye sábados, domingos y festivos colombianos).',
+        'Regla de notificación electrónica Art. 8 Ley 2213 de 2022: dos (2) días hábiles de gracia tras la entrega del mensaje, iniciando el término al tercer día hábil.',
+        'Traslado de 20 días hábiles judiciales para contestar la demanda y proponer excepciones previas o de mérito (Art. 369 CGP).',
+        'Límite de duración del proceso en primera instancia: 1 año calendario según el Art. 121 del CGP.'
       ],
       etapas: [
         {
@@ -2663,6 +3166,28 @@ Declarar la exequibilidad de las disposiciones demandadas bajo el condicionamien
 
 7. COMENTARIO CRÍTICO PEDAGÓGICO
 El estudiante debe analizar cómo esta doctrina armoniza la seguridad jurídica y la cosa juzgada con la supremacía de los derechos fundamentales.`;
+  } else if (tipoDoc === 'MATRIZ_PROBATORIA') {
+    const filasMatriz = (caso?.matrizHechosYPruebas && caso.matrizHechosYPruebas.length > 0)
+      ? caso.matrizHechosYPruebas.map((h, i) => `| ${i + 1} | ${h.textoHecho} | ${h.origenFuente} | ${h.soporteProbatorioIdentificado || 'Sin soporte identificado'} | [${h.estado}] | ${h.inferenciasAsociadas?.join(', ') || 'Sin inferencias'} | ${h.informacionFaltante || 'Ninguna'} |`).join('\n')
+      : `| 1 | El consultante afirma haber prestado servicios bajo subordinación ininterrumpida. | Narración del estudiante/consultante | Sin soporte identificado | [RELATADO_POR_PARTE] | Indicio de subordinación por verificar | Aportar copias de correos con instrucciones y memorandos |
+| 2 | Se aportaron 12 cuentas de cobro consecutivas con visto bueno del supervisor. | Documentos aportados en copia digital | Archivo PDF auténtico de cuentas de cobro | [RESPALDADO_POR_SOPORTE] | Continuidad de pagos y prestación personal del servicio | Verificar certificación de pagos a seguridad social |`;
+
+    contenido = `${marcaAgua}MATRIZ DE HECHOS Y PRUEBAS (ANÁLISIS PROBATORIO RIGUROSO)
+CASO ACADÉMICO: ${casoTitulo}
+ÁREA JURÍDICA: ${casoArea}
+FECHA DE ANÁLISIS: ${fechaHoy}
+
+ADVERTENCIA DE CARGA PROBATORIA (Art. 167 CGP):
+Una manifestación unilateral de la parte constituye únicamente un hecho [RELATADO_POR_PARTE]. No adquiere la condición de [RESPALDADO_POR_SOPORTE] hasta tanto no se incorpore al expediente un medio probatorio idóneo, conducente y legalmente decretado y practicado.
+
+| # | ENUNCIADO FÁCTICO | ORIGEN DE LA FUENTE | SOPORTE PROBATORIO | ESTADO PROBATORIO | INFERENCIAS / REGLAS DE EXPERIENCIA | INFORMACIÓN FALTANTE |
+|---|---|---|---|---|---|---|
+${filasMatriz}
+
+REGLAS DE DECISIÓN PROBATORIA:
+1. Hechos con estado [RELATADO_POR_PARTE] requieren decreto oficioso o solicitud tempestiva en demanda/contestación.
+2. Hechos con estado [CONTROVERTIDO] constituyen el tema de prueba nuclear para fijación del litigio en audiencia.
+3. Descartar pruebas impertinentes o inconducentes antes de formular pretensiones o excepciones.`;
   } else if (tipoDoc === 'MATRIZ_ANALISIS') {
     contenido = `${marcaAgua}MATRIZ DE ANÁLISIS JURÍDICO COMPARATIVO
 CASO ACADÉMICO: ${casoTitulo}

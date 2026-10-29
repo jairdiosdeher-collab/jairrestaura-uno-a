@@ -304,11 +304,20 @@ export interface TareaInvestigacionAcademica {
   fuenteAsociada?: string;
 }
 
+export type EstadoVerificacionFuente = 
+  | 'CATALOGO_LOCAL_VERIFICADO'
+  | 'EN_LINEA_VERIFICADO'
+  | 'PENDIENTE_VERIFICACION';
+
 export interface FuenteAcademicaRecomendada {
   identificador: string;
   tipo: string;
+  entidadEmisora?: string;
   motivoPertinencia: string;
+  fragmentoPertinente?: string;
   enlaceOficial?: string;
+  fechaConsultaReal?: string;
+  estadoVerificacion: EstadoVerificacionFuente;
   verificadaEnCatalogo: boolean;
 }
 
@@ -317,6 +326,82 @@ export interface LineaAnalisisAcademico {
   fundamentoJuridico: string;
   pros: string;
   limitacionesORiesgos: string;
+}
+
+// B. Matriz de Hechos y Pruebas con trazabilidad probatoria
+export type EstadoHechoProbatorio = 
+  | 'RELATADO_POR_PARTE' 
+  | 'CONTROVERTIDO' 
+  | 'RESPALDADO_POR_SOPORTE' 
+  | 'PENDIENTE_CORROBORACION';
+
+export interface HechoMatrizProbatoria {
+  id: string;
+  texto: string;
+  textoHecho?: string;
+  origenInformacion: string; // e.g. "Relato escrito del estudiante", "Documento soporte aportado", "Declaración de parte"
+  origenFuente?: string;
+  soporteProbatorio: string; // e.g. "Contrato de trabajo suscrito", "Constancia de correo", "Sin soporte identificado"
+  soporteProbatorioIdentificado?: string;
+  estado: EstadoHechoProbatorio;
+  inferenciasAsociadas: string[];
+  informacionFaltante: string[] | string;
+}
+
+// C. Análisis de Hipótesis Contrapuestas
+export interface HipotesisContrapuesta {
+  id: string;
+  titulo: string;
+  esPrincipal: boolean;
+  tesisJuridica: string;
+  descripcion?: string;
+  argumentosAFavor: string[];
+  argumentosEnContra: string[];
+  elementosConfirmacionProbatoria: string[];
+  pruebasQueConfirman?: string[];
+  elementosRefutacionProbatoria: string[];
+  pruebasQueDesvirtuan?: string[];
+  reglasJuridicasAplicables: string[];
+  incertidumbresYLimitaciones: string[];
+}
+
+export interface AnalisisHipotesisCaso {
+  hipotesisPrincipal: HipotesisContrapuesta;
+  hipotesisAlternativa: HipotesisContrapuesta;
+  preguntasAdicionalesPorResolver: string[];
+  preguntasParaProfundizar?: string[];
+  sintesisDocente: string;
+  sintesisPonderacion?: string;
+  criterioDecisionSugerido?: string;
+}
+
+// A. Análisis Socrático y Progresión Pedagógica
+export type EtapaSocratica = 
+  | 'HECHOS' 
+  | 'CONTROVERSIA' 
+  | 'REGLA_JURIDICA' 
+  | 'PRUEBAS' 
+  | 'INFERENCIAS' 
+  | 'CONCLUSION';
+
+export interface PasoSocratico {
+  id: string;
+  orden: number;
+  etapa: EtapaSocratica;
+  preguntaGuia: string;
+  preguntaDocente?: string;
+  contextoNormativo: string;
+  respuestaEstudiante?: string;
+  fechaRegistro?: string;
+  evaluacionDocente?: {
+    esAcierto: boolean;
+    esValido?: boolean;
+    analisisCritico: string;
+    falaciasOVaciosIdentificados?: string[];
+    orientacionMejora: string;
+    sugerenciaMejora?: string;
+  };
+  retroalimentacionCompletada: boolean;
 }
 
 export interface CasoAcademico {
@@ -334,6 +419,17 @@ export interface CasoAcademico {
   preguntasPorResolver: string[];
   fuentesRecomendadas: FuenteAcademicaRecomendada[];
   lineasAnalisis: LineaAnalisisAcademico[];
+
+  // Componentes interactivos pedagógicos avanzados
+  matrizHechosYPruebas?: HechoMatrizProbatoria[];
+  analisisHipotesis?: AnalisisHipotesisCaso;
+  dialogoSocratico?: PasoSocratico[];
+  datosFaltantesAntesDeRuta?: string[];
+  fuentesVinculadasAProblemas?: {
+    problemaJuridico: string;
+    fuenteIdentificador: string;
+    justificacionPertinencia: string;
+  }[];
   
   // Estado pedagógico y seguimiento
   estadoEstudio: EstadoEstudioCaso;
@@ -370,6 +466,8 @@ export interface RutaProcesalAcademica {
   tipoProcedimiento: string;
   autoridadYCompetencia: string;
   requisitosPrevios: string[];
+  datosFaltantesPrevios?: string[];
+  supuestosCalculoTerminos?: string[];
   etapas: RutaProcesalEtapa[];
   proximaActuacionInmediata: string;
   riesgosYExcepciones: string[];
@@ -377,6 +475,7 @@ export interface RutaProcesalAcademica {
     nombre: string;
     enlace: string;
     tipo: string;
+    estadoVerificacion?: EstadoVerificacionFuente;
   }[];
   advertenciaDeontologica: string;
 }
@@ -393,6 +492,7 @@ export type TutorAcademicoModo =
 
 export type DocumentoAcademicoTipo =
   | 'FICHA_JURISPRUDENCIAL'
+  | 'MATRIZ_PROBATORIA'
   | 'RESUMEN_NORMATIVO'
   | 'MATRIZ_ANALISIS'
   | 'CONCEPTO_ACADEMICO'

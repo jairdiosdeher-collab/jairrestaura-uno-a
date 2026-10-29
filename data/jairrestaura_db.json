@@ -512,6 +512,78 @@
   ],
   "auditoria": [
     {
+      "id": "aud-1793277570336-b2816c",
+      "timestamp": "2026-10-29T12:39:30.336Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793277570325-7fb7",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793277570329-df3c31",
+      "timestamp": "2026-10-29T12:39:30.329Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793277570325-7fb7",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793277411478-2279cc",
+      "timestamp": "2026-10-29T12:36:51.478Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793277411472-7724",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793277411473-92dc23",
+      "timestamp": "2026-10-29T12:36:51.473Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793277411472-7724",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793277277254-fd6ad7",
+      "timestamp": "2026-10-29T12:34:37.254Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793277277248-2742",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793277277248-40d7ac",
+      "timestamp": "2026-10-29T12:34:37.249Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793277277248-2742",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
       "id": "aud-1793275625011-33806d",
       "timestamp": "2026-10-29T12:07:05.011Z",
       "usuarioId": "usr-jair-01",
@@ -768,6 +840,189 @@
     }
   ],
   "casosAcademicos": [
+    {
+      "id": "caso-acad-1793277570325-7fb7",
+      "titulo": "Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "areaDerecho": "CIVIL",
+      "materiaEspecifica": "Responsabilidad Civil por Actividades Peligrosas (Art. 2356 CC)",
+      "hechosOriginales": "Una embarcación de transporte turístico colisionó contra un muelle en el embalse de Guatapé. Tres pasajeros sufrieron politraumatismos. La empresa operadora alega fuerza mayor por ráfagas de viento imprevistas.",
+      "hechosAcreditados": [
+        "Ocurrencia del accidente en el embalse.",
+        "Daño corporal a tres pasajeros."
+      ],
+      "inferenciasJuridicas": [
+        "Presunción de culpa o responsabilidad objetiva por actividad peligrosa."
+      ],
+      "informacionFaltanteYPorVerificar": [
+        "Comprobar informe de capitanía de puerto sobre condiciones meteorológicas."
+      ],
+      "problemasJuridicos": [
+        "¿Configuran las ráfagas de viento un evento imprevisible e irresistible para exonerar al transportador?"
+      ],
+      "preguntasPorResolver": [
+        "¿Cuál es la carga probatoria de la fuerza mayor según la Sala de Casación Civil de la CSJ?"
+      ],
+      "fuentesRecomendadas": [],
+      "lineasAnalisis": [],
+      "matrizHechosYPruebas": [],
+      "dialogoSocratico": [],
+      "datosFaltantesAntesDeRuta": [],
+      "fuentesVinculadasAProblemas": [],
+      "estadoEstudio": "FUENTES_REVISADAS",
+      "tareasInvestigacion": [
+        {
+          "id": "t1",
+          "descripcion": "Consultar providencias de la Sala de Casación Civil",
+          "completada": true
+        },
+        {
+          "id": "t2",
+          "descripcion": "Verificar Art. 2356 del Código Civil",
+          "completada": true
+        }
+      ],
+      "proximaActividadAcademica": "Redactar ficha de casación civil sobre actividad peligrosa",
+      "notasEstudiante": "",
+      "historialCambios": [
+        {
+          "fecha": "2026-10-29T12:39:30.325Z",
+          "accion": "CREACION_CASO_ACADEMICO",
+          "detalles": "Caso académico creado por Dr. Jair (Director Jurídico)"
+        },
+        {
+          "fecha": "2026-10-29T12:39:30.335Z",
+          "accion": "ACTUALIZACION_CASO_ACADEMICO",
+          "detalles": "Modificación por Dr. Jair (Director Jurídico). Estado: FUENTES_REVISADAS"
+        }
+      ],
+      "esCasoPedagogico": true,
+      "creadoPor": "Dr. Jair (Director Jurídico)",
+      "fechaCreacion": "2026-10-29T12:39:30.325Z",
+      "fechaActualizacion": "2026-10-29T12:39:30.335Z",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "caso-acad-1793277411472-7724",
+      "titulo": "Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "areaDerecho": "CIVIL",
+      "materiaEspecifica": "Responsabilidad Civil por Actividades Peligrosas (Art. 2356 CC)",
+      "hechosOriginales": "Una embarcación de transporte turístico colisionó contra un muelle en el embalse de Guatapé. Tres pasajeros sufrieron politraumatismos. La empresa operadora alega fuerza mayor por ráfagas de viento imprevistas.",
+      "hechosAcreditados": [
+        "Ocurrencia del accidente en el embalse.",
+        "Daño corporal a tres pasajeros."
+      ],
+      "inferenciasJuridicas": [
+        "Presunción de culpa o responsabilidad objetiva por actividad peligrosa."
+      ],
+      "informacionFaltanteYPorVerificar": [
+        "Comprobar informe de capitanía de puerto sobre condiciones meteorológicas."
+      ],
+      "problemasJuridicos": [
+        "¿Configuran las ráfagas de viento un evento imprevisible e irresistible para exonerar al transportador?"
+      ],
+      "preguntasPorResolver": [
+        "¿Cuál es la carga probatoria de la fuerza mayor según la Sala de Casación Civil de la CSJ?"
+      ],
+      "fuentesRecomendadas": [],
+      "lineasAnalisis": [],
+      "matrizHechosYPruebas": [],
+      "dialogoSocratico": [],
+      "datosFaltantesAntesDeRuta": [],
+      "fuentesVinculadasAProblemas": [],
+      "estadoEstudio": "FUENTES_REVISADAS",
+      "tareasInvestigacion": [
+        {
+          "id": "t1",
+          "descripcion": "Consultar providencias de la Sala de Casación Civil",
+          "completada": true
+        },
+        {
+          "id": "t2",
+          "descripcion": "Verificar Art. 2356 del Código Civil",
+          "completada": true
+        }
+      ],
+      "proximaActividadAcademica": "Redactar ficha de casación civil sobre actividad peligrosa",
+      "notasEstudiante": "",
+      "historialCambios": [
+        {
+          "fecha": "2026-10-29T12:36:51.472Z",
+          "accion": "CREACION_CASO_ACADEMICO",
+          "detalles": "Caso académico creado por Dr. Jair (Director Jurídico)"
+        },
+        {
+          "fecha": "2026-10-29T12:36:51.478Z",
+          "accion": "ACTUALIZACION_CASO_ACADEMICO",
+          "detalles": "Modificación por Dr. Jair (Director Jurídico). Estado: FUENTES_REVISADAS"
+        }
+      ],
+      "esCasoPedagogico": true,
+      "creadoPor": "Dr. Jair (Director Jurídico)",
+      "fechaCreacion": "2026-10-29T12:36:51.472Z",
+      "fechaActualizacion": "2026-10-29T12:36:51.478Z",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "caso-acad-1793277277248-2742",
+      "titulo": "Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "areaDerecho": "CIVIL",
+      "materiaEspecifica": "Responsabilidad Civil por Actividades Peligrosas (Art. 2356 CC)",
+      "hechosOriginales": "Una embarcación de transporte turístico colisionó contra un muelle en el embalse de Guatapé. Tres pasajeros sufrieron politraumatismos. La empresa operadora alega fuerza mayor por ráfagas de viento imprevistas.",
+      "hechosAcreditados": [
+        "Ocurrencia del accidente en el embalse.",
+        "Daño corporal a tres pasajeros."
+      ],
+      "inferenciasJuridicas": [
+        "Presunción de culpa o responsabilidad objetiva por actividad peligrosa."
+      ],
+      "informacionFaltanteYPorVerificar": [
+        "Comprobar informe de capitanía de puerto sobre condiciones meteorológicas."
+      ],
+      "problemasJuridicos": [
+        "¿Configuran las ráfagas de viento un evento imprevisible e irresistible para exonerar al transportador?"
+      ],
+      "preguntasPorResolver": [
+        "¿Cuál es la carga probatoria de la fuerza mayor según la Sala de Casación Civil de la CSJ?"
+      ],
+      "fuentesRecomendadas": [],
+      "lineasAnalisis": [],
+      "matrizHechosYPruebas": [],
+      "dialogoSocratico": [],
+      "datosFaltantesAntesDeRuta": [],
+      "fuentesVinculadasAProblemas": [],
+      "estadoEstudio": "FUENTES_REVISADAS",
+      "tareasInvestigacion": [
+        {
+          "id": "t1",
+          "descripcion": "Consultar providencias de la Sala de Casación Civil",
+          "completada": true
+        },
+        {
+          "id": "t2",
+          "descripcion": "Verificar Art. 2356 del Código Civil",
+          "completada": true
+        }
+      ],
+      "proximaActividadAcademica": "Redactar ficha de casación civil sobre actividad peligrosa",
+      "notasEstudiante": "",
+      "historialCambios": [
+        {
+          "fecha": "2026-10-29T12:34:37.248Z",
+          "accion": "CREACION_CASO_ACADEMICO",
+          "detalles": "Caso académico creado por Dr. Jair (Director Jurídico)"
+        },
+        {
+          "fecha": "2026-10-29T12:34:37.254Z",
+          "accion": "ACTUALIZACION_CASO_ACADEMICO",
+          "detalles": "Modificación por Dr. Jair (Director Jurídico). Estado: FUENTES_REVISADAS"
+        }
+      ],
+      "esCasoPedagogico": true,
+      "creadoPor": "Dr. Jair (Director Jurídico)",
+      "fechaCreacion": "2026-10-29T12:34:37.248Z",
+      "fechaActualizacion": "2026-10-29T12:34:37.254Z",
+      "organizacionId": "org-jairrestaura-001"
+    },
     {
       "id": "caso-acad-1793275625003-fb59",
       "titulo": "Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
