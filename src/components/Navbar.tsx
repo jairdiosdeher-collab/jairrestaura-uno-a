@@ -14,7 +14,8 @@ import {
   Clock, 
   Plus, 
   Search,
-  Sparkles
+  Sparkles,
+  LogOut
 } from 'lucide-react';
 import type { Usuario } from '../types/legal';
 
@@ -23,6 +24,7 @@ interface NavbarProps {
   usuarioActivo: Usuario;
   usuariosDisponibles: Usuario[];
   onSwitchUser: (userId: string) => void;
+  onLogout?: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   onQuickAction: (action: string) => void;
@@ -47,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   usuarioActivo,
   usuariosDisponibles,
   onSwitchUser,
+  onLogout,
   isDarkMode,
   onToggleDarkMode,
   onQuickAction,
@@ -82,14 +85,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         )}
 
-        {/* Selector de Usuario / Rol activo */}
+        {/* Selector de Usuario / Rol activo con sesión criptográfica */}
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
-          <ShieldCheck className="w-4 h-4 text-amber-500" />
+          <ShieldCheck className="w-4 h-4 text-emerald-500" />
           <div className="text-left hidden lg:block">
             <span className="block text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none">
               {usuarioActivo.nombre}
             </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               {usuarioActivo.rol}
             </span>
           </div>
@@ -97,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             value={usuarioActivo.id}
             onChange={(e) => onSwitchUser(e.target.value)}
             className="text-xs bg-transparent border-0 text-slate-700 dark:text-slate-300 font-medium focus:ring-0 cursor-pointer outline-none"
-            title="Cambiar perfil de usuario para pruebas"
+            title="Cambiar perfil activo (acceso abierto)"
           >
             {usuariosDisponibles.map((u) => (
               <option key={u.id} value={u.id} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
@@ -105,6 +109,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               </option>
             ))}
           </select>
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="p-1 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+              title="Cerrar sesión de forma segura"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Selector de Modo Claro / Modo Oscuro */}

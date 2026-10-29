@@ -65,6 +65,7 @@ export interface Cliente {
 
 export type AreaJuridica = 
   | 'CIVIL'
+  | 'CIVIL_COMERCIAL'
   | 'LABORAL_SEGURIDAD_SOCIAL'
   | 'ADMINISTRATIVO'
   | 'COMERCIAL'
@@ -80,6 +81,7 @@ export type EstadoExpediente =
   | 'ADMITIDO'
   | 'NOTIFICACION'
   | 'CONTESTACION_TRASLADO'
+  | 'AUDIENCIA_INICIAL'
   | 'AUDIENCIA_INICIAL_372'
   | 'AUDIENCIA_INSTRUCCION_373'
   | 'ALEGATOS_CONCLUSION'
@@ -145,6 +147,7 @@ export interface Expediente {
 
 export type TipoTermino = 
   | 'TRASLADO_DEMANDA'
+  | 'CONTESTACION_DEMANDA'
   | 'CONTESTACION_TRASLADO'
   | 'RECURSO_REPOSICION'
   | 'RECURSO_APELACION'
@@ -199,18 +202,23 @@ export type TipoDocumentoLegal =
 export interface DocumentoLegal {
   id: string;
   titulo: string;
-  tipo: TipoDocumentoLegal;
+  tipo?: TipoDocumentoLegal;
+  tipoPlantilla?: string;
   expedienteId?: string;
+  expedienteCodigo?: string;
   clienteId?: string;
   version: number;
   contenidoTexto: string;
   parametrosGeneracion?: Record<string, any>;
-  estadoRevision: 'BORRADOR_PRELIMINAR' | 'EN_REVISION' | 'APROBADO_PARA_RADICACION' | 'RADICADO';
-  advertenciasRequisitos: string[];
+  estadoRevision?: 'BORRADOR_PRELIMINAR' | 'EN_REVISION' | 'APROBADO_PARA_RADICACION' | 'RADICADO';
+  estado?: string;
+  advertenciasRequisitos?: string[];
   fechaCreacion: string;
-  fechaModificacion: string;
-  autorId: string;
-  autorNombre: string;
+  fechaModificacion?: string;
+  fechaActualizacion?: string;
+  autorId?: string;
+  autorNombre?: string;
+  creadoPor?: string;
   organizacionId: string;
 }
 
@@ -254,7 +262,7 @@ export interface RegistroAuditoria {
   usuarioId: string;
   usuarioNombre: string;
   usuarioRol: RolUsuario;
-  accion: 'LOGIN' | 'CREATE' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'AI_QUERY' | 'CONFIRM_TERM' | 'RESTORE';
+  accion: 'LOGIN' | 'LOGOUT' | 'CREATE' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'AI_QUERY' | 'CONFIRM_TERM' | 'RESTORE';
   modulo: 'CLIENTES' | 'EXPEDIENTES' | 'ASISTENTE_IA' | 'INVESTIGACION' | 'DOCUMENTOS' | 'AGENDA' | 'HONORARIOS' | 'SEGURIDAD';
   registroIdAfectado?: string;
   descripcionDetallada: string;

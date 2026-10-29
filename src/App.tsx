@@ -102,7 +102,7 @@ export default function App() {
     setTimeout(() => setNotificacion(null), 3500);
   };
 
-  // Cargar datos iniciales desde el backend Express
+  // Cargar datos desde el backend Express (Modo Abierto sin bloqueo)
   const cargarDatos = async () => {
     try {
       // 1. Sesión y usuarios
@@ -117,55 +117,69 @@ export default function App() {
       }
 
       // 2. Dashboard Stats
-      const resStats = await fetch('/api/dashboard/stats');
+      const resStats = await fetch('/api/dashboard/stats', {
+        headers: { 'x-user-id': usuarioActivo.id },
+      });
       if (resStats.ok) {
         const dataStats = await resStats.json();
         setStats(dataStats);
       }
 
       // 3. Clientes
-      const resClientes = await fetch('/api/clientes');
+      const resClientes = await fetch('/api/clientes', {
+        headers: { 'x-user-id': usuarioActivo.id },
+      });
       if (resClientes.ok) {
         const dataClientes = await resClientes.json();
         setClientes(dataClientes.clientes || []);
       }
 
       // 4. Expedientes
-      const resExp = await fetch('/api/expedientes');
+      const resExp = await fetch('/api/expedientes', {
+        headers: { 'x-user-id': usuarioActivo.id },
+      });
       if (resExp.ok) {
         const dataExp = await resExp.json();
         setExpedientes(dataExp.expedientes || []);
       }
 
       // 5. Términos
-      const resTerm = await fetch('/api/terminos');
+      const resTerm = await fetch('/api/terminos', {
+        headers: { 'x-user-id': usuarioActivo.id },
+      });
       if (resTerm.ok) {
         const dataTerm = await resTerm.json();
         setTerminos(dataTerm.terminos || []);
       }
 
       // 6. Documentos
-      const resDoc = await fetch('/api/documentos');
+      const resDoc = await fetch('/api/documentos', {
+        headers: { 'x-user-id': usuarioActivo.id },
+      });
       if (resDoc.ok) {
         const dataDoc = await resDoc.json();
         setDocumentos(dataDoc.documentos || []);
       }
 
       // 7. Honorarios
-      const resHon = await fetch('/api/honorarios');
+      const resHon = await fetch('/api/honorarios', {
+        headers: { 'x-user-id': usuarioActivo.id },
+      });
       if (resHon.ok) {
         const dataHon = await resHon.json();
         setHonorarios(dataHon.honorarios || []);
       }
 
       // 8. Auditoría
-      const resAud = await fetch('/api/audit-log');
+      const resAud = await fetch('/api/audit-log', {
+        headers: { 'x-user-id': usuarioActivo.id },
+      });
       if (resAud.ok) {
         const dataAud = await resAud.json();
         setAuditoria(dataAud.auditoria || []);
       }
     } catch (err) {
-      console.warn('Backend aún iniciando, reintentando carga...', err);
+      console.warn('Sincronizando con backend...', err);
     }
   };
 
@@ -173,22 +187,23 @@ export default function App() {
     cargarDatos();
   }, []);
 
-  // Cambiar usuario / rol
+  // Cambiar perfil activo con un solo clic (sin bloqueo ni contraseña)
   const handleSwitchUser = async (userId: string) => {
-    try {
-      const res = await fetch('/api/auth/switch-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUsuarioActivo(data.usuario);
-        mostrarNotificacion(`Sesión activa cambiada a: ${data.usuario.nombre}`);
-        cargarDatos();
-      }
-    } catch (err) {
-      console.error(err);
+    const user = usuariosDisponibles.find((u) => u.id === userId);
+    if (user) {
+      setUsuarioActivo(user);
+      mostrarNotificacion(`Perfil activo: ${user.nombre} (${user.rol})`);
+      setTimeout(() => cargarDatos(), 50);
+    }
+  };
+
+  // Restablecer perfil
+  const handleLogout = () => {
+    const admin = usuariosDisponibles.find((u) => u.rol === 'ADMIN_TITULAR') || usuariosDisponibles[0];
+    if (admin) {
+      setUsuarioActivo(admin);
+      mostrarNotificacion(`Sesión activa: ${admin.nombre} (Modo Abierto)`);
+      setTimeout(() => cargarDatos(), 50);
     }
   };
 
@@ -392,11 +407,13 @@ export default function App() {
           usuarioActivo={usuarioActivo}
           usuariosDisponibles={usuariosDisponibles}
           onSwitchUser={handleSwitchUser}
+          onLogout={handleLogout}
           isDarkMode={isDarkMode}
           onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
           onQuickAction={handleQuickAction}
           terminosCriticosCount={stats.terminosCriticosTotal}
         />
+
 
         <main className="flex-1 overflow-y-auto px-6 py-6">
           {currentView === 'dashboard' && (

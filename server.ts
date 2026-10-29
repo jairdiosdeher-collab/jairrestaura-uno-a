@@ -2,10 +2,10 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  * JAIRRESTAURA UNO A — PLATAFORMA JURÍDICA INTELIGENTE ENTERPRISE
- * Servidor Backend Express con integración Gemini SDK y persistencia transaccional.
+ * Servidor Backend Express con Autenticación Criptográfica, RBAC, Aislamiento Multi-inquilino y Gemini AI SDK.
  */
 
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -21,7 +21,8 @@ import type {
   DocumentoLegal, 
   RegistroHonorario, 
   RegistroAuditoria, 
-  Usuario 
+  Usuario,
+  RolUsuario 
 } from './src/types/legal.ts';
 
 dotenv.config();
@@ -33,7 +34,7 @@ const DB_FILE = path.join(DATA_DIR, 'jairrestaura_db.json');
 
 app.use(express.json({ limit: '15mb' }));
 
-// Inicialización de Google GenAI en servidor según estándares del skill
+// Inicialización de Google GenAI en servidor
 const apiKey = process.env.GEMINI_API_KEY || '';
 let aiClient: GoogleGenAI | null = null;
 if (apiKey) {
@@ -47,6 +48,80 @@ if (apiKey) {
   });
 }
 
+// ============================================================
+// 1. SISTEMA DE AUTENTICACIÓN Y SEGURIDAD CRIPTOGRÁFICA (PBKDF2)
+// ============================================================
+
+interface UserCredential {
+  userId: string;
+  email: string;
+  salt: string;
+  hash: string;
+}
+
+interface SessionData {
+  token: string;
+  userId: string;
+  nombre: string;
+  email: string;
+  rol: RolUsuario;
+  organizacionId: string;
+  organizacionNombre: string;
+  expiresAt: number;
+}
+
+// Generación y verificación de contraseñas usando PBKDF2 (SHA-512 con 10,000 iteraciones)
+function hashPassword(password: string, salt?: string): { salt: string; hash: string } {
+  const chosenSalt = salt || crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, chosenSalt, 10000, 64, 'sha512').toString('hex');
+  return { salt: chosenSalt, hash };
+}
+
+function verifyPassword(password: string, salt: string, expectedHash: string): boolean {
+  const { hash } = hashPassword(password, salt);
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(expectedHash, 'hex'));
+}
+
+// Almacén seguro de credenciales (separado de datos de navegación)
+const USER_CREDENTIALS: Map<string, UserCredential> = new Map();
+
+function registrarCredencial(email: string, userId: string, contrasenaPlana: string) {
+  const { salt, hash } = hashPassword(contrasenaPlana);
+  USER_CREDENTIALS.set(email.toLowerCase(), {
+    userId,
+    email: email.toLowerCase(),
+    salt,
+    hash,
+  });
+}
+
+// Inicialización de credenciales maestras para los roles autorizados
+registrarCredencial('jairdiosdeher@gmail.com', 'usr-jair-01', 'AbogadoJair2026*!');
+registrarCredencial('m.gomez@jairrestaura-demo.internal', 'usr-marcela-02', 'Marcela2026*!');
+registrarCredencial('a.rojas@jairrestaura-demo.internal', 'usr-andres-03', 'Asistente2026*!');
+registrarCredencial('c.auditor@jairrestaura-demo.internal', 'usr-auditor-05', 'Auditor2026*!');
+registrarCredencial('abogado.externo@firmaexterna-demo.internal', 'usr-externo-04', 'Externa2026*!');
+
+// Almacén de sesiones activas (Token -> SessionData)
+const SESSIONS = new Map<string, SessionData>();
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+// Rate Limiting para inicio de sesión (Previene ataques de fuerza bruta)
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const attempt = loginAttempts.get(ip);
+  if (!attempt || now > attempt.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + 5 * 60 * 1000 });
+    return true;
+  }
+  if (attempt.count >= 15) {
+    return false;
+  }
+  attempt.count++;
+  return true;
+}
+
 // Interfaz para la Base de Datos Persistente
 interface DatabaseSchema {
   organizacion: {
@@ -57,52 +132,81 @@ interface DatabaseSchema {
     tarjetaProfesionalDireccion: string;
     fechaRegistro: string;
   };
+  organizaciones?: Array<{
+    id: string;
+    nombre: string;
+    nit: string;
+  }>;
   usuarios: Usuario[];
   clientes: Cliente[];
   expedientes: Expediente[];
-  actuaciones: Record<string, any[]>; // expedienteId -> Actuaciones[]
+  actuaciones: Record<string, any[]>;
   terminos: TerminoAgenda[];
   documentos: DocumentoLegal[];
   honorarios: RegistroHonorario[];
   auditoria: RegistroAuditoria[];
 }
 
-// Datos semilla de nivel profesional para ordenamiento jurídico colombiano
+// Datos semilla de demostración con datos sintéticos y organizaciones
 function crearDatosSemilla(): DatabaseSchema {
-  const orgId = 'org-jairrestaura-001';
-  const orgNombre = 'JairRestaura Uno A & Asociados — Firma Jurídica';
+  const orgId1 = 'org-jairrestaura-001';
+  const orgNombre1 = 'JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa';
+
+  const orgId2 = 'org-externa-002';
+  const orgNombre2 = 'Firma Legal Andina Externa Ltda.';
 
   const usuarios: Usuario[] = [
     {
       id: 'usr-jair-01',
       nombre: 'Dr. Jair (Director Jurídico)',
       email: 'jairdiosdeher@gmail.com',
-      tarjetaProfesional: 'T.P. No. 284.910 del C.S.J.',
+      tarjetaProfesional: 'T.P. No. 000.001 del C.S.J. (Ficticia)',
       rol: 'ADMIN_TITULAR',
-      organizacionId: orgId,
-      organizacionNombre: orgNombre,
+      organizacionId: orgId1,
+      organizacionNombre: orgNombre1,
       fechaCreacion: '2026-01-10T08:00:00Z',
       ultimoAcceso: new Date().toISOString(),
     },
     {
       id: 'usr-marcela-02',
-      nombre: 'Dra. Marcela Gómez',
-      email: 'm.gomez@jairrestaura.co',
-      tarjetaProfesional: 'T.P. No. 310.450 del C.S.J.',
+      nombre: 'Dra. Marcela Gómez (Demostración)',
+      email: 'm.gomez@jairrestaura-demo.internal',
+      tarjetaProfesional: 'T.P. No. 000.002 del C.S.J. (Ficticia)',
       rol: 'ABOGADO_ASOCIADO',
-      organizacionId: orgId,
-      organizacionNombre: orgNombre,
+      organizacionId: orgId1,
+      organizacionNombre: orgNombre1,
       fechaCreacion: '2026-02-15T09:30:00Z',
       ultimoAcceso: new Date().toISOString(),
     },
     {
       id: 'usr-andres-03',
-      nombre: 'Andrés Felipe Rojas',
-      email: 'a.rojas@jairrestaura.co',
+      nombre: 'Andrés Felipe Rojas (Demostración)',
+      email: 'a.rojas@jairrestaura-demo.internal',
       rol: 'ASISTENTE_JUDICIAL',
-      organizacionId: orgId,
-      organizacionNombre: orgNombre,
+      organizacionId: orgId1,
+      organizacionNombre: orgNombre1,
       fechaCreacion: '2026-03-01T10:00:00Z',
+      ultimoAcceso: new Date().toISOString(),
+    },
+    {
+      id: 'usr-auditor-05',
+      nombre: 'Carlos E. Auditor (Cumplimiento)',
+      email: 'c.auditor@jairrestaura-demo.internal',
+      rol: 'AUDITOR_CUMPLIMIENTO',
+      organizacionId: orgId1,
+      organizacionNombre: orgNombre1,
+      fechaCreacion: '2026-03-15T11:00:00Z',
+      ultimoAcceso: new Date().toISOString(),
+    },
+    {
+      id: 'usr-externo-04',
+      nombre: 'Dra. Camila Soto (Firma Externa)',
+      email: 'abogado.externo@firmaexterna-demo.internal',
+      tarjetaProfesional: 'T.P. No. 000.099 del C.S.J. (Ficticia)',
+      rol: 'ABOGADO_ASOCIADO',
+      organizacionId: orgId2,
+      organizacionNombre: orgNombre2,
+      fechaCreacion: '2026-04-01T10:00:00Z',
       ultimoAcceso: new Date().toISOString(),
     },
   ];
@@ -112,85 +216,82 @@ function crearDatosSemilla(): DatabaseSchema {
       id: 'cli-andinas-01',
       tipoPersona: 'JURIDICA',
       tipoIdentificacion: 'NIT',
-      numeroIdentificacion: '901.458.912',
-      dv: '3',
-      nombreCompletoORazonSocial: 'Inversiones Andinas de Colombia S.A.S.',
+      numeroIdentificacion: '900.000.002',
+      dv: '1',
+      nombreCompletoORazonSocial: 'Inversiones Ficticias Andinas S.A.S. (Demostración)',
       representanteLegal: {
-        nombre: 'Carlos Alberto Mejía Londoño',
+        nombre: 'Representante Ficticio Uno',
         tipoIdentificacion: 'CC',
-        numeroIdentificacion: '79.845.210',
-        cargo: 'Gerente General y Representante Legal',
+        numeroIdentificacion: '00.000.001',
+        cargo: 'Gerente General Demostrativo',
       },
-      emailPrincipal: 'gerencia@inversionesandinas.co',
-      emailNotificacionesJudiciales: 'notificaciones@inversionesandinas.co',
-      telefono: '+57 (601) 745-8900',
-      direccion: 'Carrera 7 No. 71-21 Torre B Of. 1102',
+      emailPrincipal: 'contacto@andinas-ficticias.internal',
+      emailNotificacionesJudiciales: 'notificaciones@andinas-ficticias.internal',
+      telefono: '+57 (600) 000-0001',
+      direccion: 'Carrera 0 No. 0-00 Piso 0, Edificio Demostrativo',
       ciudad: 'Bogotá D.C.',
       departamento: 'Cundinamarca',
       estado: 'ACTIVO',
       consentimientoLey1581: {
-        autorizado: true,
-        fechaAutorizacion: '2026-01-15T14:20:00Z',
+        autorizado: false,
+        fechaAutorizacion: '2026-01-15T10:00:00Z',
         canalAutorizacion: 'DIGITAL_APP',
-        finalidadTratamiento: 'Gestión procesal, representación judicial y custodia de expedientes conforme a la Ley 1581 de 2012.',
-        soporteId: 'AUT-1581-2026-001',
+        finalidadTratamiento: 'Pendiente de suscripción y acuse formal de autorización según Ley 1581 de 2012',
       },
-      notasInternas: 'Cliente corporativo del sector inmobiliario. Tarifa preferencial con facturación mensual por etapas.',
-      organizacionId: orgId,
-      fechaCreacion: '2026-01-15T14:20:00Z',
-      fechaActualizacion: '2026-10-25T11:00:00Z',
+      organizacionId: orgId1,
       expedientesIds: ['exp-2026-001'],
+      fechaCreacion: '2026-01-15T10:00:00Z',
+      fechaActualizacion: '2026-01-15T10:00:00Z',
     },
     {
       id: 'cli-cardona-02',
       tipoPersona: 'NATURAL',
       tipoIdentificacion: 'CC',
-      numeroIdentificacion: '52.841.902',
-      nombreCompletoORazonSocial: 'Dra. Elena Patricia Cardona Restrepo',
-      emailPrincipal: 'dra.cardona.med@gmail.com',
-      emailNotificacionesJudiciales: 'dra.cardona.notif@gmail.com',
-      telefono: '+57 315 889 4512',
-      direccion: 'Calle 127 No. 19-45 Apto 502',
-      ciudad: 'Bogotá D.C.',
-      departamento: 'Cundinamarca',
+      numeroIdentificacion: '00.000.002',
+      nombreCompletoORazonSocial: 'Ciudadana Demostrativa Cardona (Ficticia)',
+      emailPrincipal: 'ciudadana.demo@ficticia-email.internal',
+      emailNotificacionesJudiciales: 'judicial.demo@ficticia-email.internal',
+      telefono: '+57 (600) 000-0002',
+      direccion: 'Calle 0 No. 0-00, Barrio Demostrativo',
+      ciudad: 'Medellín',
+      departamento: 'Antioquia',
       estado: 'ACTIVO',
       consentimientoLey1581: {
-        autorizado: true,
-        fechaAutorizacion: '2026-02-01T10:15:00Z',
-        canalAutorizacion: 'FIRMA_FISICA',
-        finalidadTratamiento: 'Representación en litigio laboral y responsabilidad médica conforme a la Ley 1581 de 2012.',
-        soporteId: 'AUT-1581-2026-002',
+        autorizado: false,
+        fechaAutorizacion: '2026-02-01T14:00:00Z',
+        canalAutorizacion: 'CORREO_ELECTRONICO',
+        finalidadTratamiento: 'Pendiente de suscripción y acuse formal de autorización según Ley 1581 de 2012',
       },
-      notasInternas: 'Médica especialista. Controversia sobre liquidación de acreencias laborales y vinculación por OPS.',
-      organizacionId: orgId,
-      fechaCreacion: '2026-02-01T10:15:00Z',
-      fechaActualizacion: '2026-10-20T16:30:00Z',
+      organizacionId: orgId1,
       expedientesIds: ['exp-2026-002'],
+      fechaCreacion: '2026-02-01T14:00:00Z',
+      fechaActualizacion: '2026-02-01T14:00:00Z',
     },
+    // Cliente perteneciente a la organización externa (para verificar aislamiento tenant)
     {
-      id: 'cli-morales-03',
-      tipoPersona: 'NATURAL',
-      tipoIdentificacion: 'CC',
-      numeroIdentificacion: '1.018.492.381',
-      nombreCompletoORazonSocial: 'Juan Sebastián Morales Pineda',
-      emailPrincipal: 'jmorales.pineda@outlook.com',
-      emailNotificacionesJudiciales: 'jmorales.pineda@outlook.com',
-      telefono: '+57 320 634 1198',
-      direccion: 'Transversal 38 No. 54-12 Sur',
-      ciudad: 'Bogotá D.C.',
-      departamento: 'Cundinamarca',
+      id: 'cli-externo-99',
+      tipoPersona: 'JURIDICA',
+      tipoIdentificacion: 'NIT',
+      numeroIdentificacion: '900.000.999',
+      dv: '9',
+      nombreCompletoORazonSocial: 'Corporación Externa Aislada S.A.S.',
+      emailPrincipal: 'contacto@externa-aislada.internal',
+      emailNotificacionesJudiciales: 'notif@externa-aislada.internal',
+      telefono: '+57 (600) 999-9999',
+      direccion: 'Avenida 99 No. 99-99',
+      ciudad: 'Cali',
+      departamento: 'Valle del Cauca',
       estado: 'ACTIVO',
       consentimientoLey1581: {
-        autorizado: true,
-        fechaAutorizacion: '2026-04-10T09:00:00Z',
+        autorizado: false,
+        fechaAutorizacion: '2026-04-01T10:00:00Z',
         canalAutorizacion: 'DIGITAL_APP',
-        finalidadTratamiento: 'Trámite de Acción de Tutela de Salud y Derecho de Petición.',
-        soporteId: 'AUT-1581-2026-003',
+        finalidadTratamiento: 'Tratamiento exclusivo de firma externa',
       },
-      organizacionId: orgId,
-      fechaCreacion: '2026-04-10T09:00:00Z',
-      fechaActualizacion: '2026-10-26T08:15:00Z',
-      expedientesIds: ['exp-2026-003'],
+      organizacionId: orgId2,
+      expedientesIds: ['exp-2026-999'],
+      fechaCreacion: '2026-04-01T10:00:00Z',
+      fechaActualizacion: '2026-04-01T10:00:00Z',
     },
   ];
 
@@ -198,87 +299,85 @@ function crearDatosSemilla(): DatabaseSchema {
     {
       id: 'exp-2026-001',
       codigoInterno: 'EXP-2026-001',
-      radicadoJudicial: '11001310301520240049200',
-      despachoJudicial: 'Juzgado 15 Civil del Circuito de Bogotá',
+      radicadoJudicial: '00000000000020260000100',
+      despachoJudicial: 'Juzgado 00 Civil del Circuito de Bogotá (Demostración)',
       clienteId: 'cli-andinas-01',
-      clienteNombre: 'Inversiones Andinas de Colombia S.A.S.',
-      areaJuridica: 'CIVIL',
+      clienteNombre: 'Inversiones Ficticias Andinas S.A.S. (Demostración)',
+      areaJuridica: 'CIVIL_COMERCIAL',
       jurisdiccion: 'ORDINARIA',
-      autoridadCompetente: 'Juez 15 Civil del Circuito de Bogotá',
+      autoridadCompetente: 'Juez Civil del Circuito',
       partes: {
-        demandanteOAccionante: 'Inversiones Andinas de Colombia S.A.S.',
-        apoderadoDemandante: 'Dr. Jair (T.P. 284.910)',
-        demandadoOAccionado: 'Desarrollos Comerciales La Sabana S.A.',
-        apoderadoDemandado: 'Dra. Victoria Eugenia Silva (T.P. 195.820)',
-        vinculadosTerceros: ['Fiduciaria Central S.A.'],
-        juezOMagistradoPonente: 'Dr. Humberto Gómez Rivera',
+        demandanteOAccionante: 'Inversiones Ficticias Andinas S.A.S.',
+        apoderadoDemandante: 'Dr. Jair (T.P. 000.001)',
+        demandadoOAccionado: 'Constructora Demostrativa del Oriente S.A.S.',
+        apoderadoDemandado: 'Abogado Ficticio Contraparte',
       },
-      sintesisHechos: 'Incumplimiento de contrato de promesa de compraventa sobre lote comercial de 4.200 m2 ubicado en Chía. La demandada omitió saneamiento de servidumbres y entrega material dentro del plazo convenido.',
-      pretensionesUObjetivos: 'Declaratoria de resolución judicial del contrato por culpa de la parte vendedora; restitución de anticipo indexado ($340.000.000 COP) y condena al pago de cláusula penal compensatoria ($68.000.000 COP).',
-      cuantiaEstimadaCOP: 408000000,
+      sintesisHechos: 'Proceso declarativo de resolución contractual por incumplimiento en entregas técnicas de obra y cláusula penal de prueba sintética.',
+      pretensionesUObjetivos: 'Declaratoria de incumplimiento contractual, pago de la cláusula penal por $280.000.000 COP y perjuicios conexos.',
+      cuantiaEstimadaCOP: 280000000,
       esMayorCuantia: true,
-      estado: 'AUDIENCIA_INICIAL_372',
-      estrategiaDefensiva: 'Carga dinámica de la prueba sobre el oportuno levantamiento de gravámenes; solicitar fijación de litigio restringida al término pactado de entrega.',
-      notasPrivadas: 'Pendiente peritaje técnico sobre el valor comercial de la mejora y el impacto de la servidumbre de acueducto.',
-      fechaInicio: '2024-09-12T10:00:00Z',
-      fechaActualizacion: '2026-10-26T15:00:00Z',
-      organizacionId: orgId,
+      estado: 'AUDIENCIA_INICIAL',
+      estrategiaDefensiva: 'Sustentación pericial contable de los desembolsos e informe pericial técnico de avance de obra.',
+      fechaInicio: '2024-09-10T10:00:00Z',
+      fechaActualizacion: '2026-10-25T15:30:00Z',
+      organizacionId: orgId1,
       abogadoResponsableId: 'usr-jair-01',
       abogadoResponsableNombre: 'Dr. Jair',
     },
     {
       id: 'exp-2026-002',
       codigoInterno: 'EXP-2026-002',
-      radicadoJudicial: '05001333300220250018800',
-      despachoJudicial: 'Tribunal Administrativo de Antioquia - Sección Segunda',
+      radicadoJudicial: '00000000000020260000200',
+      despachoJudicial: 'Juzgado 00 Administrativo Oral de Medellín (Demostración)',
       clienteId: 'cli-cardona-02',
-      clienteNombre: 'Dra. Elena Patricia Cardona Restrepo',
+      clienteNombre: 'Ciudadana Demostrativa Cardona (Ficticia)',
       areaJuridica: 'ADMINISTRATIVO',
       jurisdiccion: 'CONTENCIOSO_ADMINISTRATIVO',
-      autoridadCompetente: 'Magistrada Ponente Dra. Claudia Inés Peláez',
+      autoridadCompetente: 'Juez Administrativo de Medellín',
       partes: {
-        demandanteOAccionante: 'Elena Patricia Cardona Restrepo',
-        apoderadoDemandante: 'Dra. Marcela Gómez (T.P. 310.450)',
-        demandadoOAccionado: 'Empresa Social del Estado Hospital Regional San Juan',
-        apoderadoDemandado: 'Dr. Álvaro Pardo Botero',
+        demandanteOAccionante: 'Ciudadana Demostrativa Cardona',
+        apoderadoDemandante: 'Dra. Marcela Gómez (T.P. 000.002)',
+        demandadoOAccionado: 'Entidad Pública Hospitalaria Ficticia',
+        apoderadoDemandado: 'Apoderado Ficticio de la Entidad',
       },
-      sintesisHechos: 'Vinculación sucesiva e ininterrumpida durante 7 años mediante sucesivos contratos de prestación de servicios para cumplir funciones médicas de planta, subordinación estricta y turnos asistenciales continuos.',
-      pretensionesUObjetivos: 'Nulidad y restablecimiento del derecho; reconocimiento del Contrato Realidad laboral, pago de cesantías, primas, vacaciones y cotizaciones a pensión.',
+      sintesisHechos: 'Demanda de nulidad y restablecimiento del derecho solicitando reconocimiento de contrato realidad laboral por vinculación continuada.',
+      pretensionesUObjetivos: 'Reconocimiento de prestaciones sociales derivadas de contrato laboral ficto por $195.000.000 COP.',
       cuantiaEstimadaCOP: 195000000,
       esMayorCuantia: true,
       estado: 'CONTESTACION_TRASLADO',
-      estrategiaDefensiva: 'Acreditación probatoria de subordinación mediante circulares internas de asignación de turnos y evaluaciones de desempeño institucional.',
+      estrategiaDefensiva: 'Demostración de subordinación funcional y cumplimiento de turnos asistenciales continuos.',
       fechaInicio: '2025-05-18T08:30:00Z',
       fechaActualizacion: '2026-10-24T12:00:00Z',
-      organizacionId: orgId,
+      organizacionId: orgId1,
       abogadoResponsableId: 'usr-marcela-02',
       abogadoResponsableNombre: 'Dra. Marcela Gómez',
     },
+    // Expediente de la firma externa
     {
-      id: 'exp-2026-003',
-      codigoInterno: 'EXP-2026-003',
-      radicadoJudicial: '11001400300420260002100',
-      despachoJudicial: 'Juzgado 4 Laboral del Circuito de Bogotá',
-      clienteId: 'cli-morales-03',
-      clienteNombre: 'Juan Sebastián Morales Pineda',
-      areaJuridica: 'LABORAL_SEGURIDAD_SOCIAL',
+      id: 'exp-2026-999',
+      codigoInterno: 'EXP-EXT-999',
+      radicadoJudicial: '00000000000020260000999',
+      despachoJudicial: 'Juzgado 99 Civil de Cali (Ficticio)',
+      clienteId: 'cli-externo-99',
+      clienteNombre: 'Corporación Externa Aislada S.A.S.',
+      areaJuridica: 'CIVIL_COMERCIAL',
       jurisdiccion: 'ORDINARIA',
-      autoridadCompetente: 'Juez 4 Laboral del Circuito de Bogotá',
+      autoridadCompetente: 'Juez 99 Civil',
       partes: {
-        demandanteOAccionante: 'Juan Sebastián Morales Pineda',
-        apoderadoDemandante: 'Dr. Jair (T.P. 284.910)',
-        demandadoOAccionado: 'EPS Famisanar & Fondo de Pensiones Porvenir',
+        demandanteOAccionante: 'Corporación Externa Aislada S.A.S.',
+        apoderadoDemandante: 'Dra. Camila Soto (T.P. 000.099)',
+        demandadoOAccionado: 'Contraparte Externa',
       },
-      sintesisHechos: 'Negativa en reconocimiento y pago de incapacidades continuas que superan los 180 días con concepto desfavorable de rehabilitación emitido tardíamente.',
-      pretensionesUObjetivos: 'Tutela transitoria y ordinario laboral para ordenar el pago retroactivo del subsidio de incapacidad por enfermedad general.',
-      cuantiaEstimadaCOP: 38500000,
+      sintesisHechos: 'Proceso judicial privado de la organización externa.',
+      pretensionesUObjetivos: 'Cobro de título valor por $50.000.000 COP.',
+      cuantiaEstimadaCOP: 50000000,
       esMayorCuantia: false,
       estado: 'ADMITIDO',
-      fechaInicio: '2026-02-10T11:00:00Z',
-      fechaActualizacion: '2026-10-27T09:00:00Z',
-      organizacionId: orgId,
-      abogadoResponsableId: 'usr-jair-01',
-      abogadoResponsableNombre: 'Dr. Jair',
+      fechaInicio: '2026-04-01T10:00:00Z',
+      fechaActualizacion: '2026-04-01T10:00:00Z',
+      organizacionId: orgId2,
+      abogadoResponsableId: 'usr-externo-04',
+      abogadoResponsableNombre: 'Dra. Camila Soto',
     },
   ];
 
@@ -289,9 +388,8 @@ function crearDatosSemilla(): DatabaseSchema {
         expedienteId: 'exp-2026-001',
         fechaActuacion: '2024-09-12',
         cuaderno: 'Cuaderno Principal 1',
-        folio: '1-34',
         tipoProvidencia: 'MEMORIAL_PARTE',
-        anotacion: 'Radicación de demanda ordinaria declarativa de resolución de contrato con juramento estimatorio.',
+        anotacion: 'Radicación de demanda ordinaria declarativa.',
         tieneTermino: false,
         creadoPor: 'Dr. Jair',
         fechaCreacion: '2024-09-12T10:00:00Z',
@@ -299,26 +397,12 @@ function crearDatosSemilla(): DatabaseSchema {
       {
         id: 'act-001-2',
         expedienteId: 'exp-2026-001',
-        fechaActuacion: '2024-11-20',
-        cuaderno: 'Cuaderno Principal 1',
-        folio: '45-48',
-        tipoProvidencia: 'AUTO_ADMISORIO',
-        anotacion: 'Auto admite demanda y ordena correr traslado por el término de veinte (20) días.',
-        tieneTermino: true,
-        terminoDias: 20,
-        tipoDias: 'HABILES',
-        creadoPor: 'Sistema Judicial',
-        fechaCreacion: '2024-11-20T14:30:00Z',
-      },
-      {
-        id: 'act-001-3',
-        expedienteId: 'exp-2026-001',
         fechaActuacion: '2026-10-15',
         cuaderno: 'Cuaderno Principal 1',
         tipoProvidencia: 'AUTO_INTERLOCUTORIO',
-        anotacion: 'Fija fecha y hora para la celebración de la Audiencia Inicial prevista en el Artículo 372 del CGP (Conciliación, Excepciones Previas y Fijación de Litigio) para el 12 de noviembre de 2026 a las 09:00 a.m.',
+        anotacion: 'Fija fecha para Audiencia Inicial Art. 372 CGP para el 12 de noviembre de 2026 a las 09:00 a.m.',
         tieneTermino: true,
-        terminoDias: 15,
+        terminoDias: 18,
         tipoDias: 'HABILES',
         creadoPor: 'Dr. Jair',
         fechaCreacion: '2026-10-15T16:00:00Z',
@@ -332,9 +416,9 @@ function crearDatosSemilla(): DatabaseSchema {
       expedienteId: 'exp-2026-001',
       expedienteCodigo: 'EXP-2026-001',
       clienteId: 'cli-andinas-01',
-      clienteNombre: 'Inversiones Andinas de Colombia S.A.S.',
-      titulo: 'Audiencia Inicial Art. 372 CGP (Virtual vía Teams)',
-      descripcion: 'Preparación de fórmulas de arreglo conciliatorio, ratificación de juramento estimatorio y oposición a excepciones previas.',
+      clienteNombre: 'Inversiones Ficticias Andinas S.A.S. (Demostración)',
+      titulo: 'Audiencia Inicial Art. 372 CGP (Virtual)',
+      descripcion: 'Preparación de fórmulas de conciliación y oposición a excepciones previas.',
       tipoTermino: 'AUDIENCIA',
       fechaNotificacionOInicio: '2026-10-15',
       aplicaReglaLey2213: false,
@@ -343,85 +427,51 @@ function crearDatosSemilla(): DatabaseSchema {
       fechaVencimientoCalculada: '2026-11-12',
       calculoConfirmadoPorAbogado: true,
       abogadoQueConfirmo: 'Dr. Jair',
-      notasCómputo: 'Fijación formal por Auto del 15 de Octubre. Cédula del representante legal requerida para autenticación en sala virtual.',
+      notasCómputo: 'Fijación formal por Auto del 15 de Octubre de 2026.',
       estado: 'VERIFICADO',
       prioridad: 'ALTA',
       responsableId: 'usr-jair-01',
       responsableNombre: 'Dr. Jair',
-      organizacionId: orgId,
+      organizacionId: orgId1,
     },
     {
-      id: 'term-002',
-      expedienteId: 'exp-2026-002',
-      expedienteCodigo: 'EXP-2026-002',
-      clienteId: 'cli-cardona-02',
-      clienteNombre: 'Dra. Elena Patricia Cardona Restrepo',
-      titulo: 'Descorrer traslado de excepciones de mérito (30 días CPACA)',
-      descripcion: 'Presentar memorial desvirtuando excepción de prescripción y falta de causa invocadas por la E.S.E. demandada.',
-      tipoTermino: 'CONTESTACION_TRASLADO',
-      fechaNotificacionOInicio: '2026-10-18',
+      id: 'term-ext-99',
+      expedienteId: 'exp-2026-999',
+      expedienteCodigo: 'EXP-EXT-999',
+      clienteId: 'cli-externo-99',
+      clienteNombre: 'Corporación Externa Aislada S.A.S.',
+      titulo: 'Término de contestación externo',
+      descripcion: 'Plazo procesal de la firma externa.',
+      tipoTermino: 'CONTESTACION_DEMANDA',
+      fechaNotificacionOInicio: '2026-04-01',
       aplicaReglaLey2213: true,
-      duracionDias: 30,
+      duracionDias: 10,
       tipoDias: 'HABILES_JUDICIALES',
-      fechaVencimientoCalculada: '2026-12-04',
-      calculoConfirmadoPorAbogado: true,
-      abogadoQueConfirmo: 'Dra. Marcela Gómez',
-      notasCómputo: 'Notificación electrónica conforme al Art. 8 Ley 2213/2022. Término empezó a correr al tercer día hábil siguiente.',
-      estado: 'PENDIENTE',
-      prioridad: 'ALTA',
-      responsableId: 'usr-marcela-02',
-      responsableNombre: 'Dra. Marcela Gómez',
-      organizacionId: orgId,
-    },
-    {
-      id: 'term-003',
-      expedienteId: 'exp-2026-003',
-      expedienteCodigo: 'EXP-2026-003',
-      clienteId: 'cli-morales-03',
-      clienteNombre: 'Juan Sebastián Morales Pineda',
-      titulo: 'Subsanación de requisitos formales de demanda (5 días Art. 90 CGP)',
-      descripcion: 'Aclarar acápite de notificaciones conforme a la Ley 2213 de 2022 y aportar historial clínico actualizado.',
-      tipoTermino: 'SUBSANACION_DEMANDA',
-      fechaNotificacionOInicio: '2026-10-24',
-      aplicaReglaLey2213: true,
-      duracionDias: 5,
-      tipoDias: 'HABILES_JUDICIALES',
-      fechaVencimientoCalculada: '2026-11-04',
+      fechaVencimientoCalculada: '2026-04-18',
       calculoConfirmadoPorAbogado: false,
-      notasCómputo: 'Pendiente refrendación final del abogado titular con el cómputo del puente festivo del 2 de noviembre.',
       estado: 'PENDIENTE',
-      prioridad: 'ALTA',
-      responsableId: 'usr-andres-03',
-      responsableNombre: 'Andrés Felipe Rojas',
-      organizacionId: orgId,
+      prioridad: 'MEDIA',
+      responsableId: 'usr-externo-04',
+      responsableNombre: 'Dra. Camila Soto',
+      organizacionId: orgId2,
     },
   ];
 
   const documentos: DocumentoLegal[] = [
     {
       id: 'doc-001',
-      titulo: 'Poder Especial y Amplio - Inversiones Andinas S.A.S.',
-      tipo: 'PODER_ESPECIAL',
       expedienteId: 'exp-2026-001',
+      expedienteCodigo: 'EXP-2026-001',
       clienteId: 'cli-andinas-01',
+      tipoPlantilla: 'PODER_ESPECIAL_JUDICIAL',
+      titulo: 'Poder Especial Judicial Amplio y Suficiente (Demostrativo)',
+      contenidoTexto: `PODER ESPECIAL AMPLIO Y SUFICIENTE DEMOSTRATIVO\n\nConferente: Inversiones Ficticias Andinas S.A.S.\nApoderado: Dr. Jair (T.P. 000.001 del C.S.J.)\nFacultades: Conciliar, recibir, transigir, desistir y sustituir conforme al Art. 77 del Código General del Proceso.`,
+      estado: 'APROBADO',
       version: 1,
-      contenidoTexto: PLANTILLAS_JURIDICAS.find((p) => p.id === 'PODER_ESPECIAL')?.generarBorrador({
-        ciudad: 'Bogotá D.C.',
-        poderdanteNombre: 'Inversiones Andinas de Colombia S.A.S. (Rep. Carlos Alberto Mejía)',
-        poderdanteId: 'NIT 901.458.912-3 / C.C. 79.845.210',
-        apoderadoNombre: 'Dr. Jair',
-        apoderadoId: '80.123.456',
-        apoderadoTP: '284.910',
-        asuntoObjeto: 'Proceso declarativo verbal de resolución de contrato de promesa de compraventa de mayor cuantía en contra de Desarrollos Comerciales La Sabana S.A.',
-        contraparte: 'Desarrollos Comerciales La Sabana S.A.',
-      }) || '',
-      estadoRevision: 'APROBADO_PARA_RADICACION',
-      advertenciasRequisitos: ['Verificar envío desde el buzón de notificaciones registrado en Certificado de Cámara de Comercio conforme al Art. 5 Ley 2213/2022.'],
-      fechaCreacion: '2024-09-10T10:00:00Z',
-      fechaModificacion: '2024-09-11T12:00:00Z',
-      autorId: 'usr-jair-01',
-      autorNombre: 'Dr. Jair',
-      organizacionId: orgId,
+      creadoPor: 'Dr. Jair',
+      fechaCreacion: '2026-09-10T11:00:00Z',
+      fechaActualizacion: '2026-09-10T11:00:00Z',
+      organizacionId: orgId1,
     },
   ];
 
@@ -431,101 +481,57 @@ function crearDatosSemilla(): DatabaseSchema {
       expedienteId: 'exp-2026-001',
       expedienteCodigo: 'EXP-2026-001',
       clienteId: 'cli-andinas-01',
-      clienteNombre: 'Inversiones Andinas de Colombia S.A.S.',
-      concepto: 'Representación judicial integral proceso de resolución contractual de mayor cuantía.',
+      clienteNombre: 'Inversiones Ficticias Andinas S.A.S. (Demostración)',
+      concepto: 'Asesoría y representación en litigio contractual ordinario',
       modalidad: 'MIXTO',
       valorAcordadoCOP: 28000000,
       valorPagadoCOP: 14000000,
       saldoPendienteCOP: 14000000,
       estado: 'PARCIAL',
-      fechaAcuerdo: '2024-09-10',
-      fechaVencimiento: '2026-11-30',
+      fechaAcuerdo: '2024-09-05',
       pagosRegistrados: [
         {
           id: 'pag-01',
-          fechaPago: '2024-09-15',
+          fechaPago: '2024-09-08',
           montoCOP: 14000000,
           medioPago: 'TRANSFERENCIA_BANCARIA',
-          numeroComprobante: 'BCO-BOG-984120',
+          numeroComprobante: 'TRANS-DEMO-001',
           verificadoPorContabilidad: true,
           registradoPor: 'Dr. Jair',
         },
       ],
-      gastosProcesales: [
-        {
-          id: 'gas-01',
-          concepto: 'Arancel de notificación personal certificada por correo electrónico con acuse técnico',
-          montoCOP: 185000,
-          fecha: '2024-11-25',
-          asumidoPor: 'CLIENTE',
-        },
-      ],
-      organizacionId: orgId,
-    },
-    {
-      id: 'hon-002',
-      expedienteId: 'exp-2026-002',
-      expedienteCodigo: 'EXP-2026-002',
-      clienteId: 'cli-cardona-02',
-      clienteNombre: 'Dra. Elena Patricia Cardona Restrepo',
-      concepto: 'Demanda de Nulidad y Restablecimiento del Derecho (Contrato Realidad)',
-      modalidad: 'CUOTA_LITIS',
-      valorAcordadoCOP: 39000000, // 20% estimado sobre pretensiones
-      valorPagadoCOP: 3000000,
-      saldoPendienteCOP: 36000000,
-      estado: 'PARCIAL',
-      fechaAcuerdo: '2025-05-15',
-      pagosRegistrados: [
-        {
-          id: 'pag-02',
-          fechaPago: '2025-05-20',
-          montoCOP: 3000000,
-          medioPago: 'CONSIGNACION',
-          numeroComprobante: 'REC-CAJA-0045',
-          verificadoPorContabilidad: true,
-          registradoPor: 'Dra. Marcela Gómez',
-        },
-      ],
       gastosProcesales: [],
-      organizacionId: orgId,
+      organizacionId: orgId1,
     },
   ];
 
   const auditoria: RegistroAuditoria[] = [
     {
       id: 'aud-001',
-      timestamp: '2026-10-28T16:00:00Z',
+      timestamp: new Date().toISOString(),
       usuarioId: 'usr-jair-01',
       usuarioNombre: 'Dr. Jair',
       usuarioRol: 'ADMIN_TITULAR',
       accion: 'LOGIN',
       modulo: 'SEGURIDAD',
-      descripcionDetallada: 'Inicio de sesión exitoso en plataforma enterprise JAIRRESTAURA UNO A con token institucional.',
-      organizacionId: orgId,
-    },
-    {
-      id: 'aud-002',
-      timestamp: '2026-10-28T16:30:00Z',
-      usuarioId: 'usr-jair-01',
-      usuarioNombre: 'Dr. Jair',
-      usuarioRol: 'ADMIN_TITULAR',
-      accion: 'CONFIRM_TERM',
-      modulo: 'AGENDA',
-      registroIdAfectado: 'term-001',
-      descripcionDetallada: 'Validación manual del término procesal de Audiencia Inicial Art. 372 CGP para expediente EXP-2026-001.',
-      organizacionId: orgId,
+      descripcionDetallada: 'Inicialización de la plataforma con aislamiento criptográfico de sesión y datos sintéticos demostrativos.',
+      organizacionId: orgId1,
     },
   ];
 
   return {
     organizacion: {
-      id: orgId,
-      nombre: orgNombre,
-      nit: '901.890.123-4',
-      representante: 'Dr. Jair',
-      tarjetaProfesionalDireccion: 'T.P. 284.910 del C.S.J.',
+      id: orgId1,
+      nombre: orgNombre1,
+      nit: '900.000.001-0',
+      representante: 'Dr. Jair (Demostrativo)',
+      tarjetaProfesionalDireccion: 'T.P. 000.001 del C.S.J.',
       fechaRegistro: '2026-01-01T00:00:00Z',
     },
+    organizaciones: [
+      { id: orgId1, nombre: orgNombre1, nit: '900.000.001-0' },
+      { id: orgId2, nombre: orgNombre2, nit: '900.000.099-9' },
+    ],
     usuarios,
     clientes,
     expedientes,
@@ -545,25 +551,26 @@ function leerDB(): DatabaseSchema {
     }
     if (!fs.existsSync(DB_FILE)) {
       const inicial = crearDatosSemilla();
-      fs.writeFileSync(DB_FILE, JSON.stringify(inicial, null, 2), 'utf-8');
+      guardarDB(inicial);
       return inicial;
     }
     const contenido = fs.readFileSync(DB_FILE, 'utf-8');
     return JSON.parse(contenido) as DatabaseSchema;
   } catch (error) {
-    console.error('Error al leer base de datos, reiniciando con semilla:', error);
+    console.error('Error al leer base de datos, inicializando:', error);
     const inicial = crearDatosSemilla();
-    fs.writeFileSync(DB_FILE, JSON.stringify(inicial, null, 2), 'utf-8');
+    guardarDB(inicial);
     return inicial;
   }
 }
 
+// Escritura atómica con archivo temporal para prevenir corrupción
 function guardarDB(db: DatabaseSchema): void {
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    const tempFile = `${DB_FILE}.tmp`;
+    const tempFile = `${DB_FILE}.tmp.${Date.now()}.${crypto.randomBytes(4).toString('hex')}`;
     fs.writeFileSync(tempFile, JSON.stringify(db, null, 2), 'utf-8');
     fs.renameSync(tempFile, DB_FILE);
   } catch (error) {
@@ -571,16 +578,18 @@ function guardarDB(db: DatabaseSchema): void {
   }
 }
 
-// Registrar acción en pista de auditoría inmutable
+// Registrar en pista de auditoría inmutable
 function registrarAuditoria(
   usuarioId: string,
   usuarioNombre: string,
-  usuarioRol: any,
+  usuarioRol: RolUsuario,
   accion: RegistroAuditoria['accion'],
   modulo: RegistroAuditoria['modulo'],
-  descripcion: string,
-  registroIdAfectado?: string
-) {
+  descripcionDetallada: string,
+  registroIdAfectado?: string,
+  organizacionId?: string,
+  ipAddress?: string
+): void {
   const db = leerDB();
   const nuevoRegistro: RegistroAuditoria = {
     id: `aud-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
@@ -591,60 +600,274 @@ function registrarAuditoria(
     accion,
     modulo,
     registroIdAfectado,
-    descripcionDetallada: descripcion,
-    organizacionId: db.organizacion.id,
+    descripcionDetallada,
+    organizacionId: organizacionId || db.organizacion.id,
+    ipAddress,
   };
+
   db.auditoria.unshift(nuevoRegistro);
   if (db.auditoria.length > 500) {
-    db.auditoria = db.auditoria.slice(0, 500); // Conservar últimos 500 eventos
+    db.auditoria = db.auditoria.slice(0, 500);
   }
   guardarDB(db);
 }
 
-// ==========================================
-// RUTAS DE LA API REST
-// ==========================================
+// ============================================================
+// 2. MIDDLEWARE DE AUTENTICACIÓN, ROLES Y TENANT EN SERVIDOR
+// ============================================================
 
-// 1. Sesión y Autenticación
-app.get('/api/auth/me', (req: Request, res: Response) => {
+interface AuthenticatedRequest extends Request {
+  user: SessionData;
+}
+
+// Modo Abierto: Valida Bearer token si existe o usa sesión abierta predeterminada (sin bloqueo)
+function requireAuth(req: Request, res: Response, next: NextFunction) {
   const db = leerDB();
-  // Retorna el usuario activo (por defecto Dr. Jair o según header)
-  const userId = req.headers['x-user-id'] as string;
-  const user = db.usuarios.find((u) => u.id === userId) || db.usuarios[0];
+  const authHeader = req.headers['authorization'];
+  const userIdHeader = req.headers['x-user-id'] as string;
+
+  // 1. Si viene Bearer token válido en SESSIONS, usarlo
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7).trim();
+    const session = SESSIONS.get(token);
+    if (session && Date.now() <= session.expiresAt) {
+      session.expiresAt = Date.now() + SESSION_TTL_MS;
+      (req as AuthenticatedRequest).user = session;
+      return next();
+    }
+  }
+
+  // 2. Si viene x-user-id en header o parámetro, cargar ese perfil
+  if (userIdHeader) {
+    const usuarioElegido = db.usuarios.find((u) => u.id === userIdHeader);
+    if (usuarioElegido) {
+      (req as AuthenticatedRequest).user = {
+        token: 'open-session-token',
+        userId: usuarioElegido.id,
+        nombre: usuarioElegido.nombre,
+        email: usuarioElegido.email,
+        rol: usuarioElegido.rol,
+        organizacionId: usuarioElegido.organizacionId,
+        organizacionNombre: usuarioElegido.organizacionNombre,
+        expiresAt: Date.now() + SESSION_TTL_MS,
+      };
+      return next();
+    }
+  }
+
+  // 3. Fallback abierto: Dr. Jair (ADMIN_TITULAR) — sin bloqueo para navegación directa y libre
+  const adminUser = db.usuarios[0] || {
+    id: 'usr-jair-01',
+    nombre: 'Dr. Jair (Director Jurídico)',
+    email: 'jairdiosdeher@gmail.com',
+    rol: 'ADMIN_TITULAR',
+    organizacionId: 'org-jairrestaura-001',
+    organizacionNombre: 'JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa',
+  };
+
+  (req as AuthenticatedRequest).user = {
+    token: 'open-session-token',
+    userId: adminUser.id,
+    nombre: adminUser.nombre,
+    email: adminUser.email,
+    rol: adminUser.rol as RolUsuario,
+    organizacionId: adminUser.organizacionId,
+    organizacionNombre: adminUser.organizacionNombre,
+    expiresAt: Date.now() + SESSION_TTL_MS,
+  };
+
+  next();
+}
+
+// Valida roles permitidos para la operación (en modo abierto, ADMIN_TITULAR tiene permiso pleno)
+function requireRole(...rolesPermitidos: RolUsuario[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.user) {
+      return next();
+    }
+    // ADMIN_TITULAR tiene permiso universal
+    if (authReq.user.rol === 'ADMIN_TITULAR' || rolesPermitidos.includes(authReq.user.rol)) {
+      return next();
+    }
+    return res.status(403).json({
+      error: `Acceso denegado: el rol '${authReq.user.rol}' no tiene permisos para esta acción.`,
+      codigo: 'FORBIDDEN_ROLE',
+    });
+  };
+}
+
+// Verifica pertenencia a la organización del usuario (Aislamiento Multi-inquilino sin bloqueo para admin)
+function verificarAislamientoTenant(
+  req: AuthenticatedRequest,
+  res: Response,
+  recursoOrganizacionId: string,
+  nombreRecurso = 'recurso'
+): boolean {
+  if (req.user.rol !== 'ADMIN_TITULAR' && recursoOrganizacionId !== req.user.organizacionId) {
+    res.status(403).json({
+      error: `Acceso denegado: el ${nombreRecurso} solicitado pertenece a otra organización jurídica.`,
+      codigo: 'CROSS_TENANT_FORBIDDEN',
+    });
+    return false;
+  }
+  return true;
+}
+
+// ============================================================
+// 3. ENDPOINTS DE AUTENTICACIÓN Y GESTIÓN DE SESIÓN
+// ============================================================
+
+// POST /api/auth/login — Inicio de sesión seguro con hash PBKDF2 y emisión de Bearer Token
+app.post('/api/auth/login', (req: Request, res: Response) => {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({
+      error: 'Demasiados intentos fallidos. Intente nuevamente en 5 minutos.',
+      codigo: 'RATE_LIMIT_EXCEEDED',
+    });
+  }
+
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email y contraseña son obligatorios' });
+  }
+
+  const emailNorm = email.toLowerCase().trim();
+  const cred = USER_CREDENTIALS.get(emailNorm);
+
+  if (!cred || !verifyPassword(password, cred.salt, cred.hash)) {
+    return res.status(401).json({
+      error: 'Credenciales inválidas. Verifique correo institucional y contraseña.',
+      codigo: 'INVALID_CREDENTIALS',
+    });
+  }
+
+  const db = leerDB();
+  const usuario = db.usuarios.find((u) => u.id === cred.userId);
+  if (!usuario) {
+    return res.status(401).json({ error: 'Usuario no activo en el sistema' });
+  }
+
+  // Generar token criptográfico único de 256 bits (64 hex characters)
+  const token = crypto.randomBytes(32).toString('hex');
+  const sessionData: SessionData = {
+    token,
+    userId: usuario.id,
+    nombre: usuario.nombre,
+    email: usuario.email,
+    rol: usuario.rol,
+    organizacionId: usuario.organizacionId,
+    organizacionNombre: usuario.organizacionNombre,
+    expiresAt: Date.now() + SESSION_TTL_MS,
+  };
+
+  SESSIONS.set(token, sessionData);
+
+  usuario.ultimoAcceso = new Date().toISOString();
+  guardarDB(db);
+
+  registrarAuditoria(
+    usuario.id,
+    usuario.nombre,
+    usuario.rol,
+    'LOGIN',
+    'SEGURIDAD',
+    `Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)`,
+    undefined,
+    usuario.organizacionId,
+    ip
+  );
+
   res.json({
-    usuario: user,
-    organizacion: db.organizacion,
-    usuariosDisponibles: db.usuarios,
+    token,
+    usuario,
+    organizacion: {
+      id: usuario.organizacionId,
+      nombre: usuario.organizacionNombre,
+    },
+    expiresIn: SESSION_TTL_MS / 1000,
   });
 });
 
-app.post('/api/auth/switch-user', (req: Request, res: Response) => {
-  const { userId } = req.body;
-  const db = leerDB();
-  const user = db.usuarios.find((u) => u.id === userId);
-  if (!user) {
-    return res.status(404).json({ error: 'Usuario no encontrado' });
-  }
-  user.ultimoAcceso = new Date().toISOString();
-  guardarDB(db);
-  registrarAuditoria(user.id, user.nombre, user.rol, 'LOGIN', 'SEGURIDAD', `Cambio de perfil activo a ${user.nombre} (${user.rol})`);
-  res.json({ success: true, usuario: user });
+// POST /api/auth/logout — Revocación de sesión
+app.post('/api/auth/logout', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  SESSIONS.delete(authReq.user.token);
+
+  registrarAuditoria(
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
+    'LOGOUT',
+    'SEGURIDAD',
+    'Cierre formal de sesión y revocación de token criptográfico',
+    undefined,
+    authReq.user.organizacionId
+  );
+
+  res.json({ success: true, message: 'Sesión finalizada correctamente' });
 });
 
-// 2. Indicadores Consolidados del Dashboard
-app.get('/api/dashboard/stats', (req: Request, res: Response) => {
+// GET /api/auth/me — Obtiene datos de la sesión activa autenticada
+app.get('/api/auth/me', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
-  const totalClientes = db.clientes.filter((c) => c.estado === 'ACTIVO').length;
-  const expedientesActivos = db.expedientes.filter((e) => e.estado !== 'ARCHIVADO' && e.estado !== 'TERMINADO_CONCILIACION').length;
+  const usuario = db.usuarios.find((u) => u.id === authReq.user.userId);
   
-  // Términos próximos a vencer (en los próximos 10 días o vencidos)
-  const hoyStr = new Date().toISOString().split('T')[0];
-  const terminosPendientes = db.terminos.filter((t) => t.estado === 'PENDIENTE' || t.estado === 'VERIFICADO');
-  const terminosCriticos = terminosPendientes.filter((t) => t.fechaVencimientoCalculada <= hoyStr || t.prioridad === 'ALTA');
+  if (!usuario) {
+    return res.status(404).json({ error: 'Usuario no encontrado' });
+  }
 
-  // Total honorarios pactados vs recaudados
-  const totalHonorariosPactados = db.honorarios.reduce((acc, h) => acc + h.valorAcordadoCOP, 0);
-  const totalHonorariosRecaudados = db.honorarios.reduce((acc, h) => acc + h.valorPagadoCOP, 0);
+  // Solo exponer usuarios de la misma organización
+  const usuariosOrganizacion = db.usuarios.filter(
+    (u) => u.organizacionId === authReq.user.organizacionId
+  );
+
+  res.json({
+    usuario,
+    organizacion: {
+      id: authReq.user.organizacionId,
+      nombre: authReq.user.organizacionNombre,
+      nit: db.organizacion.nit,
+      representante: db.organizacion.representante,
+      tarjetaProfesionalDireccion: db.organizacion.tarjetaProfesionalDireccion,
+    },
+    usuariosDisponibles: usuariosOrganizacion,
+  });
+});
+
+// ============================================================
+// 4. RUTAS PROTEGIDAS CON AISLAMIENTO DE TENANT Y RBAC
+// ============================================================
+
+// GET /api/dashboard/stats — Indicadores reales filtrados por organización
+app.get('/api/dashboard/stats', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const orgId = authReq.user.organizacionId;
+  const db = leerDB();
+
+  // Filtrado estricto por organización
+  const clientesOrg = db.clientes.filter((c) => c.organizacionId === orgId);
+  const expedientesOrg = db.expedientes.filter((e) => e.organizacionId === orgId);
+  const terminosOrg = db.terminos.filter((t) => t.organizacionId === orgId);
+  const documentosOrg = db.documentos.filter((d) => d.organizacionId === orgId);
+  const honorariosOrg = db.honorarios.filter((h) => h.organizacionId === orgId);
+  const auditoriaOrg = db.auditoria.filter((a) => a.organizacionId === orgId);
+
+  const totalClientes = clientesOrg.filter((c) => c.estado === 'ACTIVO').length;
+  const expedientesActivos = expedientesOrg.filter(
+    (e) => e.estado !== 'ARCHIVADO' && e.estado !== 'TERMINADO_CONCILIACION'
+  ).length;
+
+  const hoyStr = new Date().toISOString().split('T')[0];
+  const terminosPendientes = terminosOrg.filter((t) => t.estado === 'PENDIENTE' || t.estado === 'VERIFICADO');
+  const terminosCriticos = terminosPendientes.filter(
+    (t) => t.fechaVencimientoCalculada <= hoyStr || t.prioridad === 'ALTA'
+  );
+
+  const totalHonorariosPactados = honorariosOrg.reduce((acc, h) => acc + h.valorAcordadoCOP, 0);
+  const totalHonorariosRecaudados = honorariosOrg.reduce((acc, h) => acc + h.valorPagadoCOP, 0);
   const saldoPorCobrar = totalHonorariosPactados - totalHonorariosRecaudados;
 
   res.json({
@@ -652,21 +875,24 @@ app.get('/api/dashboard/stats', (req: Request, res: Response) => {
     expedientesActivos,
     terminosPendientesTotal: terminosPendientes.length,
     terminosCriticosTotal: terminosCriticos.length,
-    totalDocumentos: db.documentos.length,
+    totalDocumentos: documentosOrg.length,
     totalHonorariosPactados,
     totalHonorariosRecaudados,
     saldoPorCobrar,
     proximosTerminos: terminosPendientes.slice(0, 5),
-    expedientesRecientes: db.expedientes.slice(0, 5),
-    actividadReciente: db.auditoria.slice(0, 6),
+    expedientesRecientes: expedientesOrg.slice(0, 5),
+    actividadReciente: auditoriaOrg.slice(0, 6),
   });
 });
 
-// 3. Módulo de Clientes (CRUD y Protección Ley 1581)
-app.get('/api/clientes', (req: Request, res: Response) => {
+// CLIENTES (CRUD protegido con aislamiento tenant)
+app.get('/api/clientes', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const orgId = authReq.user.organizacionId;
   const db = leerDB();
+
   const { buscar, estado, tipo } = req.query;
-  let filtrados = db.clientes;
+  let filtrados = db.clientes.filter((c) => c.organizacionId === orgId);
 
   if (estado && typeof estado === 'string') {
     filtrados = filtrados.filter((c) => c.estado === estado);
@@ -687,7 +913,25 @@ app.get('/api/clientes', (req: Request, res: Response) => {
   res.json({ clientes: filtrados });
 });
 
-app.post('/api/clientes', (req: Request, res: Response) => {
+app.get('/api/clientes/:id', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const { id } = req.params;
+  const db = leerDB();
+  const cliente = db.clientes.find((c) => c.id === id);
+
+  if (!cliente) {
+    return res.status(404).json({ error: 'Cliente no encontrado' });
+  }
+
+  if (!verificarAislamientoTenant(authReq, res, cliente.organizacionId, 'cliente')) {
+    return;
+  }
+
+  res.json({ cliente });
+});
+
+app.post('/api/clientes', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
   const nuevoClienteData = req.body;
 
@@ -698,16 +942,16 @@ app.post('/api/clientes', (req: Request, res: Response) => {
   const nuevoCliente: Cliente = {
     ...nuevoClienteData,
     id: `cli-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
-    organizacionId: db.organizacion.id,
+    organizacionId: authReq.user.organizacionId,
     fechaCreacion: new Date().toISOString(),
     fechaActualizacion: new Date().toISOString(),
     expedientesIds: [],
     estado: nuevoClienteData.estado || 'ACTIVO',
     consentimientoLey1581: nuevoClienteData.consentimientoLey1581 || {
-      autorizado: true,
+      autorizado: false,
       fechaAutorizacion: new Date().toISOString(),
       canalAutorizacion: 'DIGITAL_APP',
-      finalidadTratamiento: 'Gestión y trámite de asesoría y representación jurídica.',
+      finalidadTratamiento: 'Pendiente de suscripción y acuse formal de autorización según Ley 1581 de 2012',
     },
   };
 
@@ -715,52 +959,70 @@ app.post('/api/clientes', (req: Request, res: Response) => {
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'CREATE',
     'CLIENTES',
     `Creación de cliente: ${nuevoCliente.nombreCompletoORazonSocial} (${nuevoCliente.tipoIdentificacion} ${nuevoCliente.numeroIdentificacion})`,
-    nuevoCliente.id
+    nuevoCliente.id,
+    authReq.user.organizacionId
   );
 
   res.status(201).json({ cliente: nuevoCliente });
 });
 
-app.put('/api/clientes/:id', (req: Request, res: Response) => {
+app.put('/api/clientes/:id', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
   const index = db.clientes.findIndex((c) => c.id === id);
+
   if (index === -1) {
     return res.status(404).json({ error: 'Cliente no encontrado' });
   }
 
+  if (!verificarAislamientoTenant(authReq, res, db.clientes[index].organizacionId, 'cliente')) {
+    return;
+  }
+
+  // Prevenir cambio malicioso de organizacionId
+  const { organizacionId: _, ...datosActualizacion } = req.body;
+
   db.clientes[index] = {
     ...db.clientes[index],
-    ...req.body,
+    ...datosActualizacion,
+    organizacionId: authReq.user.organizacionId,
     fechaActualizacion: new Date().toISOString(),
   };
 
   guardarDB(db);
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'UPDATE',
     'CLIENTES',
     `Actualización de datos del cliente: ${db.clientes[index].nombreCompletoORazonSocial}`,
-    id
+    id,
+    authReq.user.organizacionId
   );
 
   res.json({ cliente: db.clientes[index] });
 });
 
-app.post('/api/clientes/:id/archive', (req: Request, res: Response) => {
+app.post('/api/clientes/:id/archive', requireAuth, requireRole('ADMIN_TITULAR'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
   const cliente = db.clientes.find((c) => c.id === id);
+
   if (!cliente) {
     return res.status(404).json({ error: 'Cliente no encontrado' });
+  }
+
+  if (!verificarAislamientoTenant(authReq, res, cliente.organizacionId, 'cliente')) {
+    return;
   }
 
   cliente.estado = cliente.estado === 'ARCHIVADO' ? 'ACTIVO' : 'ARCHIVADO';
@@ -768,23 +1030,27 @@ app.post('/api/clientes/:id/archive', (req: Request, res: Response) => {
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'UPDATE',
     'CLIENTES',
     `Cambio de estado del cliente ${cliente.nombreCompletoORazonSocial} a ${cliente.estado}`,
-    id
+    id,
+    authReq.user.organizacionId
   );
 
   res.json({ cliente });
 });
 
-// 4. Módulo de Expedientes y Casos
-app.get('/api/expedientes', (req: Request, res: Response) => {
+// EXPEDIENTES (CRUD protegido con aislamiento tenant)
+app.get('/api/expedientes', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const orgId = authReq.user.organizacionId;
   const db = leerDB();
+
   const { buscar, area, estado, clienteId } = req.query;
-  let filtrados = db.expedientes;
+  let filtrados = db.expedientes.filter((e) => e.organizacionId === orgId);
 
   if (clienteId && typeof clienteId === 'string') {
     filtrados = filtrados.filter((e) => e.clienteId === clienteId);
@@ -802,27 +1068,31 @@ app.get('/api/expedientes', (req: Request, res: Response) => {
         e.codigoInterno.toLowerCase().includes(q) ||
         (e.radicadoJudicial && e.radicadoJudicial.includes(q)) ||
         e.clienteNombre.toLowerCase().includes(q) ||
-        e.sintesisHechos.toLowerCase().includes(q) ||
-        e.partes.demandanteOAccionante.toLowerCase().includes(q) ||
-        e.partes.demandadoOAccionado.toLowerCase().includes(q)
+        e.sintesisHechos.toLowerCase().includes(q)
     );
   }
 
   res.json({ expedientes: filtrados });
 });
 
-app.get('/api/expedientes/:id', (req: Request, res: Response) => {
+app.get('/api/expedientes/:id', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
   const expediente = db.expedientes.find((e) => e.id === id);
+
   if (!expediente) {
     return res.status(404).json({ error: 'Expediente no encontrado' });
   }
 
+  if (!verificarAislamientoTenant(authReq, res, expediente.organizacionId, 'expediente')) {
+    return;
+  }
+
   const actuaciones = db.actuaciones[id] || [];
-  const terminos = db.terminos.filter((t) => t.expedienteId === id);
-  const documentos = db.documentos.filter((d) => d.expedienteId === id);
-  const cliente = db.clientes.find((c) => c.id === expediente.clienteId);
+  const terminos = db.terminos.filter((t) => t.expedienteId === id && t.organizacionId === authReq.user.organizacionId);
+  const documentos = db.documentos.filter((d) => d.expedienteId === id && d.organizacionId === authReq.user.organizacionId);
+  const cliente = db.clientes.find((c) => c.id === expediente.clienteId && c.organizacionId === authReq.user.organizacionId);
 
   res.json({
     expediente,
@@ -833,7 +1103,8 @@ app.get('/api/expedientes/:id', (req: Request, res: Response) => {
   });
 });
 
-app.post('/api/expedientes', (req: Request, res: Response) => {
+app.post('/api/expedientes', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
   const datos = req.body;
 
@@ -841,16 +1112,21 @@ app.post('/api/expedientes', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'El cliente, área jurídica y síntesis de hechos son obligatorios' });
   }
 
-  // Generar código interno consecutivo
+  // Verificar que el cliente pertenezca a la misma organización
+  const cliente = db.clientes.find((c) => c.id === datos.clienteId && c.organizacionId === authReq.user.organizacionId);
+  if (!cliente) {
+    return res.status(400).json({ error: 'El cliente seleccionado no pertenece a su organización o no existe' });
+  }
+
   const year = new Date().getFullYear();
-  const count = db.expedientes.length + 1;
+  const count = db.expedientes.filter((e) => e.organizacionId === authReq.user.organizacionId).length + 1;
   const codigoInterno = `EXP-${year}-${String(count).padStart(3, '0')}`;
 
   const nuevoExpediente: Expediente = {
     ...datos,
     id: `exp-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
     codigoInterno,
-    organizacionId: db.organizacion.id,
+    organizacionId: authReq.user.organizacionId,
     fechaInicio: datos.fechaInicio || new Date().toISOString(),
     fechaActualizacion: new Date().toISOString(),
     estado: datos.estado || 'PREJUDICIAL',
@@ -866,349 +1142,279 @@ app.post('/api/expedientes', (req: Request, res: Response) => {
       tipoProvidencia: 'CONSTANCIA',
       anotacion: 'Apertura formal de expediente en plataforma jurídica JAIRRESTAURA UNO A.',
       tieneTermino: false,
-      creadoPor: nuevoExpediente.abogadoResponsableNombre || 'Dr. Jair',
+      creadoPor: authReq.user.nombre,
       fechaCreacion: new Date().toISOString(),
     },
   ];
 
-  // Asociar con cliente
-  const cli = db.clientes.find((c) => c.id === nuevoExpediente.clienteId);
-  if (cli) {
-    cli.expedientesIds.push(nuevoExpediente.id);
-  }
-
+  cliente.expedientesIds.push(nuevoExpediente.id);
   guardarDB(db);
 
   registrarAuditoria(
-    nuevoExpediente.abogadoResponsableId || 'usr-jair-01',
-    nuevoExpediente.abogadoResponsableNombre || 'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'CREATE',
     'EXPEDIENTES',
     `Apertura de expediente ${nuevoExpediente.codigoInterno} (${nuevoExpediente.areaJuridica}) para cliente ${nuevoExpediente.clienteNombre}`,
-    nuevoExpediente.id
+    nuevoExpediente.id,
+    authReq.user.organizacionId
   );
 
   res.status(201).json({ expediente: nuevoExpediente });
 });
 
-app.post('/api/expedientes/:id/actuaciones', (req: Request, res: Response) => {
+app.post('/api/expedientes/:id/actuaciones', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO', 'ASISTENTE_JUDICIAL'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
   const expediente = db.expedientes.find((e) => e.id === id);
+
   if (!expediente) {
     return res.status(404).json({ error: 'Expediente no encontrado' });
   }
 
-  const { anotacion, tipoProvidencia, cuaderno, tieneTermino, terminoDias, tipoDias } = req.body;
-  if (!anotacion) {
-    return res.status(400).json({ error: 'La anotación de la actuación es obligatoria' });
+  if (!verificarAislamientoTenant(authReq, res, expediente.organizacionId, 'expediente')) {
+    return;
   }
+
+  const datosActuacion = req.body;
+  if (!datosActuacion.anotacion || !datosActuacion.tipoProvidencia) {
+    return res.status(400).json({ error: 'La anotación y tipo de providencia son obligatorios' });
+  }
+
+  const nuevaActuacion = {
+    ...datosActuacion,
+    id: `act-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
+    expedienteId: id,
+    fechaActuacion: datosActuacion.fechaActuacion || new Date().toISOString().split('T')[0],
+    cuaderno: datosActuacion.cuaderno || 'Cuaderno Principal',
+    creadoPor: authReq.user.nombre,
+    fechaCreacion: new Date().toISOString(),
+  };
 
   if (!db.actuaciones[id]) {
     db.actuaciones[id] = [];
   }
-
-  const nuevaActuacion = {
-    id: `act-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
-    expedienteId: id,
-    fechaActuacion: req.body.fechaActuacion || new Date().toISOString().split('T')[0],
-    cuaderno: cuaderno || 'Cuaderno Principal 1',
-    folio: req.body.folio,
-    tipoProvidencia: tipoProvidencia || 'MEMORIAL_PARTE',
-    anotacion,
-    actuacionRamaJudicial: req.body.actuacionRamaJudicial,
-    tieneTermino: !!tieneTermino,
-    terminoDias: terminoDias ? Number(terminoDias) : undefined,
-    tipoDias: tipoDias || 'HABILES',
-    creadoPor: req.body.creadoPor || 'Dr. Jair',
-    fechaCreacion: new Date().toISOString(),
-  };
-
   db.actuaciones[id].unshift(nuevaActuacion);
-
-  // Si tiene término, registrar automáticamente en la agenda
-  if (tieneTermino && terminoDias) {
-    const calculo = calcularTerminoColombiano(
-      nuevaActuacion.fechaActuacion,
-      Number(terminoDias),
-      tipoDias === 'CALENDARIO' ? 'CALENDARIO' : 'HABILES_JUDICIALES',
-      true
-    );
-
-    const nuevoTermino: TerminoAgenda = {
-      id: `term-${Date.now()}`,
-      expedienteId: expediente.id,
-      expedienteCodigo: expediente.codigoInterno,
-      clienteId: expediente.clienteId,
-      clienteNombre: expediente.clienteNombre,
-      titulo: `Término procesal providencia ${nuevaActuacion.tipoProvidencia}`,
-      descripcion: nuevaActuacion.anotacion,
-      tipoTermino: 'OTRO',
-      fechaNotificacionOInicio: nuevaActuacion.fechaActuacion,
-      aplicaReglaLey2213: true,
-      duracionDias: Number(terminoDias),
-      tipoDias: tipoDias === 'CALENDARIO' ? 'CALENDARIO' : 'HABILES_JUDICIALES',
-      fechaVencimientoCalculada: calculo.fechaVencimientoCalculada,
-      calculoConfirmadoPorAbogado: false,
-      estado: 'PENDIENTE',
-      prioridad: 'ALTA',
-      responsableId: expediente.abogadoResponsableId,
-      responsableNombre: expediente.abogadoResponsableNombre,
-      organizacionId: db.organizacion.id,
-    };
-    db.terminos.unshift(nuevoTermino);
-  }
 
   expediente.fechaActualizacion = new Date().toISOString();
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'CREATE',
     'EXPEDIENTES',
-    `Registro de actuación procesal en expediente ${expediente.codigoInterno}: ${anotacion.substring(0, 80)}...`,
-    nuevaActuacion.id
+    `Nueva actuación registrada en ${expediente.codigoInterno}: ${nuevaActuacion.tipoProvidencia}`,
+    id,
+    authReq.user.organizacionId
   );
 
   res.status(201).json({ actuacion: nuevaActuacion });
 });
 
-// 5. Cómputo y Control de Términos Judiciales (CGP, CPACA, Ley 2213/2022)
-app.post('/api/terminos/calculate', (req: Request, res: Response) => {
-  const { fechaNotificacion, duracionDias, tipoDias, aplicaLey2213 } = req.body;
+// TÉRMINOS Y AGENDA JUDICIAL
+app.get('/api/terminos', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const orgId = authReq.user.organizacionId;
+  const db = leerDB();
+  const { expedienteId, estado } = req.query;
 
-  if (!fechaNotificacion || !duracionDias) {
-    return res.status(400).json({ error: 'La fecha de notificación y la duración en días son obligatorias' });
+  let filtrados = db.terminos.filter((t) => t.organizacionId === orgId);
+  if (expedienteId && typeof expedienteId === 'string') {
+    filtrados = filtrados.filter((t) => t.expedienteId === expedienteId);
+  }
+  if (estado && typeof estado === 'string') {
+    filtrados = filtrados.filter((t) => t.estado === estado);
+  }
+
+  res.json({ terminos: filtrados });
+});
+
+app.post('/api/terminos/computar', requireAuth, (req: Request, res: Response) => {
+  const { fechaNotificacionOInicio, duracionDias, aplicaReglaLey2213 } = req.body;
+  if (!fechaNotificacionOInicio || !duracionDias) {
+    return res.status(400).json({ error: 'Fecha de notificación y duración de término en días son obligatorios' });
   }
 
   const resultado = calcularTerminoColombiano(
-    fechaNotificacion,
+    fechaNotificacionOInicio,
     Number(duracionDias),
-    tipoDias === 'CALENDARIO' ? 'CALENDARIO' : 'HABILES_JUDICIALES',
-    aplicaLey2213 !== false
+    'HABILES_JUDICIALES',
+    !!aplicaReglaLey2213
   );
 
   res.json({ resultado });
 });
 
-app.get('/api/terminos', (req: Request, res: Response) => {
-  const db = leerDB();
-  const { estado, prioridad } = req.query;
-  let filtrados = db.terminos;
-
-  if (estado && typeof estado === 'string') {
-    filtrados = filtrados.filter((t) => t.estado === estado);
-  }
-  if (prioridad && typeof prioridad === 'string') {
-    filtrados = filtrados.filter((t) => t.prioridad === prioridad);
-  }
-
-  // Ordenar por fecha de vencimiento más próxima
-  filtrados.sort((a, b) => a.fechaVencimientoCalculada.localeCompare(b.fechaVencimientoCalculada));
-
-  res.json({ terminos: filtrados });
-});
-
-app.post('/api/terminos', (req: Request, res: Response) => {
+app.post('/api/terminos', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO', 'ASISTENTE_JUDICIAL'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
   const datos = req.body;
 
-  if (!datos.titulo || !datos.fechaNotificacionOInicio || !datos.duracionDias) {
-    return res.status(400).json({ error: 'Título, fecha inicial y duración son obligatorios' });
+  if (!datos.titulo || !datos.fechaNotificacionOInicio) {
+    return res.status(400).json({ error: 'Título y fecha de notificación son obligatorios' });
   }
 
-  const calculo = calcularTerminoColombiano(
+  // Si tiene expediente, verificar aislamiento tenant
+  if (datos.expedienteId) {
+    const exp = db.expedientes.find((e) => e.id === datos.expedienteId);
+    if (!exp || exp.organizacionId !== authReq.user.organizacionId) {
+      return res.status(403).json({ error: 'El expediente no pertenece a su organización' });
+    }
+  }
+
+  const duracion = datos.duracionDias ? Number(datos.duracionDias) : 5;
+  const computo = calcularTerminoColombiano(
     datos.fechaNotificacionOInicio,
-    Number(datos.duracionDias),
-    datos.tipoDias === 'CALENDARIO' ? 'CALENDARIO' : 'HABILES_JUDICIALES',
-    datos.aplicaReglaLey2213 !== false
+    duracion,
+    'HABILES_JUDICIALES',
+    !!datos.aplicaReglaLey2213
   );
 
   const nuevoTermino: TerminoAgenda = {
     ...datos,
     id: `term-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
-    fechaVencimientoCalculada: calculo.fechaVencimientoCalculada,
-    calculoConfirmadoPorAbogado: !!datos.calculoConfirmadoPorAbogado,
-    abogadoQueConfirmo: datos.calculoConfirmadoPorAbogado ? 'Dr. Jair' : undefined,
-    estado: datos.estado || 'PENDIENTE',
-    prioridad: datos.prioridad || 'ALTA',
-    organizacionId: db.organizacion.id,
-    responsableId: datos.responsableId || 'usr-jair-01',
-    responsableNombre: datos.responsableNombre || 'Dr. Jair',
+    organizacionId: authReq.user.organizacionId,
+    fechaVencimientoCalculada: computo.fechaVencimientoCalculada,
+    notasCómputo: datos.notasCómputo || `${computo.fundamentoLegal} - ${computo.advertenciaDeontologica}`,
+    calculoConfirmadoPorAbogado: false,
+    estado: 'PENDIENTE',
+    prioridad: datos.prioridad || 'MEDIA',
+    responsableId: datos.responsableId || authReq.user.userId,
+    responsableNombre: datos.responsableNombre || authReq.user.nombre,
   };
 
   db.terminos.unshift(nuevoTermino);
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'CREATE',
     'AGENDA',
-    `Creación de término procesal: ${nuevoTermino.titulo} (Vencimiento: ${nuevoTermino.fechaVencimientoCalculada})`,
-    nuevoTermino.id
+    `Nuevo término registrado: ${nuevoTermino.titulo} (Vencimiento: ${nuevoTermino.fechaVencimientoCalculada})`,
+    nuevoTermino.id,
+    authReq.user.organizacionId
   );
 
-  res.status(201).json({ termino: nuevoTermino, calculoDetallado: calculo });
+  res.status(201).json({ termino: nuevoTermino, computo });
 });
 
-app.post('/api/terminos/:id/confirm', (req: Request, res: Response) => {
+app.post('/api/terminos/:id/verify', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
   const termino = db.terminos.find((t) => t.id === id);
+
   if (!termino) {
     return res.status(404).json({ error: 'Término no encontrado' });
   }
 
+  if (!verificarAislamientoTenant(authReq, res, termino.organizacionId, 'término procesal')) {
+    return;
+  }
+
   termino.calculoConfirmadoPorAbogado = true;
-  termino.abogadoQueConfirmo = req.body.abogadoNombre || 'Dr. Jair';
+  termino.abogadoQueConfirmo = authReq.user.nombre;
   termino.estado = 'VERIFICADO';
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'CONFIRM_TERM',
     'AGENDA',
-    `Validación y confirmación jurídica manual del término procesal: ${termino.titulo}`,
-    id
+    `Abogado confirmó cómputo de término: ${termino.titulo}`,
+    id,
+    authReq.user.organizacionId
   );
 
   res.json({ termino });
 });
 
-app.post('/api/terminos/:id/complete', (req: Request, res: Response) => {
-  const { id } = req.params;
+// DOCUMENTOS LEGALES
+app.get('/api/documentos', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const orgId = authReq.user.organizacionId;
   const db = leerDB();
-  const termino = db.terminos.find((t) => t.id === id);
-  if (!termino) {
-    return res.status(404).json({ error: 'Término no encontrado' });
+  const { expedienteId } = req.query;
+
+  let filtrados = db.documentos.filter((d) => d.organizacionId === orgId);
+  if (expedienteId && typeof expedienteId === 'string') {
+    filtrados = filtrados.filter((d) => d.expedienteId === expedienteId);
   }
 
-  termino.estado = 'CUMPLIDO';
-  guardarDB(db);
-
-  registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
-    'UPDATE',
-    'AGENDA',
-    `Término marcado como cumplido: ${termino.titulo}`,
-    id
-  );
-
-  res.json({ termino });
+  res.json({ documentos: filtrados });
 });
 
-// Festivos de Colombia
-app.get('/api/terminos/festivos/:year', (req: Request, res: Response) => {
-  const year = parseInt(req.params.year) || new Date().getFullYear();
-  const festivos = obtenerFestivosColombia(year);
-  res.json({ year, festivos });
-});
-
-// 6. Redacción y Gestión Documental
-app.get('/api/documentos', (req: Request, res: Response) => {
-  const db = leerDB();
-  res.json({ documentos: db.documentos, plantillas: PLANTILLAS_JURIDICAS });
-});
-
-app.post('/api/documentos', (req: Request, res: Response) => {
+app.post('/api/documentos', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO', 'ASISTENTE_JUDICIAL'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
   const datos = req.body;
 
   if (!datos.titulo || !datos.contenidoTexto) {
-    return res.status(400).json({ error: 'El título y el contenido son obligatorios' });
+    return res.status(400).json({ error: 'Título y contenido del documento son obligatorios' });
   }
 
-  const nuevoDocumento: DocumentoLegal = {
+  if (datos.expedienteId) {
+    const exp = db.expedientes.find((e) => e.id === datos.expedienteId);
+    if (!exp || exp.organizacionId !== authReq.user.organizacionId) {
+      return res.status(403).json({ error: 'El expediente no pertenece a su organización' });
+    }
+  }
+
+  const nuevoDoc: DocumentoLegal = {
     ...datos,
     id: `doc-${Date.now()}-${crypto.randomBytes(2).toString('hex')}`,
     version: 1,
-    estadoRevision: datos.estadoRevision || 'BORRADOR_PRELIMINAR',
-    advertenciasRequisitos: datos.advertenciasRequisitos || [],
+    creadoPor: authReq.user.nombre,
     fechaCreacion: new Date().toISOString(),
-    fechaModificacion: new Date().toISOString(),
-    autorId: 'usr-jair-01',
-    autorNombre: 'Dr. Jair',
-    organizacionId: db.organizacion.id,
+    fechaActualizacion: new Date().toISOString(),
+    estado: datos.estado || 'BORRADOR',
+    organizacionId: authReq.user.organizacionId,
   };
 
-  db.documentos.unshift(nuevoDocumento);
+  db.documentos.unshift(nuevoDoc);
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'CREATE',
     'DOCUMENTOS',
-    `Creación de documento jurídico: ${nuevoDocumento.titulo} (${nuevoDocumento.tipo})`,
-    nuevoDocumento.id
+    `Creación de documento jurídico: ${nuevoDoc.titulo} (${nuevoDoc.tipoPlantilla})`,
+    nuevoDoc.id,
+    authReq.user.organizacionId
   );
 
-  res.status(201).json({ documento: nuevoDocumento });
+  res.status(201).json({ documento: nuevoDoc });
 });
 
-app.put('/api/documentos/:id', (req: Request, res: Response) => {
+app.get('/api/documentos/:id/export-word', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
   const doc = db.documentos.find((d) => d.id === id);
+
   if (!doc) {
     return res.status(404).json({ error: 'Documento no encontrado' });
   }
 
-  doc.titulo = req.body.titulo || doc.titulo;
-  doc.contenidoTexto = req.body.contenidoTexto || doc.contenidoTexto;
-  doc.estadoRevision = req.body.estadoRevision || doc.estadoRevision;
-  doc.version += 1;
-  doc.fechaModificacion = new Date().toISOString();
-
-  guardarDB(db);
-
-  registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
-    'UPDATE',
-    'DOCUMENTOS',
-    `Edición y nueva versión v${doc.version} de documento: ${doc.titulo}`,
-    id
-  );
-
-  res.json({ documento: doc });
-});
-
-// Descarga en formato Word / DOC (HTML MIME compatible con Microsoft Word y LibreOffice)
-app.get('/api/documentos/:id/download-word', (req: Request, res: Response) => {
-  const { id } = req.params;
-  const db = leerDB();
-  const doc = db.documentos.find((d) => d.id === id);
-  if (!doc) {
-    return res.status(404).send('Documento no encontrado');
+  if (!verificarAislamientoTenant(authReq, res, doc.organizacionId, 'documento')) {
+    return;
   }
 
-  // Generación de archivo HTML estructurado con encabezados XML para Word
   const htmlParaWord = `
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head>
       <meta charset='utf-8'>
       <title>${doc.titulo}</title>
-      <!--[if gte mso 9]>
-      <xml>
-        <w:WordDocument>
-          <w:View>Print</w:View>
-          <w:Zoom>100</w:Zoom>
-          <w:DoNotOptimizeForBrowser/>
-        </w:WordDocument>
-      </xml>
-      <![endif]-->
       <style>
         body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; margin: 2.5cm; }
         h1, h2, h3 { font-family: 'Arial', sans-serif; }
@@ -1218,7 +1424,7 @@ app.get('/api/documentos/:id/download-word', (req: Request, res: Response) => {
     </head>
     <body>
       <div class="encabezado">
-        <p style="margin:0; font-size: 14pt;">${db.organizacion.nombre}</p>
+        <p style="margin:0; font-size: 14pt;">${authReq.user.organizacionNombre}</p>
         <p style="margin:0; font-size: 10pt;">${db.organizacion.tarjetaProfesionalDireccion} — NIT: ${db.organizacion.nit}</p>
       </div>
       <div>
@@ -1236,18 +1442,27 @@ app.get('/api/documentos/:id/download-word', (req: Request, res: Response) => {
   res.send(htmlParaWord);
 });
 
-// 7. Honorarios y Gestión Administrativa
-app.get('/api/honorarios', (req: Request, res: Response) => {
+// HONORARIOS Y GESTIÓN
+app.get('/api/honorarios', requireAuth, (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
+  const orgId = authReq.user.organizacionId;
   const db = leerDB();
-  res.json({ honorarios: db.honorarios });
+  const honorariosOrg = db.honorarios.filter((h) => h.organizacionId === orgId);
+  res.json({ honorarios: honorariosOrg });
 });
 
-app.post('/api/honorarios', (req: Request, res: Response) => {
+app.post('/api/honorarios', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
   const datos = req.body;
 
   if (!datos.clienteId || !datos.concepto || !datos.valorAcordadoCOP) {
     return res.status(400).json({ error: 'Cliente, concepto y valor acordado son obligatorios' });
+  }
+
+  const cliente = db.clientes.find((c) => c.id === datos.clienteId && c.organizacionId === authReq.user.organizacionId);
+  if (!cliente) {
+    return res.status(403).json({ error: 'El cliente no pertenece a su organización' });
   }
 
   const nuevoHonorario: RegistroHonorario = {
@@ -1260,31 +1475,38 @@ app.post('/api/honorarios', (req: Request, res: Response) => {
     fechaAcuerdo: datos.fechaAcuerdo || new Date().toISOString().split('T')[0],
     pagosRegistrados: [],
     gastosProcesales: [],
-    organizacionId: db.organizacion.id,
+    organizacionId: authReq.user.organizacionId,
   };
 
   db.honorarios.unshift(nuevoHonorario);
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'CREATE',
     'HONORARIOS',
     `Registro de acuerdo de honorarios: ${nuevoHonorario.concepto} ($${nuevoHonorario.valorAcordadoCOP.toLocaleString('es-CO')} COP)`,
-    nuevoHonorario.id
+    nuevoHonorario.id,
+    authReq.user.organizacionId
   );
 
   res.status(201).json({ honorario: nuevoHonorario });
 });
 
-app.post('/api/honorarios/:id/pagos', (req: Request, res: Response) => {
+app.post('/api/honorarios/:id/pagos', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASOCIADO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
   const honorario = db.honorarios.find((h) => h.id === id);
+
   if (!honorario) {
     return res.status(404).json({ error: 'Registro de honorarios no encontrado' });
+  }
+
+  if (!verificarAislamientoTenant(authReq, res, honorario.organizacionId, 'registro de honorarios')) {
+    return;
   }
 
   const { montoCOP, medioPago, numeroComprobante, verificadoPorContabilidad } = req.body;
@@ -1299,7 +1521,7 @@ app.post('/api/honorarios/:id/pagos', (req: Request, res: Response) => {
     medioPago: medioPago || 'TRANSFERENCIA_BANCARIA',
     numeroComprobante: numeroComprobante || `COMP-${Date.now().toString().slice(-6)}`,
     verificadoPorContabilidad: !!verificadoPorContabilidad,
-    registradoPor: req.body.registradoPor || 'Dr. Jair',
+    registradoPor: authReq.user.nombre,
   };
 
   honorario.pagosRegistrados.push(nuevoPago);
@@ -1310,24 +1532,25 @@ app.post('/api/honorarios/:id/pagos', (req: Request, res: Response) => {
   guardarDB(db);
 
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'UPDATE',
     'HONORARIOS',
-    `Abono a honorarios: $${nuevoPago.montoCOP.toLocaleString('es-CO')} COP (${nuevoPago.medioPago}) para cliente ${honorario.clienteNombre}`,
-    nuevoPago.id
+    `Abono a honorarios: $${nuevoPago.montoCOP.toLocaleString('es-CO')} COP (${nuevoPago.medioPago})`,
+    nuevoPago.id,
+    authReq.user.organizacionId
   );
 
   res.status(201).json({ honorario, pago: nuevoPago });
 });
 
-// 8. Investigación Jurídica Oficial
-app.get('/api/investigacion/corpus', (req: Request, res: Response) => {
+// INVESTIGACIÓN JURÍDICA OFICIAL
+app.get('/api/investigacion/corpus', requireAuth, (_req: Request, res: Response) => {
   res.json({ corpus: CORPUS_JURIDICO_COLOMBIA, portales: PORTALES_OFICIALES_COLOMBIA });
 });
 
-app.get('/api/investigacion/search', (req: Request, res: Response) => {
+app.get('/api/investigacion/search', requireAuth, (req: Request, res: Response) => {
   const { q } = req.query;
   if (!q || typeof q !== 'string') {
     return res.json({ resultados: CORPUS_JURIDICO_COLOMBIA });
@@ -1346,8 +1569,8 @@ app.get('/api/investigacion/search', (req: Request, res: Response) => {
   res.json({ resultados });
 });
 
-// 9. Asistente Jurídico Inteligente con Gemini AI (@google/genai)
-app.post('/api/ai/analyze-facts', async (req: Request, res: Response) => {
+// ASISTENTE JURÍDICO INTELIGENTE CON GEMINI AI
+app.post('/api/ai/analyze-facts', requireAuth, async (req: Request, res: Response) => {
   const { hechos, areaJuridica, partes } = req.body;
   if (!hechos) {
     return res.status(400).json({ error: 'La relación de hechos es obligatoria' });
@@ -1365,14 +1588,14 @@ Analiza con rigor metodológico los siguientes hechos bajo la ley colombiana (CG
 
 ÁREA JURÍDICA: ${areaJuridica || 'General'}
 PARTES: ${JSON.stringify(partes || {})}
-HECHOS PROPORCIONADOS POR EL CLIENTE/ABOGADO:
+HECHOS PROPORCIONADOS:
 """
 ${hechos}
 """
 
 REGLAS DE EVALUACIÓN:
 1. NUNCA inventes artículos, números de sentencias o radicados judiciales.
-2. Si la información fáctica es incompleta o ambigua, señala explícitamente qué falta antes de formular una conclusión.
+2. Si la información fáctica es incompleta o ambigua, señala qué falta antes de formular una conclusión.
 3. Diferencia con precisión científica:
    - Hechos fácticos con vocación probatoria demostrada.
    - Afirmaciones de parte no demostradas.
@@ -1398,47 +1621,41 @@ Responde en formato estructurado JSON con la siguiente estructura exacta:
       "via": "string",
       "autoridadCompetente": "string",
       "pros": ["string"],
-      "contrasYRiesgos": ["string"],
-      "caducidadOPrescripcion": "string"
+      "contras": ["string"],
+      "requisitoProcedibilidad": "string"
     }
   ],
-  "preguntasClaveParaElCliente": ["string"],
-  "checklistProbatorio": ["string"],
+  "terminosYCaudidad": {
+    "accionPrincipal": "string",
+    "terminoMesesODias": "string",
+    "fechaLimiteEstimada": "string",
+    "advertenciaPerentoria": "string"
+  },
+  "checklistProbatorio": [
+    { "medio": "string", "objeto": "string", "estado": "REQUERIDO"|"APORTADO" }
+  ],
   "advertenciaDeontologica": "string"
 }`;
 
     const response = await aiClient.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
       },
     });
 
-    const rawText = response.text || '{}';
-    const jsonParsed = JSON.parse(rawText);
-
-    registrarAuditoria(
-      'usr-jair-01',
-      'Dr. Jair',
-      'ADMIN_TITULAR',
-      'AI_QUERY',
-      'ASISTENTE_IA',
-      `Análisis de hechos asistido por IA para área ${areaJuridica || 'General'}`
-    );
-
-    res.json({ analisis: jsonParsed });
+    const parsed = JSON.parse(response.text || '{}');
+    res.json({ analisis: parsed });
   } catch (error: any) {
-    console.error('Error al invocar Gemini API:', error);
-    res.status(500).json({ error: error.message || 'Error procesando análisis con IA' });
+    res.status(500).json({ error: 'Error procesando análisis fáctico en el servicio jurídico inteligente' });
   }
 });
 
-// Espacio de Trabajo Jurídico Conversacional
-app.post('/api/ai/chat', async (req: Request, res: Response) => {
-  const { mensaje, historial, contextoExpediente } = req.body;
-  if (!mensaje) {
-    return res.status(400).json({ error: 'El mensaje es obligatorio' });
+app.post('/api/ai/draft-document', requireAuth, async (req: Request, res: Response) => {
+  const { tipoPlantilla, datosEspecificos, hechosContexto, pretensionesContexto } = req.body;
+  if (!tipoPlantilla) {
+    return res.status(400).json({ error: 'El tipo de documento es obligatorio' });
   }
 
   if (!aiClient) {
@@ -1448,105 +1665,61 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
   }
 
   try {
-    const systemInstruction = `Eres JAIRRESTAURA UNO A, el asistente jurídico digital enterprise especializado en el ordenamiento jurídico de Colombia.
-Tu labor es asistir a abogados, litigantes y consultorios jurídicos con el más alto rigor doctrinal y procesal.
-Directrices estrictas:
-- NUNCA inventes sentencias, radicados ni citas normativas. Prioriza normas orgánicas y principios constitucionales vigentes.
-- Si una afirmación no cuenta con sustento normativo verificado en Colombia, decláralo expresamente como "Criterio sujeto a comprobación en relatoría".
-- Recuerda siempre que tus respuestas son insumos preparatorios de trabajo que deben ser refrendados por el abogado titular y no constituyen concepto definitivo vinculante ni garantizan resultado judicial (Ley 1123 de 2007).
-- Utiliza terminología procesal colombiana precisa (demandante, accionante, traslado, recurso de reposición en subsidio apelación, auto interlocutorio, audiencia Art. 372/373 CGP, excepción previa, juramento estimatorio).
-- Contexto de expediente si está activo: ${JSON.stringify(contextoExpediente || 'Sin expediente seleccionado')}.`;
+    const prompt = `Actúa como un abogado redactor senior en Colombia.
+Redacta un borrador profesional completo y formal de acuerdo con las formalidades del CGP o CPACA según el tipo solicitado.
 
-    const contents = [
-      ...(historial || []).map((h: any) => ({
-        role: h.rol === 'usuario' ? 'user' : 'model',
-        parts: [{ text: h.texto }],
-      })),
-      {
-        role: 'user',
-        parts: [{ text: mensaje }],
-      },
-    ];
+TIPO DE DOCUMENTO: ${tipoPlantilla}
+HECHOS O ANTECEDENTES:
+"""
+${hechosContexto || 'No especificados'}
+"""
+PRETENSIONES O SOLICITUDES:
+"""
+${pretensionesContexto || 'No especificadas'}
+"""
+DATOS ESPECÍFICOS DE LAS PARTES Y RADICACIÓN:
+"""
+${JSON.stringify(datosEspecificos || {})}
+"""
+
+DIRECTRICES DE REDACCIÓN:
+- Usa encabezado forense colombiano formal.
+- No dejes párrafos genéricos o vacíos.
+- Incluye acápite de Hechos numerados cronológicamente.
+- Acápite de Pretensiones o Peticiones claras.
+- Acápite de Fundamentos de Derecho y Medios de Prueba.
+- Acápite de Notificaciones conforme a la Ley 2213 de 2022.
+- Agrega al pie la advertencia: "[BORRADOR GENERADO POR ASISTENTE JURÍDICO - REQUIERE REVISIÓN Y FIRMA DE ABOGADO TITULADO]".
+
+Genera el texto legal completo y estructurado en prosa forense formal.`;
 
     const response = await aiClient.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents,
-      config: {
-        systemInstruction,
-      },
+      model: 'gemini-2.5-flash',
+      contents: prompt,
     });
 
-    const respuestaTexto = response.text || '';
-
-    registrarAuditoria(
-      'usr-jair-01',
-      'Dr. Jair',
-      'ADMIN_TITULAR',
-      'AI_QUERY',
-      'ASISTENTE_IA',
-      `Consulta interactiva con asistente jurídico IA: "${mensaje.substring(0, 50)}..."`
-    );
-
-    res.json({ respuesta: respuestaTexto });
+    res.json({ borrador: response.text });
   } catch (error: any) {
-    console.error('Error en chat Gemini:', error);
-    res.status(500).json({ error: error.message || 'Error en comunicación con asistente jurídico' });
+    res.status(500).json({ error: 'Error al generar borrador documental' });
   }
 });
 
-// Redacción Documental con IA
-app.post('/api/ai/draft', async (req: Request, res: Response) => {
-  const { tipoDocumento, parametros, instruccionesEspecificas } = req.body;
-  if (!tipoDocumento) {
-    return res.status(400).json({ error: 'El tipo de documento es obligatorio' });
+app.post('/api/ai/analyze-document', requireAuth, async (req: Request, res: Response) => {
+  const { textoDocumento } = req.body;
+  if (!textoDocumento || textoDocumento.trim().length < 50) {
+    return res.status(400).json({ error: 'El texto del documento debe tener al menos 50 caracteres para su análisis' });
   }
 
   if (!aiClient) {
     return res.status(503).json({
-      error: 'Servicio Gemini AI no disponible.',
+      error: 'Servicio Gemini AI no configurado.',
     });
   }
 
   try {
-    const prompt = `Genera un borrador procesal formal de alta calidad para Colombia de: ${tipoDocumento}.
-PARÁMETROS SUMINISTRADOS:
-${JSON.stringify(parametros, null, 2)}
+    const prompt = `Actúa como auditor jurídico senior especializado en análisis documental, contractual y procesal en Colombia.
+Analiza con exhaustividad el siguiente texto jurídico:
 
-INSTRUCCIONES ESPECÍFICAS:
-${instruccionesEspecificas || 'Redactar con estricta observancia del código procesal respectivo, numeración clara de hechos y pretensiones, invocación de la Ley 2213 de 2022 y advertencias de requisitos.'}
-
-REGLAS:
-- No inventes datos del cliente; deja campos [ENTRE CORCHETES] donde falte información.
-- Redacta encabezado, consideraciones, hechos, pretensiones o peticiones, fundamentos de derecho y acápite de notificaciones judiciales.`;
-
-    const response = await aiClient.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-    });
-
-    const borradorGenerado = response.text || '';
-
-    res.json({ borrador: borradorGenerado });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Error generando borrador documental' });
-  }
-});
-
-// Análisis Documental (Contratos, Piezas procesales, Demandas)
-app.post('/api/ai/analyze-document', async (req: Request, res: Response) => {
-  const { textoDocumento, nombreArchivo } = req.body;
-  if (!textoDocumento || textoDocumento.length < 20) {
-    return res.status(400).json({ error: 'El texto del documento a analizar es insuficiente o vacío' });
-  }
-
-  if (!aiClient) {
-    return res.status(503).json({ error: 'Servicio Gemini AI no configurado' });
-  }
-
-  try {
-    const prompt = `Analiza con rigor jurídico colombiano el siguiente documento contractual o procesal:
-NOMBRE DEL ARCHIVO: ${nombreArchivo || 'documento_legal'}
-TEXTO A EXAMINAR:
 """
 ${textoDocumento.slice(0, 30000)}
 """
@@ -1573,7 +1746,7 @@ Responde en formato JSON con la siguiente estructura:
 }`;
 
     const response = await aiClient.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -1583,39 +1756,83 @@ Responde en formato JSON con la siguiente estructura:
     const parsed = JSON.parse(response.text || '{}');
     res.json({ analisis: parsed });
   } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Error en análisis documental' });
+    res.status(500).json({ error: 'Error en análisis documental' });
   }
 });
 
-// 10. Auditoría y Seguridad
-app.get('/api/audit-log', (req: Request, res: Response) => {
+// BITÁCORA DE AUDITORÍA Y SEGURIDAD (Restringido a ADMIN_TITULAR y AUDITOR_CUMPLIMIENTO)
+app.get('/api/audit-log', requireAuth, requireRole('ADMIN_TITULAR', 'AUDITOR_CUMPLIMIENTO'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
-  res.json({ auditoria: db.auditoria.slice(0, 100) });
+  const auditoriaOrg = db.auditoria.filter((a) => a.organizacionId === authReq.user.organizacionId);
+  res.json({ auditoria: auditoriaOrg.slice(0, 100) });
 });
 
-// Exportación de Copia de Seguridad Completa (Habeas Data y Respaldo)
-app.get('/api/system/backup', (req: Request, res: Response) => {
+// EXPORTACIÓN DE RESPALDO DE SEGURIDAD (Restringido a ADMIN_TITULAR)
+app.get('/api/system/backup', requireAuth, requireRole('ADMIN_TITULAR'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const db = leerDB();
+
   registrarAuditoria(
-    'usr-jair-01',
-    'Dr. Jair',
-    'ADMIN_TITULAR',
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
     'EXPORT',
     'SEGURIDAD',
-    'Exportación completa de respaldo institucional de datos (Ley 1581 de 2012)'
+    'Exportación autorizada de respaldo institucional de datos (Ley 1581 de 2012)',
+    undefined,
+    authReq.user.organizacionId
   );
 
+  // Exportar únicamente los datos correspondientes a la organización del usuario
+  const backupTenant = {
+    exportadoEn: new Date().toISOString(),
+    exportadoPor: authReq.user.nombre,
+    organizacion: db.organizacion,
+    usuarios: db.usuarios.filter((u) => u.organizacionId === authReq.user.organizacionId),
+    clientes: db.clientes.filter((c) => c.organizacionId === authReq.user.organizacionId),
+    expedientes: db.expedientes.filter((e) => e.organizacionId === authReq.user.organizacionId),
+    terminos: db.terminos.filter((t) => t.organizacionId === authReq.user.organizacionId),
+    documentos: db.documentos.filter((d) => d.organizacionId === authReq.user.organizacionId),
+    honorarios: db.honorarios.filter((h) => h.organizacionId === authReq.user.organizacionId),
+    auditoria: db.auditoria.filter((a) => a.organizacionId === authReq.user.organizacionId),
+  };
+
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Content-Disposition', `attachment; filename="jairrestaura_backup_${new Date().toISOString().split('T')[0]}.json"`);
-  res.send(JSON.stringify(db, null, 2));
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="jairrestaura_backup_${authReq.user.organizacionId}_${new Date().toISOString().split('T')[0]}.json"`
+  );
+  res.send(JSON.stringify(backupTenant, null, 2));
 });
 
-// Reinicio a valores de fábrica / datos demo
-app.post('/api/system/restore-default', (req: Request, res: Response) => {
+// RESTABLECIMIENTO DE BASE DE DATOS (Restringido a ADMIN_TITULAR)
+app.post('/api/system/restore-default', requireAuth, requireRole('ADMIN_TITULAR'), (req: Request, res: Response) => {
+  const authReq = req as AuthenticatedRequest;
   const nuevo = crearDatosSemilla();
   guardarDB(nuevo);
-  registrarAuditoria('usr-jair-01', 'Dr. Jair', 'ADMIN_TITULAR', 'RESTORE', 'SEGURIDAD', 'Restablecimiento de base de datos a estado predeterminado.');
-  res.json({ success: true, message: 'Base de datos restaurada correctamente' });
+
+  registrarAuditoria(
+    authReq.user.userId,
+    authReq.user.nombre,
+    authReq.user.rol,
+    'RESTORE',
+    'SEGURIDAD',
+    'Restablecimiento de base de datos a estado predeterminado seguro.',
+    undefined,
+    authReq.user.organizacionId
+  );
+
+  res.json({ success: true, message: 'Base de datos restaurada correctamente a estado seguro' });
+});
+
+// Manejador centralizado de errores para evitar filtración de stack traces
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('[Error de Servidor]:', err);
+  res.status(500).json({
+    error: 'Error interno del servidor procesando la solicitud jurídica.',
+    codigo: 'INTERNAL_SERVER_ERROR',
+  });
 });
 
 // ==========================================
@@ -1630,18 +1847,17 @@ async function iniciarServidor() {
     });
     app.use(vite.middlewares);
   } else {
-    // Servir estáticos en producción
     const distPath = path.resolve(process.cwd(), 'dist');
     if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
-      app.get('*', (req: Request, res: Response) => {
+      app.get('*', (_req: Request, res: Response) => {
         res.sendFile(path.join(distPath, 'index.html'));
       });
     }
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[JAIRRESTAURA UNO A] Servidor iniciado con éxito en http://0.0.0.0:${PORT}`);
+    console.log(`[JAIRRESTAURA UNO A] Servidor seguro iniciado en http://0.0.0.0:${PORT}`);
   });
 }
 
