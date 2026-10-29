@@ -1,0 +1,7 @@
+{
+  "name": "JAIRRESTAURA UNO A",
+  "description": "Plataforma Jurídica Inteligente Enterprise. Más claridad jurídica. Mejor organización. Decisiones fundamentadas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

@@ -1,0 +1,448 @@
+{
+  "organizacion": {
+    "id": "org-jairrestaura-001",
+    "nombre": "JairRestaura Uno A & Asociados — Firma Jurídica",
+    "nit": "901.890.123-4",
+    "representante": "Dr. Jair",
+    "tarjetaProfesionalDireccion": "T.P. 284.910 del C.S.J.",
+    "fechaRegistro": "2026-01-01T00:00:00Z"
+  },
+  "usuarios": [
+    {
+      "id": "usr-jair-01",
+      "nombre": "Dr. Jair (Director Jurídico)",
+      "email": "jairdiosdeher@gmail.com",
+      "tarjetaProfesional": "T.P. No. 284.910 del C.S.J.",
+      "rol": "ADMIN_TITULAR",
+      "organizacionId": "org-jairrestaura-001",
+      "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica",
+      "fechaCreacion": "2026-01-10T08:00:00Z",
+      "ultimoAcceso": "2026-10-29T00:50:16.428Z"
+    },
+    {
+      "id": "usr-marcela-02",
+      "nombre": "Dra. Marcela Gómez",
+      "email": "m.gomez@jairrestaura.co",
+      "tarjetaProfesional": "T.P. No. 310.450 del C.S.J.",
+      "rol": "ABOGADO_ASOCIADO",
+      "organizacionId": "org-jairrestaura-001",
+      "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica",
+      "fechaCreacion": "2026-02-15T09:30:00Z",
+      "ultimoAcceso": "2026-10-29T00:50:16.429Z"
+    },
+    {
+      "id": "usr-andres-03",
+      "nombre": "Andrés Felipe Rojas",
+      "email": "a.rojas@jairrestaura.co",
+      "rol": "ASISTENTE_JUDICIAL",
+      "organizacionId": "org-jairrestaura-001",
+      "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica",
+      "fechaCreacion": "2026-03-01T10:00:00Z",
+      "ultimoAcceso": "2026-10-29T00:50:16.429Z"
+    }
+  ],
+  "clientes": [
+    {
+      "id": "cli-andinas-01",
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901.458.912",
+      "dv": "3",
+      "nombreCompletoORazonSocial": "Inversiones Andinas de Colombia S.A.S.",
+      "representanteLegal": {
+        "nombre": "Carlos Alberto Mejía Londoño",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "79.845.210",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "gerencia@inversionesandinas.co",
+      "emailNotificacionesJudiciales": "notificaciones@inversionesandinas.co",
+      "telefono": "+57 (601) 745-8900",
+      "direccion": "Carrera 7 No. 71-21 Torre B Of. 1102",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "estado": "ACTIVO",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-01-15T14:20:00Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal, representación judicial y custodia de expedientes conforme a la Ley 1581 de 2012.",
+        "soporteId": "AUT-1581-2026-001"
+      },
+      "notasInternas": "Cliente corporativo del sector inmobiliario. Tarifa preferencial con facturación mensual por etapas.",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-01-15T14:20:00Z",
+      "fechaActualizacion": "2026-10-25T11:00:00Z",
+      "expedientesIds": [
+        "exp-2026-001"
+      ]
+    },
+    {
+      "id": "cli-cardona-02",
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "52.841.902",
+      "nombreCompletoORazonSocial": "Dra. Elena Patricia Cardona Restrepo",
+      "emailPrincipal": "dra.cardona.med@gmail.com",
+      "emailNotificacionesJudiciales": "dra.cardona.notif@gmail.com",
+      "telefono": "+57 315 889 4512",
+      "direccion": "Calle 127 No. 19-45 Apto 502",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "estado": "ACTIVO",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-02-01T10:15:00Z",
+        "canalAutorizacion": "FIRMA_FISICA",
+        "finalidadTratamiento": "Representación en litigio laboral y responsabilidad médica conforme a la Ley 1581 de 2012.",
+        "soporteId": "AUT-1581-2026-002"
+      },
+      "notasInternas": "Médica especialista. Controversia sobre liquidación de acreencias laborales y vinculación por OPS.",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-02-01T10:15:00Z",
+      "fechaActualizacion": "2026-10-20T16:30:00Z",
+      "expedientesIds": [
+        "exp-2026-002"
+      ]
+    },
+    {
+      "id": "cli-morales-03",
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "1.018.492.381",
+      "nombreCompletoORazonSocial": "Juan Sebastián Morales Pineda",
+      "emailPrincipal": "jmorales.pineda@outlook.com",
+      "emailNotificacionesJudiciales": "jmorales.pineda@outlook.com",
+      "telefono": "+57 320 634 1198",
+      "direccion": "Transversal 38 No. 54-12 Sur",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "estado": "ACTIVO",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-04-10T09:00:00Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Trámite de Acción de Tutela de Salud y Derecho de Petición.",
+        "soporteId": "AUT-1581-2026-003"
+      },
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-04-10T09:00:00Z",
+      "fechaActualizacion": "2026-10-26T08:15:00Z",
+      "expedientesIds": [
+        "exp-2026-003"
+      ]
+    }
+  ],
+  "expedientes": [
+    {
+      "id": "exp-2026-001",
+      "codigoInterno": "EXP-2026-001",
+      "radicadoJudicial": "11001310301520240049200",
+      "despachoJudicial": "Juzgado 15 Civil del Circuito de Bogotá",
+      "clienteId": "cli-andinas-01",
+      "clienteNombre": "Inversiones Andinas de Colombia S.A.S.",
+      "areaJuridica": "CIVIL",
+      "jurisdiccion": "ORDINARIA",
+      "autoridadCompetente": "Juez 15 Civil del Circuito de Bogotá",
+      "partes": {
+        "demandanteOAccionante": "Inversiones Andinas de Colombia S.A.S.",
+        "apoderadoDemandante": "Dr. Jair (T.P. 284.910)",
+        "demandadoOAccionado": "Desarrollos Comerciales La Sabana S.A.",
+        "apoderadoDemandado": "Dra. Victoria Eugenia Silva (T.P. 195.820)",
+        "vinculadosTerceros": [
+          "Fiduciaria Central S.A."
+        ],
+        "juezOMagistradoPonente": "Dr. Humberto Gómez Rivera"
+      },
+      "sintesisHechos": "Incumplimiento de contrato de promesa de compraventa sobre lote comercial de 4.200 m2 ubicado en Chía. La demandada omitió saneamiento de servidumbres y entrega material dentro del plazo convenido.",
+      "pretensionesUObjetivos": "Declaratoria de resolución judicial del contrato por culpa de la parte vendedora; restitución de anticipo indexado ($340.000.000 COP) y condena al pago de cláusula penal compensatoria ($68.000.000 COP).",
+      "cuantiaEstimadaCOP": 408000000,
+      "esMayorCuantia": true,
+      "estado": "AUDIENCIA_INICIAL_372",
+      "estrategiaDefensiva": "Carga dinámica de la prueba sobre el oportuno levantamiento de gravámenes; solicitar fijación de litigio restringida al término pactado de entrega.",
+      "notasPrivadas": "Pendiente peritaje técnico sobre el valor comercial de la mejora y el impacto de la servidumbre de acueducto.",
+      "fechaInicio": "2024-09-12T10:00:00Z",
+      "fechaActualizacion": "2026-10-26T15:00:00Z",
+      "organizacionId": "org-jairrestaura-001",
+      "abogadoResponsableId": "usr-jair-01",
+      "abogadoResponsableNombre": "Dr. Jair"
+    },
+    {
+      "id": "exp-2026-002",
+      "codigoInterno": "EXP-2026-002",
+      "radicadoJudicial": "05001333300220250018800",
+      "despachoJudicial": "Tribunal Administrativo de Antioquia - Sección Segunda",
+      "clienteId": "cli-cardona-02",
+      "clienteNombre": "Dra. Elena Patricia Cardona Restrepo",
+      "areaJuridica": "ADMINISTRATIVO",
+      "jurisdiccion": "CONTENCIOSO_ADMINISTRATIVO",
+      "autoridadCompetente": "Magistrada Ponente Dra. Claudia Inés Peláez",
+      "partes": {
+        "demandanteOAccionante": "Elena Patricia Cardona Restrepo",
+        "apoderadoDemandante": "Dra. Marcela Gómez (T.P. 310.450)",
+        "demandadoOAccionado": "Empresa Social del Estado Hospital Regional San Juan",
+        "apoderadoDemandado": "Dr. Álvaro Pardo Botero"
+      },
+      "sintesisHechos": "Vinculación sucesiva e ininterrumpida durante 7 años mediante sucesivos contratos de prestación de servicios para cumplir funciones médicas de planta, subordinación estricta y turnos asistenciales continuos.",
+      "pretensionesUObjetivos": "Nulidad y restablecimiento del derecho; reconocimiento del Contrato Realidad laboral, pago de cesantías, primas, vacaciones y cotizaciones a pensión.",
+      "cuantiaEstimadaCOP": 195000000,
+      "esMayorCuantia": true,
+      "estado": "CONTESTACION_TRASLADO",
+      "estrategiaDefensiva": "Acreditación probatoria de subordinación mediante circulares internas de asignación de turnos y evaluaciones de desempeño institucional.",
+      "fechaInicio": "2025-05-18T08:30:00Z",
+      "fechaActualizacion": "2026-10-24T12:00:00Z",
+      "organizacionId": "org-jairrestaura-001",
+      "abogadoResponsableId": "usr-marcela-02",
+      "abogadoResponsableNombre": "Dra. Marcela Gómez"
+    },
+    {
+      "id": "exp-2026-003",
+      "codigoInterno": "EXP-2026-003",
+      "radicadoJudicial": "11001400300420260002100",
+      "despachoJudicial": "Juzgado 4 Laboral del Circuito de Bogotá",
+      "clienteId": "cli-morales-03",
+      "clienteNombre": "Juan Sebastián Morales Pineda",
+      "areaJuridica": "LABORAL_SEGURIDAD_SOCIAL",
+      "jurisdiccion": "ORDINARIA",
+      "autoridadCompetente": "Juez 4 Laboral del Circuito de Bogotá",
+      "partes": {
+        "demandanteOAccionante": "Juan Sebastián Morales Pineda",
+        "apoderadoDemandante": "Dr. Jair (T.P. 284.910)",
+        "demandadoOAccionado": "EPS Famisanar & Fondo de Pensiones Porvenir"
+      },
+      "sintesisHechos": "Negativa en reconocimiento y pago de incapacidades continuas que superan los 180 días con concepto desfavorable de rehabilitación emitido tardíamente.",
+      "pretensionesUObjetivos": "Tutela transitoria y ordinario laboral para ordenar el pago retroactivo del subsidio de incapacidad por enfermedad general.",
+      "cuantiaEstimadaCOP": 38500000,
+      "esMayorCuantia": false,
+      "estado": "ADMITIDO",
+      "fechaInicio": "2026-02-10T11:00:00Z",
+      "fechaActualizacion": "2026-10-27T09:00:00Z",
+      "organizacionId": "org-jairrestaura-001",
+      "abogadoResponsableId": "usr-jair-01",
+      "abogadoResponsableNombre": "Dr. Jair"
+    }
+  ],
+  "actuaciones": {
+    "exp-2026-001": [
+      {
+        "id": "act-001-1",
+        "expedienteId": "exp-2026-001",
+        "fechaActuacion": "2024-09-12",
+        "cuaderno": "Cuaderno Principal 1",
+        "folio": "1-34",
+        "tipoProvidencia": "MEMORIAL_PARTE",
+        "anotacion": "Radicación de demanda ordinaria declarativa de resolución de contrato con juramento estimatorio.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair",
+        "fechaCreacion": "2024-09-12T10:00:00Z"
+      },
+      {
+        "id": "act-001-2",
+        "expedienteId": "exp-2026-001",
+        "fechaActuacion": "2024-11-20",
+        "cuaderno": "Cuaderno Principal 1",
+        "folio": "45-48",
+        "tipoProvidencia": "AUTO_ADMISORIO",
+        "anotacion": "Auto admite demanda y ordena correr traslado por el término de veinte (20) días.",
+        "tieneTermino": true,
+        "terminoDias": 20,
+        "tipoDias": "HABILES",
+        "creadoPor": "Sistema Judicial",
+        "fechaCreacion": "2024-11-20T14:30:00Z"
+      },
+      {
+        "id": "act-001-3",
+        "expedienteId": "exp-2026-001",
+        "fechaActuacion": "2026-10-15",
+        "cuaderno": "Cuaderno Principal 1",
+        "tipoProvidencia": "AUTO_INTERLOCUTORIO",
+        "anotacion": "Fija fecha y hora para la celebración de la Audiencia Inicial prevista en el Artículo 372 del CGP (Conciliación, Excepciones Previas y Fijación de Litigio) para el 12 de noviembre de 2026 a las 09:00 a.m.",
+        "tieneTermino": true,
+        "terminoDias": 15,
+        "tipoDias": "HABILES",
+        "creadoPor": "Dr. Jair",
+        "fechaCreacion": "2026-10-15T16:00:00Z"
+      }
+    ]
+  },
+  "terminos": [
+    {
+      "id": "term-001",
+      "expedienteId": "exp-2026-001",
+      "expedienteCodigo": "EXP-2026-001",
+      "clienteId": "cli-andinas-01",
+      "clienteNombre": "Inversiones Andinas de Colombia S.A.S.",
+      "titulo": "Audiencia Inicial Art. 372 CGP (Virtual vía Teams)",
+      "descripcion": "Preparación de fórmulas de arreglo conciliatorio, ratificación de juramento estimatorio y oposición a excepciones previas.",
+      "tipoTermino": "AUDIENCIA",
+      "fechaNotificacionOInicio": "2026-10-15",
+      "aplicaReglaLey2213": false,
+      "duracionDias": 18,
+      "tipoDias": "HABILES_JUDICIALES",
+      "fechaVencimientoCalculada": "2026-11-12",
+      "calculoConfirmadoPorAbogado": true,
+      "abogadoQueConfirmo": "Dr. Jair",
+      "notasCómputo": "Fijación formal por Auto del 15 de Octubre. Cédula del representante legal requerida para autenticación en sala virtual.",
+      "estado": "VERIFICADO",
+      "prioridad": "ALTA",
+      "responsableId": "usr-jair-01",
+      "responsableNombre": "Dr. Jair",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "term-002",
+      "expedienteId": "exp-2026-002",
+      "expedienteCodigo": "EXP-2026-002",
+      "clienteId": "cli-cardona-02",
+      "clienteNombre": "Dra. Elena Patricia Cardona Restrepo",
+      "titulo": "Descorrer traslado de excepciones de mérito (30 días CPACA)",
+      "descripcion": "Presentar memorial desvirtuando excepción de prescripción y falta de causa invocadas por la E.S.E. demandada.",
+      "tipoTermino": "CONTESTACION_TRASLADO",
+      "fechaNotificacionOInicio": "2026-10-18",
+      "aplicaReglaLey2213": true,
+      "duracionDias": 30,
+      "tipoDias": "HABILES_JUDICIALES",
+      "fechaVencimientoCalculada": "2026-12-04",
+      "calculoConfirmadoPorAbogado": true,
+      "abogadoQueConfirmo": "Dra. Marcela Gómez",
+      "notasCómputo": "Notificación electrónica conforme al Art. 8 Ley 2213/2022. Término empezó a correr al tercer día hábil siguiente.",
+      "estado": "PENDIENTE",
+      "prioridad": "ALTA",
+      "responsableId": "usr-marcela-02",
+      "responsableNombre": "Dra. Marcela Gómez",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "term-003",
+      "expedienteId": "exp-2026-003",
+      "expedienteCodigo": "EXP-2026-003",
+      "clienteId": "cli-morales-03",
+      "clienteNombre": "Juan Sebastián Morales Pineda",
+      "titulo": "Subsanación de requisitos formales de demanda (5 días Art. 90 CGP)",
+      "descripcion": "Aclarar acápite de notificaciones conforme a la Ley 2213 de 2022 y aportar historial clínico actualizado.",
+      "tipoTermino": "SUBSANACION_DEMANDA",
+      "fechaNotificacionOInicio": "2026-10-24",
+      "aplicaReglaLey2213": true,
+      "duracionDias": 5,
+      "tipoDias": "HABILES_JUDICIALES",
+      "fechaVencimientoCalculada": "2026-11-04",
+      "calculoConfirmadoPorAbogado": false,
+      "notasCómputo": "Pendiente refrendación final del abogado titular con el cómputo del puente festivo del 2 de noviembre.",
+      "estado": "PENDIENTE",
+      "prioridad": "ALTA",
+      "responsableId": "usr-andres-03",
+      "responsableNombre": "Andrés Felipe Rojas",
+      "organizacionId": "org-jairrestaura-001"
+    }
+  ],
+  "documentos": [
+    {
+      "id": "doc-001",
+      "titulo": "Poder Especial y Amplio - Inversiones Andinas S.A.S.",
+      "tipo": "PODER_ESPECIAL",
+      "expedienteId": "exp-2026-001",
+      "clienteId": "cli-andinas-01",
+      "version": 1,
+      "contenidoTexto": "PODER ESPECIAL, AMPLIO Y SUFICIENTE\n(Artículos 74 y siguientes del Código General del Proceso y Ley 2213 de 2022)\n\nBogotá D.C.\n\nSeñor(a)\nJUEZ COMPETENTE / AUTORIDAD JUDICIAL O ADMINISTRATIVA\nBogotá D.C.\nE. S. D.\n\nInversiones Andinas de Colombia S.A.S. (Rep. Carlos Alberto Mejía), mayor de edad, domiciliado en esta ciudad, identificado con NIT 901.458.912-3 / C.C. 79.845.210, por medio del presente documento confiero PODER ESPECIAL, AMPLIO Y SUFICIENTE al(a la) doctor(a) Dr. Jair, mayor de edad, identificado con la cédula de ciudadanía No. 80.123.456 y portador(a) de la Tarjeta Profesional No. 284.910 expedida por el Consejo Superior de la Judicatura, para que en mi nombre y representación inicie, tramite y lleve hasta su total culminación el siguiente asunto:\n\nASUNTO: Proceso declarativo verbal de resolución de contrato de promesa de compraventa de mayor cuantía en contra de Desarrollos Comerciales La Sabana S.A.\nCONTRAPARTE: En contra de / Con intervención de Desarrollos Comerciales La Sabana S.A..\n\nFACULTADES:\nMi apoderado(a) queda expresamente facultado(a) para realizar todas las actuaciones procesales y extrajudiciales inherentes al mandato, en los términos del Artículo 77 del Código General del Proceso (Ley 1564 de 2012), entre ellas: conciliar, transigir, desistir, recibir, sustituir total o parcialmente el presente mandato, reasumirlo, tachar de falsedad, interponer recursos ordinarios y extraordinarios de reposición, apelación, queja, casación, tutela y nulidad, solicitar medidas cautelares, y en general todas aquellas que tiendan a la más eficaz defensa de mis derechos e intereses.\n\nEl presente poder se otorga con las prerrogativas y presunción de autenticidad establecidas en el Artículo 5 de la Ley 2213 de 2022.\n\nAcepto el mandato,\n\n___________________________________________\nInversiones Andinas de Colombia S.A.S. (Rep. Carlos Alberto Mejía)\nC.C. NIT 901.458.912-3 / C.C. 79.845.210\nPoderdante\n\n___________________________________________\nDr. Jair\nC.C. 80.123.456\nT.P. No. 284.910 del C.S. de la J.\nApoderado(a) Judicial",
+      "estadoRevision": "APROBADO_PARA_RADICACION",
+      "advertenciasRequisitos": [
+        "Verificar envío desde el buzón de notificaciones registrado en Certificado de Cámara de Comercio conforme al Art. 5 Ley 2213/2022."
+      ],
+      "fechaCreacion": "2024-09-10T10:00:00Z",
+      "fechaModificacion": "2024-09-11T12:00:00Z",
+      "autorId": "usr-jair-01",
+      "autorNombre": "Dr. Jair",
+      "organizacionId": "org-jairrestaura-001"
+    }
+  ],
+  "honorarios": [
+    {
+      "id": "hon-001",
+      "expedienteId": "exp-2026-001",
+      "expedienteCodigo": "EXP-2026-001",
+      "clienteId": "cli-andinas-01",
+      "clienteNombre": "Inversiones Andinas de Colombia S.A.S.",
+      "concepto": "Representación judicial integral proceso de resolución contractual de mayor cuantía.",
+      "modalidad": "MIXTO",
+      "valorAcordadoCOP": 28000000,
+      "valorPagadoCOP": 14000000,
+      "saldoPendienteCOP": 14000000,
+      "estado": "PARCIAL",
+      "fechaAcuerdo": "2024-09-10",
+      "fechaVencimiento": "2026-11-30",
+      "pagosRegistrados": [
+        {
+          "id": "pag-01",
+          "fechaPago": "2024-09-15",
+          "montoCOP": 14000000,
+          "medioPago": "TRANSFERENCIA_BANCARIA",
+          "numeroComprobante": "BCO-BOG-984120",
+          "verificadoPorContabilidad": true,
+          "registradoPor": "Dr. Jair"
+        }
+      ],
+      "gastosProcesales": [
+        {
+          "id": "gas-01",
+          "concepto": "Arancel de notificación personal certificada por correo electrónico con acuse técnico",
+          "montoCOP": 185000,
+          "fecha": "2024-11-25",
+          "asumidoPor": "CLIENTE"
+        }
+      ],
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "hon-002",
+      "expedienteId": "exp-2026-002",
+      "expedienteCodigo": "EXP-2026-002",
+      "clienteId": "cli-cardona-02",
+      "clienteNombre": "Dra. Elena Patricia Cardona Restrepo",
+      "concepto": "Demanda de Nulidad y Restablecimiento del Derecho (Contrato Realidad)",
+      "modalidad": "CUOTA_LITIS",
+      "valorAcordadoCOP": 39000000,
+      "valorPagadoCOP": 3000000,
+      "saldoPendienteCOP": 36000000,
+      "estado": "PARCIAL",
+      "fechaAcuerdo": "2025-05-15",
+      "pagosRegistrados": [
+        {
+          "id": "pag-02",
+          "fechaPago": "2025-05-20",
+          "montoCOP": 3000000,
+          "medioPago": "CONSIGNACION",
+          "numeroComprobante": "REC-CAJA-0045",
+          "verificadoPorContabilidad": true,
+          "registradoPor": "Dra. Marcela Gómez"
+        }
+      ],
+      "gastosProcesales": [],
+      "organizacionId": "org-jairrestaura-001"
+    }
+  ],
+  "auditoria": [
+    {
+      "id": "aud-001",
+      "timestamp": "2026-10-28T16:00:00Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso en plataforma enterprise JAIRRESTAURA UNO A con token institucional.",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-002",
+      "timestamp": "2026-10-28T16:30:00Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-001",
+      "descripcionDetallada": "Validación manual del término procesal de Audiencia Inicial Art. 372 CGP para expediente EXP-2026-001.",
+      "organizacionId": "org-jairrestaura-001"
+    }
+  ]
+}
