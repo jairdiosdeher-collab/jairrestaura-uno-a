@@ -263,7 +263,7 @@ export interface RegistroAuditoria {
   usuarioNombre: string;
   usuarioRol: RolUsuario;
   accion: 'LOGIN' | 'LOGOUT' | 'CREATE' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'AI_QUERY' | 'CONFIRM_TERM' | 'RESTORE';
-  modulo: 'CLIENTES' | 'EXPEDIENTES' | 'ASISTENTE_IA' | 'INVESTIGACION' | 'DOCUMENTOS' | 'AGENDA' | 'HONORARIOS' | 'SEGURIDAD';
+  modulo: 'CLIENTES' | 'EXPEDIENTES' | 'ASISTENTE_IA' | 'INVESTIGACION' | 'DOCUMENTOS' | 'AGENDA' | 'HONORARIOS' | 'SEGURIDAD' | 'ESCUELA_JURIDICA';
   registroIdAfectado?: string;
   descripcionDetallada: string;
   ipAddress?: string;
@@ -284,4 +284,128 @@ export interface FuenteJuridicaOficial {
   fechaUltimaConsulta: string;
   resumenExtracto: string;
   materias: string[];
+}
+
+// ============================================================
+// ESCUELA JURÍDICA INTELIGENTE (MÓDULO ACADÉMICO PARA ESTUDIANTES)
+// Espacio pedagógico estrictamente separado de expedientes reales
+// ============================================================
+
+export type EstadoEstudioCaso = 
+  | 'EN_ANALISIS' 
+  | 'FUENTES_REVISADAS' 
+  | 'BORRADOR_LISTO' 
+  | 'CONCLUIDO';
+
+export interface TareaInvestigacionAcademica {
+  id: string;
+  descripcion: string;
+  completada: boolean;
+  fuenteAsociada?: string;
+}
+
+export interface FuenteAcademicaRecomendada {
+  identificador: string;
+  tipo: string;
+  motivoPertinencia: string;
+  enlaceOficial?: string;
+  verificadaEnCatalogo: boolean;
+}
+
+export interface LineaAnalisisAcademico {
+  titulo: string;
+  fundamentoJuridico: string;
+  pros: string;
+  limitacionesORiesgos: string;
+}
+
+export interface CasoAcademico {
+  id: string;
+  titulo: string;
+  areaDerecho: AreaJuridica;
+  materiaEspecifica?: string;
+  hechosOriginales: string;
+  
+  // Descomposición analítica estructurada (IA pedagógica)
+  hechosAcreditados: string[];
+  inferenciasJuridicas: string[];
+  informacionFaltanteYPorVerificar: string[];
+  problemasJuridicos: string[];
+  preguntasPorResolver: string[];
+  fuentesRecomendadas: FuenteAcademicaRecomendada[];
+  lineasAnalisis: LineaAnalisisAcademico[];
+  
+  // Estado pedagógico y seguimiento
+  estadoEstudio: EstadoEstudioCaso;
+  tareasInvestigacion: TareaInvestigacionAcademica[];
+  proximaActividadAcademica: string;
+  notasEstudiante?: string;
+  historialCambios?: {
+    fecha: string;
+    accion: string;
+    detalles: string;
+  }[];
+
+  // Separación y metadatos
+  esCasoPedagogico: true; // Marca imperativa de no contaminación
+  creadoPor: string;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+  organizacionId: string;
+}
+
+export interface RutaProcesalEtapa {
+  orden: number;
+  nombre: string;
+  descripcion: string;
+  terminoLegal?: string;
+  fundamentoLegal: string;
+  condicionesComputo?: string;
+  actuacionSugerida: string;
+  advertencias: string;
+}
+
+export interface RutaProcesalAcademica {
+  materia: string;
+  tipoProcedimiento: string;
+  autoridadYCompetencia: string;
+  requisitosPrevios: string[];
+  etapas: RutaProcesalEtapa[];
+  proximaActuacionInmediata: string;
+  riesgosYExcepciones: string[];
+  fuentesOficialesComprobacion: {
+    nombre: string;
+    enlace: string;
+    tipo: string;
+  }[];
+  advertenciaDeontologica: string;
+}
+
+export type TutorAcademicoModo =
+  | 'CONCEPTOS'               // Explicación de conceptos jurídicos
+  | 'CASOS_PRACTICOS'         // Análisis de casos prácticos
+  | 'METODO_RESOLUCION'       // Método para resolver problemas jurídicos (IRAC / subsunción)
+  | 'PREPARACION_EXAMENES'    // Preparación para exámenes y preparatorios
+  | 'PREGUNTAS_PRACTICA'      // Preguntas de práctica con retroalimentación formativa
+  | 'ENSAYOS_TRABAJOS'        // Estructuración de ensayos y trabajos académicos
+  | 'LECTURA_GUIADA'          // Lectura guiada de normas y sentencias
+  | 'ARGUMENTACION';          // Ejercicios de argumentación jurídica
+
+export type DocumentoAcademicoTipo =
+  | 'FICHA_JURISPRUDENCIAL'
+  | 'RESUMEN_NORMATIVO'
+  | 'MATRIZ_ANALISIS'
+  | 'CONCEPTO_ACADEMICO'
+  | 'LINEA_TIEMPO'
+  | 'ESQUEMA_PROCESAL';
+
+export interface DocumentoAcademicoBorrador {
+  id: string;
+  titulo: string;
+  tipo: DocumentoAcademicoTipo;
+  casoAcademicoId?: string;
+  contenidoTexto: string;
+  fechaCreacion: string;
+  esBorradorAcademico: true;
+  advertenciaNoRadicable: string;
 }

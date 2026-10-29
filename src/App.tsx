@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { DashboardView } from './views/DashboardView';
+import { EscuelaJuridicaView } from './views/EscuelaJuridicaView';
 import { ClientesView } from './views/ClientesView';
 import { ExpedientesView } from './views/ExpedientesView';
 import { AsistenteIAView } from './views/AsistenteIAView';
@@ -73,16 +74,21 @@ export default function App() {
     nombre: 'JairRestaura Uno A & Asociados — Firma Jurídica',
   });
 
-  // Datos de negocio
+  // Datos de negocio — Inicializados sin cifras codificadas ni fijas
   const [stats, setStats] = useState({
-    totalClientes: 3,
-    expedientesActivos: 3,
-    terminosPendientesTotal: 3,
-    terminosCriticosTotal: 2,
-    totalDocumentos: 1,
-    totalHonorariosPactados: 67000000,
-    totalHonorariosRecaudados: 17000000,
-    saldoPorCobrar: 50000000,
+    totalClientes: 0,
+    clientesConHabeasData: 0,
+    expedientesActivos: 0,
+    totalExpedientes: 0,
+    terminosPendientesTotal: 0,
+    terminosCriticosTotal: 0,
+    terminosVencidosTotal: 0,
+    terminosCumplidosTotal: 0,
+    totalDocumentos: 0,
+    totalHonorariosPactados: 0,
+    totalHonorariosFacturados: 0,
+    totalHonorariosRecaudados: 0,
+    saldoPorCobrar: 0,
   });
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
@@ -90,6 +96,7 @@ export default function App() {
   const [documentos, setDocumentos] = useState<DocumentoLegal[]>([]);
   const [honorarios, setHonorarios] = useState<RegistroHonorario[]>([]);
   const [auditoria, setAuditoria] = useState<RegistroAuditoria[]>([]);
+  const [estaCargando, setEstaCargando] = useState<boolean>(true);
 
   // Expediente seleccionado para vista detallada o contextual en IA
   const [expedienteSeleccionadoId, setExpedienteSeleccionadoId] = useState<string | null>(null);
@@ -105,6 +112,7 @@ export default function App() {
   // Cargar datos desde el backend Express (Modo Abierto sin bloqueo)
   const cargarDatos = async () => {
     try {
+      setEstaCargando(true);
       // 1. Sesión y usuarios
       const resAuth = await fetch('/api/auth/me', {
         headers: { 'x-user-id': usuarioActivo.id },
@@ -180,6 +188,8 @@ export default function App() {
       }
     } catch (err) {
       console.warn('Sincronizando con backend...', err);
+    } finally {
+      setEstaCargando(false);
     }
   };
 
@@ -419,17 +429,26 @@ export default function App() {
           {currentView === 'dashboard' && (
             <DashboardView
               stats={stats}
-              proximosTerminos={terminos.filter((t) => t.estado !== 'CUMPLIDO').slice(0, 5)}
+              proximosTerminos={[...terminos]
+                .filter((t) => t.estado !== 'CUMPLIDO')
+                .sort((a, b) => a.fechaVencimientoCalculada.localeCompare(b.fechaVencimientoCalculada))
+                .slice(0, 5)}
               expedientesRecientes={expedientes.slice(0, 5)}
+              clientes={clientes}
+              honorarios={honorarios}
               actividadReciente={auditoria}
+              estaCargando={estaCargando}
               onNavigate={(v, contextId) => {
                 setCurrentView(v);
                 if (contextId) setExpedienteSeleccionadoId(contextId);
               }}
               onQuickAction={handleQuickAction}
               onConfirmTerm={handleConfirmarTermino}
+              onCompleteTerm={handleCompletarTermino}
             />
           )}
+
+          {currentView === 'escuela_juridica' && <EscuelaJuridicaView />}
 
           {currentView === 'clientes' && (
             <ClientesView

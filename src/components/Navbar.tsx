@@ -33,6 +33,7 @@ interface NavbarProps {
 
 const VIEW_TITLES: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: 'Panel Principal', subtitle: 'Resumen gerencial de expedientes y actuaciones' },
+  escuela_juridica: { title: 'Escuela Jurídica Inteligente', subtitle: 'Formación pedagógica, análisis socrático de hechos y litigio estratégico' },
   clientes: { title: 'Directorio de Clientes', subtitle: 'Personas naturales, jurídicas y Habeas Data Ley 1581' },
   expedientes: { title: 'Gestión de Expedientes', subtitle: 'Seguimiento procesal y actuaciones judiciales' },
   asistente_ia: { title: 'Asistente Jurídico IA', subtitle: 'Análisis fáctico, subsunción e interrogatorio' },

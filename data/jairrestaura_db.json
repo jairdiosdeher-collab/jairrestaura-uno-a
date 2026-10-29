@@ -17,7 +17,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-01-10T08:00:00Z",
-      "ultimoAcceso": "2026-10-29T01:22:39.183Z"
+      "ultimoAcceso": "2026-10-29T11:15:11.044Z"
     },
     {
       "id": "usr-marcela-02",
@@ -38,7 +38,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-03-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-29T01:22:39.201Z"
+      "ultimoAcceso": "2026-10-29T11:15:11.070Z"
     },
     {
       "id": "usr-externo-04",
@@ -49,7 +49,7 @@
       "organizacionId": "org-externa-002",
       "organizacionNombre": "Firma Legal Andina Externa Ltda.",
       "fechaCreacion": "2026-04-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-29T01:22:39.222Z"
+      "ultimoAcceso": "2026-10-29T11:15:11.091Z"
     }
   ],
   "clientes": [
@@ -415,13 +415,14 @@
       "duracionDias": 5,
       "tipoDias": "HABILES_JUDICIALES",
       "fechaVencimientoCalculada": "2026-11-04",
-      "calculoConfirmadoPorAbogado": false,
+      "calculoConfirmadoPorAbogado": true,
       "notasCómputo": "Pendiente refrendación final del abogado titular con el cómputo del puente festivo del 2 de noviembre.",
-      "estado": "PENDIENTE",
+      "estado": "VERIFICADO",
       "prioridad": "ALTA",
       "responsableId": "usr-andres-03",
       "responsableNombre": "Andrés Felipe Rojas",
-      "organizacionId": "org-jairrestaura-001"
+      "organizacionId": "org-jairrestaura-001",
+      "abogadoQueConfirmo": "Dr. Jair"
     }
   ],
   "documentos": [
@@ -510,6 +511,111 @@
     }
   ],
   "auditoria": [
+    {
+      "id": "aud-1793275625011-33806d",
+      "timestamp": "2026-10-29T12:07:05.011Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793275625003-fb59",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793275625005-f6f37e",
+      "timestamp": "2026-10-29T12:07:05.005Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793275625003-fb59",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793272511148-858c6c",
+      "timestamp": "2026-10-29T11:15:11.148Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGOUT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Cierre formal de sesión y revocación de token criptográfico",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793272511129-b86cd7",
+      "timestamp": "2026-10-29T11:15:11.129Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "EXPORT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Exportación autorizada de respaldo institucional de datos (Ley 1581 de 2012)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793272511091-0026a2",
+      "timestamp": "2026-10-29T11:15:11.091Z",
+      "usuarioId": "usr-externo-04",
+      "usuarioNombre": "Dra. Camila Soto (Firma Externa)",
+      "usuarioRol": "ABOGADO_ASOCIADO",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-externa-002",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793272511072-51bdbc",
+      "timestamp": "2026-10-29T11:15:11.072Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793272511046-169bd5",
+      "timestamp": "2026-10-29T11:15:11.046Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793272510988-42dacd",
+      "timestamp": "2026-10-29T11:15:10.988Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "EXPORT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Exportación autorizada de respaldo institucional de datos (Ley 1581 de 2012)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793272506588-2696e3",
+      "timestamp": "2026-10-29T11:15:06.588Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-003",
+      "descripcionDetallada": "Abogado titular verificó cómputo de término: Subsanación de requisitos formales de demanda (5 días Art. 90 CGP)",
+      "organizacionId": "org-jairrestaura-001"
+    },
     {
       "id": "aud-1793237325399-398c69",
       "timestamp": "2026-10-29T01:28:45.399Z",
@@ -658,6 +764,242 @@
       "modulo": "AGENDA",
       "registroIdAfectado": "term-001",
       "descripcionDetallada": "Validación manual del término procesal de Audiencia Inicial Art. 372 CGP para expediente EXP-2026-001.",
+      "organizacionId": "org-jairrestaura-001"
+    }
+  ],
+  "casosAcademicos": [
+    {
+      "id": "caso-acad-1793275625003-fb59",
+      "titulo": "Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "areaDerecho": "CIVIL",
+      "materiaEspecifica": "Responsabilidad Civil por Actividades Peligrosas (Art. 2356 CC)",
+      "hechosOriginales": "Una embarcación de transporte turístico colisionó contra un muelle en el embalse de Guatapé. Tres pasajeros sufrieron politraumatismos. La empresa operadora alega fuerza mayor por ráfagas de viento imprevistas.",
+      "hechosAcreditados": [
+        "Ocurrencia del accidente en el embalse.",
+        "Daño corporal a tres pasajeros."
+      ],
+      "inferenciasJuridicas": [
+        "Presunción de culpa o responsabilidad objetiva por actividad peligrosa."
+      ],
+      "informacionFaltanteYPorVerificar": [
+        "Comprobar informe de capitanía de puerto sobre condiciones meteorológicas."
+      ],
+      "problemasJuridicos": [
+        "¿Configuran las ráfagas de viento un evento imprevisible e irresistible para exonerar al transportador?"
+      ],
+      "preguntasPorResolver": [
+        "¿Cuál es la carga probatoria de la fuerza mayor según la Sala de Casación Civil de la CSJ?"
+      ],
+      "fuentesRecomendadas": [],
+      "lineasAnalisis": [],
+      "estadoEstudio": "FUENTES_REVISADAS",
+      "tareasInvestigacion": [
+        {
+          "id": "t1",
+          "descripcion": "Consultar providencias de la Sala de Casación Civil",
+          "completada": true
+        },
+        {
+          "id": "t2",
+          "descripcion": "Verificar Art. 2356 del Código Civil",
+          "completada": true
+        }
+      ],
+      "proximaActividadAcademica": "Redactar ficha de casación civil sobre actividad peligrosa",
+      "notasEstudiante": "",
+      "historialCambios": [
+        {
+          "fecha": "2026-10-29T12:07:05.003Z",
+          "accion": "CREACION_CASO_ACADEMICO",
+          "detalles": "Caso académico creado por Dr. Jair (Director Jurídico)"
+        },
+        {
+          "fecha": "2026-10-29T12:07:05.010Z",
+          "accion": "ACTUALIZACION_CASO_ACADEMICO",
+          "detalles": "Modificación por Dr. Jair (Director Jurídico). Estado: FUENTES_REVISADAS"
+        }
+      ],
+      "esCasoPedagogico": true,
+      "creadoPor": "Dr. Jair (Director Jurídico)",
+      "fechaCreacion": "2026-10-29T12:07:05.003Z",
+      "fechaActualizacion": "2026-10-29T12:07:05.010Z",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "caso-acad-001",
+      "titulo": "Tutela contra Providencia Judicial por presunto Defecto Fáctico (Valoración Probatoria)",
+      "areaDerecho": "CONSTITUCIONAL",
+      "materiaEspecifica": "Acción de Tutela contra Providencias Judiciales",
+      "hechosOriginales": "Un ciudadano demandó en proceso ordinario laboral solicitando reintegro y acreencias. En segunda instancia, el Tribunal Superior revocó la sentencia estimatoria de primer grado argumentando que un testimonio clave no fue ratificado en audiencia de instrucción y juzgamiento, omitiendo valorar tres pruebas documentales aportadas en término (contratos sucesivos y memorandos internos de órdenes directas). El ciudadano interpuso tutela alegando vía de hecho por defecto fáctico por omisión arbitraria de pruebas determinantes.",
+      "hechosAcreditados": [
+        "Existió proceso ordinario laboral con sentencia estimatoria en 1a instancia y revocatoria en 2a instancia.",
+        "Se aportaron dentro de término legal contratos de trabajo sucesivos y memorandos de órdenes directas.",
+        "El Tribunal Superior fundamentó su fallo exclusivamente en la no ratificación testimonial."
+      ],
+      "inferenciasJuridicas": [
+        "Podría configurarse defecto fáctico en su dimensión negativa por valoración omisiva o defectuosa del acervo documental.",
+        "El resultado del proceso ordinario laboral habría cambiado sustancialmente si se hubiesen valorado los memorandos jerárquicos.",
+        "La tutela cumple en principio con relevancia constitucional al comprometerse el derecho al debido proceso (Art. 29 CP) y mínimo vital."
+      ],
+      "informacionFaltanteYPorVerificar": [
+        "Verificar fecha exacta de ejecutoria de la sentencia de 2a instancia para comprobar el principio de inmediatez (plazo razonable inferior a 6 meses).",
+        "Acreditar si contra la sentencia de 2a instancia procedía recurso extraordinario de casación (principio de subsidiariedad).",
+        "Revisar el texto íntegro de la providencia para verificar si el Tribunal descartó expresamente los memorandos o si guardó silencio absoluto."
+      ],
+      "problemasJuridicos": [
+        "¿Vulnera el Tribunal accionado el derecho fundamental al debido proceso (Art. 29 CP) y acceso a la justicia al incurrir en defecto fáctico por omisión probatoria determinante al revocar el fallo de primer grado?",
+        "¿Se cumple el requisito general de subsidiariedad en tutela contra providencia judicial si no se interpuso el recurso extraordinario de casación por cuantía insuficiente?"
+      ],
+      "preguntasPorResolver": [
+        "¿Cuáles son los presupuestos rigurosos fijados por la Sentencia C-590 de 2005 para estructurar el defecto fáctico en dimensión negativa?",
+        "¿Cuándo se entiende que una prueba pretermitida tiene el carácter de 'determinante' para la decisión judicial?",
+        "¿Cómo debe sustentarse la inmediatez procesal en el escrito de tutela?"
+      ],
+      "fuentesRecomendadas": [
+        {
+          "identificador": "Sentencia C-590 de 2005",
+          "tipo": "SENTENCIA_C",
+          "motivoPertinencia": "Sentencia hito vinculante que unifica los 6 requisitos generales de procedibilidad y las 8 causales específicas (defecto fáctico, orgánico, sustantivo, etc.).",
+          "enlaceOficial": "https://www.corteconstitucional.gov.co/relatoria/2005/C-590-05.htm",
+          "verificadaEnCatalogo": true
+        },
+        {
+          "identificador": "Constitución Política de Colombia",
+          "tipo": "CONSTITUCION",
+          "motivoPertinencia": "Art. 29 (Debido Proceso) y Art. 86 (Acción de Tutela como mecanismo preferente y sumario).",
+          "enlaceOficial": "https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Constitucion/1687988",
+          "verificadaEnCatalogo": true
+        },
+        {
+          "identificador": "Decreto 2591 de 1991",
+          "tipo": "DECRETO_REGLAMENTARIO",
+          "motivoPertinencia": "Reglamento del trámite constitucional de tutela, legitimación, pruebas y medidas cautelares.",
+          "enlaceOficial": "https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Decretos/1042735",
+          "verificadaEnCatalogo": true
+        }
+      ],
+      "lineasAnalisis": [
+        {
+          "titulo": "Línea Principal: Defecto Fáctico en Dimensión Negativa",
+          "fundamentoJuridico": "Jurisprudencia uniforme de la Corte Constitucional sobre omisión arbitraria en la apreciación de medios probatorios debidamente incorporados.",
+          "pros": "La prueba documental aportada es objetiva y desvirtúa la mera autonomía de la contraparte.",
+          "limitacionesORiesgos": "El juez constitucional de tutela no es una tercera instancia y debe evitar invadir la autonomía interpretativa del juez natural (Art. 228 CP)."
+        },
+        {
+          "titulo": "Línea Subsidiaria: Vulneración Directa de la Constitución",
+          "fundamentoJuridico": "Art. 53 de la Constitución: principio de primacía de la realidad sobre las formas establecidas por los sujetos de las relaciones laborales.",
+          "pros": "Refuerza la argumentación sustantiva sobre la protección reforzada al trabajo.",
+          "limitacionesORiesgos": "Requiere haber sido planteado de manera clara desde las instancias ordinarias."
+        }
+      ],
+      "estadoEstudio": "FUENTES_REVISADAS",
+      "tareasInvestigacion": [
+        {
+          "id": "tar-01",
+          "descripcion": "Verificar en la relatoría la Sentencia C-590/05 sobre causales de tutela contra providencia judicial",
+          "completada": true,
+          "fuenteAsociada": "Sentencia C-590 de 2005"
+        },
+        {
+          "id": "tar-02",
+          "descripcion": "Revisar jurisprudencia reciente de tutela de la Sala de Casación Laboral de la CSJ sobre valoración de prueba documental",
+          "completada": true,
+          "fuenteAsociada": "CSJ Relatoría"
+        },
+        {
+          "id": "tar-03",
+          "descripcion": "Redactar el borrador pedagógico de la Ficha Jurisprudencial para el seminario de Derecho Procesal",
+          "completada": false
+        }
+      ],
+      "proximaActividadAcademica": "Construir matriz de análisis y borrador de Ficha Jurisprudencial del defecto fáctico",
+      "notasEstudiante": "Caso de estudio para la cátedra de Derecho Procesal Constitucional. Recordar citar los 6 requisitos generales de procedibilidad.",
+      "esCasoPedagogico": true,
+      "creadoPor": "Dr. Jair (Director Jurídico)",
+      "fechaCreacion": "2026-10-20T10:00:00Z",
+      "fechaActualizacion": "2026-10-29T10:00:00Z",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "caso-acad-002",
+      "titulo": "Simulación y Contrato Realidad en el Sector Salud: Contratos de OPS sucesivos",
+      "areaDerecho": "ADMINISTRATIVO",
+      "materiaEspecifica": "Nulidad y Restablecimiento del Derecho / Contrato Realidad",
+      "hechosOriginales": "Una bacterióloga prestó servicios en una E.S.E. municipal durante 6 años ininterrumpidos mediante 18 contratos de prestación de servicios (OPS) consecutivos. Cumplía horario estricto fijado por el coordinador de laboratorio, utilizaba dotación y equipos de la institución, no podía delegar sus funciones y recibía honorarios mensuales fijos. Tras culminar su último contrato, solicita al hospital el reconocimiento de salarios, cesantías y primas. El hospital rechaza la petición alegando que las partes pactaron autónomamente bajo la Ley 80 de 1993.",
+      "hechosAcreditados": [
+        "Prestación continuada por 6 años mediante 18 contratos de prestación de servicios sucesivos.",
+        "Cumplimiento de turnos y horarios preestablecidos por la jefatura médica.",
+        "Uso exclusivo de insumos e infraestructura pública hospitalaria."
+      ],
+      "inferenciasJuridicas": [
+        "Configuración probable de los tres elementos del contrato de trabajo: actividad personal, continuada subordinación y salario/remuneración.",
+        "Desnaturalización del contrato estatal de prestación de servicios por subordinación funcional y permanencia en el servicio.",
+        "Vía procesal procedente: Medio de control de Nulidad y Restablecimiento del Derecho (Art. 138 CPACA) previa reclamación administrativa y agotamiento del requisito de conciliación extrajudicial (Ley 2220 de 2022)."
+      ],
+      "informacionFaltanteYPorVerificar": [
+        "Verificar fecha del acto administrativo que denegó la reclamación o si operó el silencio administrativo negativo (3 meses, Art. 83 CPACA).",
+        "Calcular con exactitud el término de caducidad de 4 meses del Art. 164 numeral 2 literal d del CPACA contado a partir de la notificación del acto expreso.",
+        "Acreditar el trámite de audiencia de conciliación prejudicial ante la Procuraduría Judicial (Ley 2220 de 2022)."
+      ],
+      "problemasJuridicos": [
+        "¿Se desnaturaliza el contrato de prestación de servicios y nace un contrato de trabajo estatal cuando la entidad contratante ejerce continuada subordinación e impone turnos a un profesional de la salud?",
+        "¿Opera el fenómeno de la prescripción trienal respecto a las prestaciones sociales reclamadas frente al momento de terminación de la última orden de prestación de servicios?"
+      ],
+      "preguntasPorResolver": [
+        "¿Cuál es la doctrina de unificación del Consejo de Estado (Sentencia SU de septiembre de 2021) sobre el término de prescripción en contrato realidad?",
+        "¿Qué consecuencias tiene el no agotamiento previo de la conciliación extrajudicial obligatoria de la Ley 2220 de 2022?",
+        "¿Cómo se formula la pretensión económica de restablecimiento del derecho para evitar indebida acumulación de pretensiones?"
+      ],
+      "fuentesRecomendadas": [
+        {
+          "identificador": "Ley 1437 de 2011 (Modificada por Ley 2080 de 2021)",
+          "tipo": "LEY",
+          "motivoPertinencia": "Art. 138 (Nulidad y Restablecimiento del Derecho), Art. 161 (Conciliación obligatoria) y Art. 164 (Caducidad de 4 meses).",
+          "enlaceOficial": "https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Leyes/1681347",
+          "verificadaEnCatalogo": true
+        },
+        {
+          "identificador": "Ley 2220 de 2022",
+          "tipo": "LEY",
+          "motivoPertinencia": "Estatuto de Conciliación en Colombia: requisito de procedibilidad en lo contencioso administrativo y suspensión de caducidad.",
+          "enlaceOficial": "https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Leyes/30044673",
+          "verificadaEnCatalogo": true
+        },
+        {
+          "identificador": "Sentencia SU-091 de 2000",
+          "tipo": "SENTENCIA_SU",
+          "motivoPertinencia": "Doctrina de la Corte Constitucional sobre interdicción de arbitrariedad y protección de relaciones laborales materiales en el sector público.",
+          "enlaceOficial": "https://www.corteconstitucional.gov.co/relatoria/2000/SU091-00.htm",
+          "verificadaEnCatalogo": true
+        }
+      ],
+      "lineasAnalisis": [
+        {
+          "titulo": "Pretensión de Nulidad y Restablecimiento del Derecho",
+          "fundamentoJuridico": "Principio constitucional de primacía de la realidad (Art. 53 CP) y jurisprudencia unificada de la Sección Segunda del Consejo de Estado.",
+          "pros": "Alineada con la jurisprudencia consolidada de las Altas Cortes cuando se prueba el horario y las directrices jerárquicas.",
+          "limitacionesORiesgos": "El término de caducidad de 4 meses del CPACA es perentorio e improrrogable si la entidad expidió resolución expresa de rechazo."
+        }
+      ],
+      "estadoEstudio": "EN_ANALISIS",
+      "tareasInvestigacion": [
+        {
+          "id": "tar-04",
+          "descripcion": "Estudiar la Sentencia de Unificación del Consejo de Estado del 9 de septiembre de 2021 sobre la regla de prescripción",
+          "completada": false
+        },
+        {
+          "id": "tar-05",
+          "descripcion": "Construir la ruta procesal desde la petición en sede administrativa hasta la audiencia inicial del Art. 180 CPACA",
+          "completada": false
+        }
+      ],
+      "proximaActividadAcademica": "Elaborar la ruta procesal y la matriz de análisis fáctico-jurídico para la clínica de litigio",
+      "notasEstudiante": "Ejercicio para el consultorio jurídico universitario. Fundamental contrastar Ley 80 de 1993 Art. 32 numeral 3 con Art. 53 de la Constitución.",
+      "esCasoPedagogico": true,
+      "creadoPor": "Dr. Jair (Director Jurídico)",
+      "fechaCreacion": "2026-10-22T14:00:00Z",
+      "fechaActualizacion": "2026-10-28T16:00:00Z",
       "organizacionId": "org-jairrestaura-001"
     }
   ]

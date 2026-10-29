@@ -16,6 +16,7 @@ import {
   FileSearch,
   ReceiptText,
   ShieldAlert,
+  GraduationCap,
   Scale,
   Building2,
   ChevronRight,
@@ -44,9 +45,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Panel Principal', icon: LayoutDashboard },
+    { id: 'escuela_juridica', label: 'Escuela Jurídica', icon: GraduationCap, highlight: true },
     { id: 'clientes', label: 'Clientes & Habeas Data', icon: Users },
     { id: 'expedientes', label: 'Expedientes & Casos', icon: FolderKanban, badge: expedientesCount },
-    { id: 'asistente_ia', label: 'Asistente Jurídico IA', icon: Sparkles, highlight: true },
+    { id: 'asistente_ia', label: 'Asistente Jurídico IA', icon: Sparkles },
     { id: 'investigacion', label: 'Investigación Oficial', icon: BookOpenCheck },
     { id: 'redaccion', label: 'Redacción Documental', icon: FileSignature },
     { id: 'terminos', label: 'Control de Términos', icon: CalendarClock, badge: terminosCount },
