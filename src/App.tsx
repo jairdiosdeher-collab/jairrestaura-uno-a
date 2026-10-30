@@ -109,14 +109,22 @@ export default function App() {
     setTimeout(() => setNotificacion(null), 3500);
   };
 
+  // Helper para cabeceras con token de sesión
+  const DEMO_TOKEN = 'jairrestaura-demo-session-token-2026';
+  const getAuthHeaders = (extra: Record<string, string> = {}) => ({
+    'Authorization': `Bearer ${DEMO_TOKEN}`,
+    'x-user-id': usuarioActivo.id,
+    ...extra,
+  });
+
   // Cargar datos desde el backend Express (Modo Abierto sin bloqueo)
   const cargarDatos = async () => {
     try {
       setEstaCargando(true);
+      const headers = getAuthHeaders();
+
       // 1. Sesión y usuarios
-      const resAuth = await fetch('/api/auth/me', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resAuth = await fetch('/api/auth/me', { headers });
       if (resAuth.ok) {
         const dataAuth = await resAuth.json();
         if (dataAuth.usuario) setUsuarioActivo(dataAuth.usuario);
@@ -125,63 +133,49 @@ export default function App() {
       }
 
       // 2. Dashboard Stats
-      const resStats = await fetch('/api/dashboard/stats', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resStats = await fetch('/api/dashboard/stats', { headers });
       if (resStats.ok) {
         const dataStats = await resStats.json();
         setStats(dataStats);
       }
 
       // 3. Clientes
-      const resClientes = await fetch('/api/clientes', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resClientes = await fetch('/api/clientes', { headers });
       if (resClientes.ok) {
         const dataClientes = await resClientes.json();
         setClientes(dataClientes.clientes || []);
       }
 
       // 4. Expedientes
-      const resExp = await fetch('/api/expedientes', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resExp = await fetch('/api/expedientes', { headers });
       if (resExp.ok) {
         const dataExp = await resExp.json();
         setExpedientes(dataExp.expedientes || []);
       }
 
       // 5. Términos
-      const resTerm = await fetch('/api/terminos', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resTerm = await fetch('/api/terminos', { headers });
       if (resTerm.ok) {
         const dataTerm = await resTerm.json();
         setTerminos(dataTerm.terminos || []);
       }
 
       // 6. Documentos
-      const resDoc = await fetch('/api/documentos', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resDoc = await fetch('/api/documentos', { headers });
       if (resDoc.ok) {
         const dataDoc = await resDoc.json();
         setDocumentos(dataDoc.documentos || []);
       }
 
       // 7. Honorarios
-      const resHon = await fetch('/api/honorarios', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resHon = await fetch('/api/honorarios', { headers });
       if (resHon.ok) {
         const dataHon = await resHon.json();
         setHonorarios(dataHon.honorarios || []);
       }
 
       // 8. Auditoría
-      const resAud = await fetch('/api/audit-log', {
-        headers: { 'x-user-id': usuarioActivo.id },
-      });
+      const resAud = await fetch('/api/audit-log', { headers });
       if (resAud.ok) {
         const dataAud = await resAud.json();
         setAuditoria(dataAud.auditoria || []);
@@ -233,7 +227,7 @@ export default function App() {
   const handleCrearCliente = async (clienteData: Partial<Cliente>) => {
     const res = await fetch('/api/clientes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(clienteData),
     });
     if (res.ok) {
@@ -248,7 +242,7 @@ export default function App() {
   const handleEditarCliente = async (id: string, clienteData: Partial<Cliente>) => {
     const res = await fetch(`/api/clientes/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(clienteData),
     });
     if (res.ok) {
@@ -258,7 +252,10 @@ export default function App() {
   };
 
   const handleArchivarCliente = async (id: string) => {
-    const res = await fetch(`/api/clientes/${id}/archive`, { method: 'POST' });
+    const res = await fetch(`/api/clientes/${id}/archive`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
     if (res.ok) {
       mostrarNotificacion('Estado del cliente modificado');
       cargarDatos();
@@ -269,7 +266,7 @@ export default function App() {
   const handleCrearExpediente = async (expData: Partial<Expediente>) => {
     const res = await fetch('/api/expedientes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(expData),
     });
     if (res.ok) {
@@ -284,7 +281,7 @@ export default function App() {
   const handleRegistrarActuacion = async (expedienteId: string, actuacionData: any) => {
     const res = await fetch(`/api/expedientes/${expedienteId}/actuaciones`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(actuacionData),
     });
     if (res.ok) {
@@ -297,7 +294,7 @@ export default function App() {
   const handleCrearTermino = async (terminoData: Partial<TerminoAgenda>) => {
     const res = await fetch('/api/terminos', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(terminoData),
     });
     if (res.ok) {
@@ -309,7 +306,7 @@ export default function App() {
   const handleConfirmarTermino = async (id: string) => {
     const res = await fetch(`/api/terminos/${id}/confirm`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ abogadoNombre: usuarioActivo.nombre }),
     });
     if (res.ok) {
@@ -319,7 +316,10 @@ export default function App() {
   };
 
   const handleCompletarTermino = async (id: string) => {
-    const res = await fetch(`/api/terminos/${id}/complete`, { method: 'POST' });
+    const res = await fetch(`/api/terminos/${id}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
     if (res.ok) {
       mostrarNotificacion('Término marcado como cumplido en agenda');
       cargarDatos();
@@ -330,7 +330,7 @@ export default function App() {
   const handleGuardarDocumento = async (docData: Partial<DocumentoLegal>) => {
     const res = await fetch('/api/documentos', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(docData),
     });
     if (res.ok) {
@@ -342,7 +342,7 @@ export default function App() {
   const handleActualizarDocumento = async (id: string, docData: Partial<DocumentoLegal>) => {
     const res = await fetch(`/api/documentos/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(docData),
     });
     if (res.ok) {

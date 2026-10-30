@@ -280,6 +280,7 @@ export interface FuenteJuridicaOficial {
   epigrafeOTitulo: string;
   articulosOFundamentosClave: string;
   enlaceVerificado: string;
+  enlaceOficial?: string;
   estadoVigenciaComprobado: 'VIGENTE' | 'DEROGADA' | 'EXEQUIBLE_CONDICIONADA' | 'INEXEQUIBLE' | 'JURISPRUDENCIA_VIGENTE';
   fechaUltimaConsulta: string;
   resumenExtracto: string;
@@ -368,6 +369,8 @@ export interface HipotesisContrapuesta {
 export interface AnalisisHipotesisCaso {
   hipotesisPrincipal: HipotesisContrapuesta;
   hipotesisAlternativa: HipotesisContrapuesta;
+  puntosControvertidos?: string[];
+  cargaProbatoria?: string[];
   preguntasAdicionalesPorResolver: string[];
   preguntasParaProfundizar?: string[];
   sintesisDocente: string;
@@ -509,3 +512,147 @@ export interface DocumentoAcademicoBorrador {
   esBorradorAcademico: true;
   advertenciaNoRadicable: string;
 }
+
+// ============================================================
+// ORIENTADOR JURÍDICO CIUDADANO IA — TIPOS Y CONTRATOS
+// ============================================================
+
+export type NivelAutogestion =
+  | 'AUTOGESTIONABLE'                  // Nivel 1: Trámite realizable directamente por el ciudadano sin apoderado
+  | 'CONVIENE_ASESORIA'                // Nivel 2: Es viable autogestión pero conviene asesoría previa o centro de conciliación
+  | 'VERIFICAR_REQUISITO_ABOGADO'      // Nivel 3: Requiere verificar cuantía y competencia procesal (Art. 73 CGP)
+  | 'ASISTENCIA_PROFESIONAL_PRIORITARIA'; // Nivel 4: Requiere abogado titulado obligatorio (mayor cuantía, penal ordinario, casación)
+
+export interface UrgenciaCiudadana {
+  esUrgente: boolean;
+  nivelUrgencia: 'ALTA' | 'MEDIA' | 'INFORMATIVA';
+  motivoUrgencia: string;
+  plazoVerificar?: string;
+  advertenciaInmediata: string;
+  diasRestantesEstimados?: number;
+  accionesInmediatas: string[];
+}
+
+export interface PasoRutaCiudadana {
+  orden: number;
+  titulo: string;
+  paraQueSirve: string;
+  queHacer: string;
+  documentosAReunir: string[];
+  anteQuien: string;
+  canalOficial: string;
+  enlaceCanalOficial?: string;
+  queEsperar: string;
+  queHacerSiFalla: string;
+  precauciones: string[];
+}
+
+export interface DocumentoRequeridoCiudadano {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  comoObtenerlo: string;
+  comoConservarlo: string;
+  obligatorio: boolean;
+  reunido?: boolean;
+}
+
+export interface EntidadCompetenteCiudadana {
+  nombre: string;
+  tipo: 'ADMINISTRATIVA' | 'JUDICIAL' | 'CONTROL' | 'CONCILIACION' | 'ORIENTACION_GRATUITA';
+  competencia: string;
+  sedeOCanal: string;
+  esGratuita: boolean;
+  enlaceOficial: string;
+}
+
+export interface OpcionLegalCiudadana {
+  titulo: string;
+  descripcion: string;
+  consecuencias: string;
+  pros: string[];
+  contras: string[];
+}
+
+export interface OrientacionGratuitaItem {
+  entidad: string;
+  descripcion: string;
+  requisitos: string;
+  canal: string;
+  enlaceOficial?: string;
+}
+
+export interface ResultadoOrientacionCiudadana {
+  id: string;
+  fechaOrientacion: string;
+  resumenSituacion: {
+    loQueEntendemos: string;
+    datosFaltantesPorConfirmar: string[];
+    hechosRelatados: string[];
+    pruebasRevisadas: string[];
+    suposiciones: string[];
+  };
+  categoriasIdentificadas: string[];
+  urgencia: UrgenciaCiudadana;
+  opcionesLegales: OpcionLegalCiudadana[];
+  queHacerPrimero: {
+    accion: string;
+    porQueEsImportante: string;
+    plazoRecomendado: string;
+  };
+  procedimientoPasoAPaso: PasoRutaCiudadana[];
+  clasificacionAutogestion: {
+    nivel: NivelAutogestion;
+    justificacion: string;
+    advertenciaRepresentacion: string;
+  };
+  documentosRequeridos: DocumentoRequeridoCiudadano[];
+  dondeAcudir: EntidadCompetenteCiudadana[];
+  orientacionGratuitaDisponible: OrientacionGratuitaItem[];
+  queHacerDespues: string[];
+  proximoPasoInmediato: string;
+  fuentesOficiales: FuenteJuridicaOficial[];
+  avisoLegal: string;
+}
+
+export interface ProblemaCiudadanoEntrada {
+  descripcionProblema: string;
+  ciudad?: string;
+  fechaAproximada?: string;
+  notificacionRecibida?: boolean;
+  detalleNotificacion?: string;
+  fechaNotificacion?: string;
+  fechaLimite?: string;
+  resultadoEsperado?: string;
+  documentosDisponibles?: string[];
+}
+
+export type TipoBorradorCiudadano =
+  | 'DERECHO_PETICION_ART23'
+  | 'RECLAMACION_DIRECTA_CONSUMIDOR'
+  | 'COMUNICACION_ARRENDAMIENTO'
+  | 'SOLICITUD_CONCILIACION_EXTRAJUDICIAL'
+  | 'REQUERIMIENTO_PAGO_EXTRAJUDICIAL';
+
+export interface BorradorCiudadano {
+  id: string;
+  tipo: TipoBorradorCiudadano;
+  titulo: string;
+  contenidoTexto: string;
+  fechaCreacion: string;
+  advertenciaNoRadicacion: string;
+  camposPendientesCompletar: string[];
+  normativaAplicable: string[];
+}
+
+export interface ConceptoGlosarioCiudadano {
+  id: string;
+  termino: string;
+  definicionClara: string;
+  enPalabrasSencillas: string;
+  ejemploHipotetico: string;
+  queNoEs: string;
+  baseLegal: string;
+  categoria: 'CONCEPTOS_BASICOS' | 'PROCEDIMIENTOS' | 'DERECHOS' | 'TERMINOS_Y_PLAZOS';
+}
+

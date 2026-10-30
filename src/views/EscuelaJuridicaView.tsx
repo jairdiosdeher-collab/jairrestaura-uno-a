@@ -42,8 +42,10 @@ import {
   RefreshCw,
   Send,
   CornerDownRight,
-  CheckSquare
+  CheckSquare,
+  Compass
 } from 'lucide-react';
+import { OrientadorCiudadano } from '../components/OrientadorCiudadano';
 import type {
   CasoAcademico,
   EstadoEstudioCaso,
@@ -59,10 +61,10 @@ import type {
   PasoSocratico
 } from '../types/legal';
 
-type TabView = 'casos' | 'matriz' | 'socratica' | 'hipotesis' | 'ruta' | 'tutor' | 'investigacion' | 'borradores';
+type TabView = 'orientador' | 'casos' | 'matriz' | 'socratica' | 'hipotesis' | 'ruta' | 'tutor' | 'investigacion' | 'borradores';
 
 export const EscuelaJuridicaView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabView>('casos');
+  const [activeTab, setActiveTab] = useState<TabView>('orientador');
   const [casos, setCasos] = useState<CasoAcademico[]>([]);
   const [selectedCasoId, setSelectedCasoId] = useState<string | null>(null);
   const [cargandoCasos, setCargandoCasos] = useState<boolean>(true);
@@ -134,6 +136,26 @@ export const EscuelaJuridicaView: React.FC = () => {
   const [tipoBorrador, setTipoBorrador] = useState<DocumentoAcademicoTipo>('MATRIZ_PROBATORIA');
   const [borradorGenerado, setBorradorGenerado] = useState<DocumentoAcademicoBorrador | null>(null);
   const [generandoBorrador, setGenerandoBorrador] = useState<boolean>(false);
+
+  // Alerta y Guía Pedagógica Docente
+  const [alertaDocente, setAlertaDocente] = useState<{ mensaje: string; tipo: 'info' | 'error' | 'exito' } | null>(null);
+
+  // Exportar caso en JSON para estudiantes sin cuenta o respaldo local
+  const handleExportarCasoJSON = (caso: CasoAcademico) => {
+    try {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(caso, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `caso-academico-${caso.id}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      setAlertaDocente({ mensaje: 'Caso académico exportado en archivo JSON descargable.', tipo: 'exito' });
+      setTimeout(() => setAlertaDocente(null), 3500);
+    } catch (e) {
+      console.error('Error exportando caso:', e);
+    }
+  };
 
   // Cargar casos académicos al montar
   useEffect(() => {
@@ -469,9 +491,20 @@ export const EscuelaJuridicaView: React.FC = () => {
       });
       if (res.ok) {
         setCasos(casos.map((c) => (c.id === casoId ? { ...c, estadoEstudio: nuevoEstado } : c)));
+        setAlertaDocente({ mensaje: `Estado del caso actualizado a ${nuevoEstado}`, tipo: 'exito' });
+        setTimeout(() => setAlertaDocente(null), 3500);
+      } else {
+        const errorData = await res.json();
+        setAlertaDocente({
+          mensaje: errorData.error || 'No fue posible actualizar el estado del caso',
+          tipo: 'error',
+        });
+        setTimeout(() => setAlertaDocente(null), 6000);
       }
     } catch (e) {
       console.error(e);
+      setAlertaDocente({ mensaje: 'Error de comunicación al actualizar el caso', tipo: 'error' });
+      setTimeout(() => setAlertaDocente(null), 4000);
     }
   };
 
@@ -640,10 +673,14 @@ export const EscuelaJuridicaView: React.FC = () => {
         <div className="absolute right-0 top-0 bottom-0 w-96 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <span className="px-2.5 py-0.5 text-[11px] font-bold tracking-wider uppercase bg-amber-400 text-slate-950 rounded-full flex items-center gap-1.5 shadow-sm">
                 <GraduationCap className="w-3.5 h-3.5 stroke-[2.5]" />
                 ESCUELA JURÍDICA INTELIGENTE
+              </span>
+              <span className="px-2 py-0.5 text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                Acceso Libre — Sin Barreras ni Registro Obligatorio
               </span>
               <span className="text-xs text-amber-300 font-mono tracking-wide flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" /> Entorno Pedagógico Separado (Sin Afectar Expedientes Reales)
@@ -674,14 +711,22 @@ export const EscuelaJuridicaView: React.FC = () => {
           </div>
         </div>
 
-        {/* 5 Botones de Acceso Rápido */}
-        <div className="mt-6 pt-5 border-t border-slate-700/60 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+        {/* Botones de Acceso Rápido */}
+        <div className="mt-6 pt-5 border-t border-slate-700/60 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+          <button
+            onClick={() => setActiveTab('orientador')}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition-all border border-amber-400/40 shadow-sm col-span-2 sm:col-span-1"
+          >
+            <Compass className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">Orientador Ciudadano</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('matriz')}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40"
           >
             <Layers className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Matriz de Hechos & Pruebas</span>
+            <span className="truncate">Matriz Hechos & Pruebas</span>
           </button>
 
           <button
@@ -717,16 +762,59 @@ export const EscuelaJuridicaView: React.FC = () => {
               setTipoBorrador('MATRIZ_PROBATORIA');
               handleGenerarBorrador();
             }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40 col-span-2 sm:col-span-1"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-400/20 text-slate-200 hover:text-amber-300 text-xs font-medium transition-all border border-slate-700 hover:border-amber-400/40"
           >
             <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">Generar Borrador Didáctico</span>
+            <span className="truncate">Borrador Didáctico</span>
           </button>
         </div>
       </div>
 
+      {/* Banner de Notificación / Alerta Docente */}
+      {alertaDocente && (
+        <div
+          className={`p-3.5 rounded-xl border flex items-center justify-between text-xs sm:text-sm shadow-sm transition-all animate-fadeIn ${
+            alertaDocente.tipo === 'error'
+              ? 'bg-red-50 dark:bg-red-950/70 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200'
+              : alertaDocente.tipo === 'exito'
+              ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+              : 'bg-blue-50 dark:bg-blue-950/70 border-blue-300 dark:border-blue-800 text-blue-900 dark:text-blue-200'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            {alertaDocente.tipo === 'error' ? (
+              <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            )}
+            <span className="font-medium">{alertaDocente.mensaje}</span>
+          </div>
+          <button
+            onClick={() => setAlertaDocente(null)}
+            className="text-xs opacity-70 hover:opacity-100 font-bold px-2 py-0.5 rounded"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* 2. Barra de Navegación de Pestañas */}
       <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1 text-xs">
+        <button
+          onClick={() => setActiveTab('orientador')}
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 font-bold rounded-t-xl transition-all border-b-2 shrink-0 ${
+            activeTab === 'orientador'
+              ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/70 dark:bg-amber-950/30 shadow-sm'
+              : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400'
+          }`}
+        >
+          <Compass className="w-4 h-4 text-amber-500" />
+          Orientador Ciudadano IA
+          <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950 text-[10px] font-extrabold uppercase tracking-wider">
+            Nuevo
+          </span>
+        </button>
+
         <button
           onClick={() => setActiveTab('casos')}
           className={`flex items-center gap-1.5 px-3.5 py-2.5 font-semibold rounded-t-xl transition-all border-b-2 shrink-0 ${
@@ -823,6 +911,11 @@ export const EscuelaJuridicaView: React.FC = () => {
           Borradores Didácticos
         </button>
       </div>
+
+      {/* 0. PESTAÑA ORIENTADOR CIUDADANO IA */}
+      {activeTab === 'orientador' && (
+        <OrientadorCiudadano onAbrirInvestigacion={() => setActiveTab('investigacion')} />
+      )}
 
       {/* 3. PESTAÑA 1: CASOS ACADÉMICOS & RESUMEN */}
       {activeTab === 'casos' && (
@@ -950,6 +1043,13 @@ export const EscuelaJuridicaView: React.FC = () => {
                       className="px-3 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-purple-100 transition-all"
                     >
                       <GitCompare className="w-3.5 h-3.5" /> Analizar Hipótesis Contrapuestas
+                    </button>
+                    <button
+                      onClick={() => handleExportarCasoJSON(casoSeleccionado)}
+                      className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-slate-200 transition-all ml-auto"
+                      title="Descargar este caso pedagógico en JSON para estudio sin conexión"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Exportar Caso JSON
                     </button>
                   </div>
 

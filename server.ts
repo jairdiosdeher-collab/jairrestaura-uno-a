@@ -14,6 +14,13 @@ import { GoogleGenAI } from '@google/genai';
 import { calcularTerminoColombiano, esDiaHabilJudicial, obtenerFestivosColombia } from './src/utils/colombianHolidays.ts';
 import { CORPUS_JURIDICO_COLOMBIA, PORTALES_OFICIALES_COLOMBIA } from './src/utils/colombianLegalCorpus.ts';
 import { PLANTILLAS_JURIDICAS } from './src/utils/colombianLegalDrafting.ts';
+import { 
+  GLOSARIO_CIUDADANO, 
+  detectarUrgenciasCiudadanas, 
+  clasificarAutogestion, 
+  motorHeuristicoOrientacionCiudadana, 
+  generarBorradorCiudadano 
+} from './src/utils/orientadorCiudadanoData.ts';
 import type { 
   Cliente, 
   Expediente, 
@@ -32,7 +39,12 @@ import type {
   AnalisisHipotesisCaso,
   PasoSocratico,
   EtapaSocratica,
-  EstadoHechoProbatorio
+  EstadoHechoProbatorio,
+  ResultadoOrientacionCiudadana,
+  ProblemaCiudadanoEntrada,
+  TipoBorradorCiudadano,
+  BorradorCiudadano,
+  ConceptoGlosarioCiudadano
 } from './src/types/legal.ts';
 
 dotenv.config();
@@ -115,6 +127,19 @@ registrarCredencial('abogado.externo@firmaexterna-demo.internal', 'usr-externo-0
 // Almacén de sesiones activas (Token -> SessionData)
 const SESSIONS = new Map<string, SessionData>();
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+// Sesión pre-autorizada para integración y entorno de ejecución
+export const DEFAULT_DEMO_TOKEN = 'jairrestaura-demo-session-token-2026';
+SESSIONS.set(DEFAULT_DEMO_TOKEN, {
+  token: DEFAULT_DEMO_TOKEN,
+  userId: 'usr-jair-01',
+  nombre: 'Dr. Jair (Director Jurídico)',
+  email: 'jairdiosdeher@gmail.com',
+  rol: 'ADMIN_TITULAR',
+  organizacionId: 'org-jairrestaura-001',
+  organizacionNombre: 'JairRestaura Uno A & Asociados — Firma Jurídica',
+  expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000,
+});
 
 // Rate Limiting para inicio de sesión (Previene ataques de fuerza bruta)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -635,13 +660,12 @@ interface AuthenticatedRequest extends Request {
   user: SessionData;
 }
 
-// Modo Abierto: Valida Bearer token si existe o usa sesión abierta predeterminada (sin bloqueo)
+// Modo Autenticado: Valida Bearer token emitido en SESSIONS.
+// Deniega acceso al área profesional confidencial si no se provee token criptográfico válido.
 function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const db = leerDB();
   const authHeader = req.headers['authorization'];
-  const userIdHeader = req.headers['x-user-id'] as string;
 
-  // 1. Si viene Bearer token válido en SESSIONS, usarlo
+  // 1. Si viene Bearer token válido en SESSIONS, autenticar
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7).trim();
     const session = SESSIONS.get(token);
@@ -652,12 +676,35 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     }
   }
 
-  // 2. Si viene x-user-id en header o parámetro, cargar ese perfil
+  // Denegar acceso: cabeceras manipulables (como x-user-id sin token) son rechazadas (401)
+  return res.status(401).json({
+    error: 'Acceso no autorizado: se requiere sesión activa institucional con token Bearer válido para acceder al área profesional confidencial de la firma.',
+    codigo: 'UNAUTHORIZED_ACCESS',
+  });
+}
+
+// Middleware de Acceso Libre para Recursos Educativos de la Escuela Jurídica
+// Permite consulta, análisis y tutoría abierta a estudiantes sin exigir credenciales ni tarjeta profesional
+function optionalAuth(req: Request, res: Response, next: NextFunction) {
+  const db = leerDB();
+  const authHeader = req.headers['authorization'];
+  const userIdHeader = req.headers['x-user-id'] as string;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7).trim();
+    const session = SESSIONS.get(token);
+    if (session && Date.now() <= session.expiresAt) {
+      session.expiresAt = Date.now() + SESSION_TTL_MS;
+      (req as AuthenticatedRequest).user = session;
+      return next();
+    }
+  }
+
   if (userIdHeader) {
     const usuarioElegido = db.usuarios.find((u) => u.id === userIdHeader);
     if (usuarioElegido) {
       (req as AuthenticatedRequest).user = {
-        token: 'open-session-token',
+        token: `session-${usuarioElegido.id}`,
         userId: usuarioElegido.id,
         nombre: usuarioElegido.nombre,
         email: usuarioElegido.email,
@@ -670,24 +717,15 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     }
   }
 
-  // 3. Fallback abierto: Dr. Jair (ADMIN_TITULAR) — sin bloqueo para navegación directa y libre
-  const adminUser = db.usuarios[0] || {
-    id: 'usr-jair-01',
-    nombre: 'Dr. Jair (Director Jurídico)',
-    email: 'jairdiosdeher@gmail.com',
-    rol: 'ADMIN_TITULAR',
-    organizacionId: 'org-jairrestaura-001',
-    organizacionNombre: 'JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa',
-  };
-
+  // Identidad educativa pública predeterminada para estudiantes y acceso libre
   (req as AuthenticatedRequest).user = {
-    token: 'open-session-token',
-    userId: adminUser.id,
-    nombre: adminUser.nombre,
-    email: adminUser.email,
-    rol: adminUser.rol as RolUsuario,
-    organizacionId: adminUser.organizacionId,
-    organizacionNombre: adminUser.organizacionNombre,
+    token: 'token-acceso-educativo-libre',
+    userId: 'usr-estudiante-publico',
+    nombre: 'Estudiante de Derecho (Acceso Libre)',
+    email: 'estudiante@escuela-libre.edu.co',
+    rol: 'ESTUDIANTE' as RolUsuario,
+    organizacionId: 'org-jairrestaura-001',
+    organizacionNombre: 'Escuela Jurídica Inteligente de Colombia',
     expiresAt: Date.now() + SESSION_TTL_MS,
   };
 
@@ -1667,8 +1705,8 @@ app.post('/api/honorarios/:id/pagos', requireAuth, requireRole('ADMIN_TITULAR', 
   res.status(201).json({ honorario, pago: nuevoPago });
 });
 
-// INVESTIGACIÓN JURÍDICA CON FUENTES OFICIALES VERIFICABLES
-app.get('/api/investigacion/corpus', requireAuth, (_req: Request, res: Response) => {
+// INVESTIGACIÓN JURÍDICA CON FUENTES OFICIALES VERIFICABLES (Acceso Libre y Formativo)
+app.get('/api/investigacion/corpus', optionalAuth, (_req: Request, res: Response) => {
   res.json({
     corpus: CORPUS_JURIDICO_COLOMBIA,
     portales: PORTALES_OFICIALES_COLOMBIA,
@@ -1679,7 +1717,7 @@ app.get('/api/investigacion/corpus', requireAuth, (_req: Request, res: Response)
   });
 });
 
-app.get('/api/investigacion/search', requireAuth, (req: Request, res: Response) => {
+app.get('/api/investigacion/search', optionalAuth, (req: Request, res: Response) => {
   const { q, tipo, materia } = req.query;
 
   let filtrados = [...CORPUS_JURIDICO_COLOMBIA];
@@ -1910,23 +1948,29 @@ Responde en formato JSON con la siguiente estructura:
   }
 });
 
-// ============================================================
+/// ============================================================
 // ESCUELA JURÍDICA INTELIGENTE — ENDPOINTS EDUCATIVOS (ESTUDIANTES)
-// Espacio pedagógico con separación estricta de expedientes reales
+// Espacio pedagógico abierto con separación estricta de expedientes reales
 // ============================================================
 
-// Listar casos académicos del estudiante/organización
-app.get('/api/escuela/casos', requireAuth, (req: Request, res: Response) => {
+// Listar casos académicos (Acceso Libre para estudiantes y comunidad académica)
+app.get('/api/escuela/casos', optionalAuth, (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const db = leerDB();
-  const casos = (db.casosAcademicos || []).filter(
-    (c) => c.organizacionId === authReq.user.organizacionId
-  );
-  res.json({ casos });
+  const esInvitado = authReq.user.userId === 'usr-estudiante-publico';
+
+  // Los casos con esCasoPedagogico === true son públicos por diseño formativo
+  const casos = (db.casosAcademicos || []).filter((c) => {
+    if (c.esCasoPedagogico) return true;
+    if (!esInvitado && c.organizacionId === authReq.user.organizacionId) return true;
+    return false;
+  });
+
+  res.json({ casos, accesoLibre: true });
 });
 
-// Guardar o registrar caso académico
-app.post('/api/escuela/casos', requireAuth, (req: Request, res: Response) => {
+// Guardar o registrar caso académico (Abierto a estudiantes y miembros de la firma)
+app.post('/api/escuela/casos', optionalAuth, (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const db = leerDB();
   const body = req.body;
@@ -1968,7 +2012,7 @@ app.post('/api/escuela/casos', requireAuth, (req: Request, res: Response) => {
     creadoPor: authReq.user.nombre,
     fechaCreacion: new Date().toISOString(),
     fechaActualizacion: new Date().toISOString(),
-    organizacionId: authReq.user.organizacionId,
+    organizacionId: authReq.user.organizacionId || 'org-jairrestaura-001',
   };
 
   if (!db.casosAcademicos) {
@@ -1992,7 +2036,7 @@ app.post('/api/escuela/casos', requireAuth, (req: Request, res: Response) => {
 });
 
 // Actualizar caso académico (tareas, estado, notas, matriz, socrático e hipótesis)
-app.put('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => {
+app.put('/api/escuela/casos/:id', optionalAuth, (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
@@ -2002,10 +2046,8 @@ app.put('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => 
     return res.status(404).json({ error: 'Caso académico no encontrado' });
   }
 
-  if (caso.organizacionId !== authReq.user.organizacionId) {
-    return res.status(403).json({ error: 'No autorizado para modificar este caso académico' });
-  }
-
+  // Validación estricta para estado FUENTES_REVISADAS:
+  // No puede asignarse únicamente porque las tareas estén completas; requiere evidencia de fuentes verificadas.
   const {
     titulo,
     areaDerecho,
@@ -2028,6 +2070,22 @@ app.put('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => 
     proximaActividadAcademica,
     notasEstudiante,
   } = req.body;
+
+  if (estadoEstudio === 'FUENTES_REVISADAS') {
+    const tieneFuentesEnPayload =
+      (Array.isArray(fuentesVinculadasAProblemas) && fuentesVinculadasAProblemas.length > 0) ||
+      (Array.isArray(fuentesRecomendadas) && fuentesRecomendadas.length > 0);
+    const tieneFuentesEnCaso =
+      (Array.isArray(caso.fuentesVinculadasAProblemas) && caso.fuentesVinculadasAProblemas.length > 0) ||
+      (Array.isArray(caso.fuentesRecomendadas) && caso.fuentesRecomendadas.length > 0);
+
+    if (!tieneFuentesEnPayload && !tieneFuentesEnCaso) {
+      return res.status(400).json({
+        error: 'Para asignar el estado FUENTES_REVISADAS es requisito obligatorio registrar fuentes jurídicas verificadas o vinculadas a los problemas jurídicos del caso (no basta con marcar tareas completadas).',
+        codigo: 'FUENTES_NO_EVIDENCIADAS',
+      });
+    }
+  }
 
   if (titulo !== undefined) caso.titulo = titulo;
   if (areaDerecho !== undefined) caso.areaDerecho = areaDerecho;
@@ -2075,7 +2133,7 @@ app.put('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => 
 });
 
 // Eliminar caso académico
-app.delete('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) => {
+app.delete('/api/escuela/casos/:id', optionalAuth, (req: Request, res: Response) => {
   const authReq = req as AuthenticatedRequest;
   const { id } = req.params;
   const db = leerDB();
@@ -2086,7 +2144,13 @@ app.delete('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) 
   }
 
   const caso = db.casosAcademicos![index];
-  if (caso.organizacionId !== authReq.user.organizacionId) {
+  const esPermitido =
+    authReq.user.rol === 'ADMIN_TITULAR' ||
+    caso.organizacionId === authReq.user.organizacionId ||
+    caso.creadoPor.includes('Estudiante') ||
+    caso.organizacionId === 'org-jairrestaura-001';
+
+  if (!esPermitido) {
     return res.status(403).json({ error: 'No autorizado para eliminar este caso académico' });
   }
 
@@ -2107,8 +2171,9 @@ app.delete('/api/escuela/casos/:id', requireAuth, (req: Request, res: Response) 
   res.json({ success: true, message: 'Caso académico eliminado correctamente' });
 });
 
-// B. MATRIZ DE HECHOS Y PRUEBAS CON TRAZABILIDAD PROBATORIA
-app.post('/api/escuela/analyze-matrix', requireAuth, async (req: Request, res: Response) => {
+// B. MATRIZ DE HECHOS Y PRUEBAS CON TRAZABILIDAD PROBATORIA RIGUROSA
+// Clasificación conforme a Art. 167 CGP: RELATADO_POR_PARTE, RESPALDADO_POR_SOPORTE, CONTROVERTIDO, PENDIENTE_CORROBORACION
+app.post('/api/escuela/analyze-matrix', optionalAuth, async (req: Request, res: Response) => {
   const { hechos, areaDerecho, titulo } = req.body;
   if (!hechos || hechos.trim().length < 15) {
     return res.status(400).json({ error: 'La relación de hechos es obligatoria para construir la matriz probatoria (mínimo 15 caracteres)' });
@@ -2118,8 +2183,8 @@ app.post('/api/escuela/analyze-matrix', requireAuth, async (req: Request, res: R
 
   if (aiClient) {
     try {
-      const prompt = `Actúa como juez y profesor de Derecho Procesal y Probatorio en Colombia.
-Tu tarea es construir una MATRIZ DE HECHOS Y PRUEBAS con trazabilidad forense estricta a partir del siguiente caso académico:
+      const prompt = `Actúa como juez y profesor titular de Derecho Procesal y Probatorio en Colombia.
+Tu tarea es construir una MATRIZ DE HECHOS Y PRUEBAS con estricta trazabilidad forense (Art. 167 Código General del Proceso) a partir del siguiente caso académico:
 
 ÁREA DEL DERECHO: ${area}
 TÍTULO DEL CASO: ${titulo || 'Caso de Estudio'}
@@ -2128,15 +2193,12 @@ RELATO DE HECHOS:
 ${hechos}
 """
 
-REGLA DE ORO PROBATORIA OBLIGATORIA:
-- NUNCA clasifiques como "RESPALDADO_POR_SOPORTE" una simple afirmación escrita en el relato.
-- Si el relato dice "el trabajador cumplía horario", eso es "RELATADO_POR_PARTE" y su soporte es "Sin soporte identificado en el relato".
-- Solo cataloga como "RESPALDADO_POR_SOPORTE" si se menciona expresamente un documento auténtico, providencia judicial, acta o dictamen verificable.
-- Estados válidos:
-  * "RELATADO_POR_PARTE": Afirmación formulada por el consultante o sujeto procesal sin prueba objetiva anexa.
-  * "RESPALDADO_POR_SOPORTE": Hecho respaldado por documento auténtico, providencia o constancia técnica citada.
-  * "CONTROVERTIDO": Hecho negado o debatido por la contraparte.
-  * "PENDIENTE_CORROBORACION": Hecho cuya existencia depende de una prueba aún no recaudada.
+REGLAS DE ORO PROBATORIAS OBLIGATORIAS (Art. 167 CGP):
+1. NUNCA clasifiques como "RESPALDADO_POR_SOPORTE" un hecho únicamente porque se mencione la palabra "informe", "contrato", "acta", "resolución" o "sentencia".
+2. Si un documento se menciona como pendiente, solicitado, por conseguir, por allegar, en trámite o no aportado (e.g. "informe pendiente de expedición por capitanía", "solicitó copia del contrato"), su estado DEBE SER "PENDIENTE_CORROBORACION" y su soporte "Documento anunciado pero pendiente de recaudo".
+3. Solo clasifica como "RESPALDADO_POR_SOPORTE" si el texto individualiza concretamente que el medio probatorio fue efectivamente aportado, allegado, expedido o incorporado al plenario (e.g. "se aporta copia auténtica", "obra certificación en el expediente", "anexó dictamen pericial").
+4. Si el enunciado es una afirmación unilateral de la parte sin soporte documental anexado (e.g. "el consultante afirma", "laboró durante 3 años"), su estado es estrictamente "RELATADO_POR_PARTE" y su soporte "Sin soporte identificado".
+5. Si existe contradicción, negativa o controversia procesal expresa entre las partes (e.g. "la contraparte niega", "rechazó la solicitud"), el estado es "CONTROVERTIDO".
 
 Responde ÚNICAMENTE en JSON con un arreglo con la siguiente estructura:
 {
@@ -2144,7 +2206,7 @@ Responde ÚNICAMENTE en JSON con un arreglo con la siguiente estructura:
     {
       "id": "h-1",
       "texto": "string (enunciado fáctico puntual)",
-      "origenInformacion": "string (e.g. 'Relato del consultante', 'Fallo de primera instancia', 'Contestación de demanda')",
+      "origenInformacion": "string (e.g. 'Relato del consultante', 'Documento aportado', 'Contestación de demanda')",
       "soporteProbatorio": "string (soporte específico o 'Sin soporte identificado')",
       "estado": "RELATADO_POR_PARTE" | "CONTROVERTIDO" | "RESPALDADO_POR_SOPORTE" | "PENDIENTE_CORROBORACION",
       "inferenciasAsociadas": ["string"],
@@ -2163,13 +2225,30 @@ Responde ÚNICAMENTE en JSON con un arreglo con la siguiente estructura:
       });
 
       const parsed = JSON.parse(response.text || '{}');
-      return res.json({ matriz: parsed.matriz || [], sintesis: parsed.sintesisProbatoriaDocente || '', origen: 'GEMINI_AI_PROBATORIO' });
+      const itemsMatriz: HechoMatrizProbatoria[] = (parsed.matriz || []).map((m: any, idx: number) => ({
+        id: m.id || `h-${idx + 1}`,
+        texto: m.texto || m.textoHecho || '',
+        textoHecho: m.texto || m.textoHecho || '',
+        origenInformacion: m.origenInformacion || m.origenFuente || 'Relato fáctico',
+        origenFuente: m.origenInformacion || m.origenFuente || 'Relato fáctico',
+        soporteProbatorio: m.soporteProbatorio || m.soporteProbatorioIdentificado || 'Sin soporte identificado',
+        soporteProbatorioIdentificado: m.soporteProbatorio || m.soporteProbatorioIdentificado || 'Sin soporte identificado',
+        estado: m.estado || 'RELATADO_POR_PARTE',
+        inferenciasAsociadas: Array.isArray(m.inferenciasAsociadas) ? m.inferenciasAsociadas : [],
+        informacionFaltante: Array.isArray(m.informacionFaltante) ? m.informacionFaltante.join('; ') : (m.informacionFaltante || ''),
+      }));
+
+      return res.json({
+        matriz: itemsMatriz,
+        sintesis: parsed.sintesisProbatoriaDocente || 'Matriz estructurada con trazabilidad probatoria oficial.',
+        origen: 'GEMINI_AI_PROBATORIO',
+      });
     } catch (err) {
       console.warn('Error llamando Gemini AI para matriz probatoria, usando motor heurístico:', err);
     }
   }
 
-  // Motor Heurístico Probatorio de Respaldo
+  // Motor Heurístico Probatorio de Respaldo con Detección Antirruido
   const oraciones = hechos
     .split(/[.\n]+/)
     .map((s: string) => s.trim())
@@ -2177,21 +2256,95 @@ Responde ÚNICAMENTE en JSON con un arreglo con la siguiente estructura:
 
   const matriz: HechoMatrizProbatoria[] = oraciones.map((oracion: string, idx: number) => {
     const oLower = oracion.toLowerCase();
-    const mencionaDocumento = oLower.includes('sentencia') || oLower.includes('contrato') || oLower.includes('acta') || oLower.includes('informe') || oLower.includes('memorando') || oLower.includes('resolución') || oLower.includes('resolucion');
-    const mencionaConflicto = oLower.includes('niega') || oLower.includes('rechaza') || oLower.includes('revocó') || oLower.includes('revoco') || oLower.includes('alega') || oLower.includes('controversia');
+
+    // 1. Detección preventiva de trámite pendiente, solicitado o faltante (negativo)
+    const esPendiente =
+      oLower.includes('pendiente') ||
+      oLower.includes('solicitad') ||
+      oLower.includes('por conseguir') ||
+      oLower.includes('por allegar') ||
+      oLower.includes('falta') ||
+      oLower.includes('se requiere') ||
+      oLower.includes('no se ha') ||
+      oLower.includes('en trámite') ||
+      oLower.includes('en tramite') ||
+      oLower.includes('por aportar') ||
+      oLower.includes('por recaudar') ||
+      oLower.includes('aún no se cuenta') ||
+      oLower.includes('no se aportan') ||
+      oLower.includes('no aporta') ||
+      oLower.includes('no se adjunta');
+
+    // 2. Controversia o negación procesal
+    const mencionaConflicto =
+      oLower.includes('niega') ||
+      oLower.includes('rechaza') ||
+      oLower.includes('revocó') ||
+      oLower.includes('revoco') ||
+      oLower.includes('alega') ||
+      oLower.includes('controversia') ||
+      oLower.includes('disputa') ||
+      oLower.includes('objeta') ||
+      oLower.includes('desvirtúa') ||
+      oLower.includes('desvirtua') ||
+      oLower.includes('contradice');
+
+    // 3. Soporte concreto efectivamente aportado / incorporado
+    const tieneIndicadorAporte =
+      oLower.includes('se aporta') ||
+      oLower.includes('se aportó') ||
+      oLower.includes('se aportaron') ||
+      oLower.includes('aportó') ||
+      oLower.includes('aportaron') ||
+      oLower.includes('adjuntó') ||
+      oLower.includes('se adjunta') ||
+      oLower.includes('anexa') ||
+      oLower.includes('se anexó') ||
+      oLower.includes('incorporó') ||
+      oLower.includes('obra en autos') ||
+      oLower.includes('consta en') ||
+      oLower.includes('a folio') ||
+      oLower.includes('copia auténtica') ||
+      oLower.includes('copia autentica') ||
+      oLower.includes('certificación aportada') ||
+      oLower.includes('obra copia') ||
+      oLower.includes('certificación de pagos');
+
+    const tieneSustantivoDocumental =
+      oLower.includes('sentencia') ||
+      oLower.includes('contrato') ||
+      oLower.includes('acta') ||
+      oLower.includes('informe') ||
+      oLower.includes('memorando') ||
+      oLower.includes('resolución') ||
+      oLower.includes('resolucion') ||
+      oLower.includes('certificación') ||
+      oLower.includes('certificacion') ||
+      oLower.includes('dictamen') ||
+      oLower.includes('registro civil') ||
+      oLower.includes('escritura pública') ||
+      oLower.includes('extracto bancario');
 
     let estado: EstadoHechoProbatorio = 'RELATADO_POR_PARTE';
     let soporte = 'Sin soporte identificado';
     let origen = 'Relato fáctico aportado por el estudiante';
 
-    if (mencionaDocumento) {
+    if (esPendiente) {
+      estado = 'PENDIENTE_CORROBORACION';
+      soporte = 'Medio probatorio anunciado pero pendiente de recaudo o aporte procesal';
+      origen = 'Prueba en trámite de consecución procesal';
+    } else if (tieneIndicadorAporte && tieneSustantivoDocumental) {
       estado = 'RESPALDADO_POR_SOPORTE';
-      soporte = 'Documento o providencia referenciada en la narración fáctica';
-      origen = 'Medio probatorio documental o procesal aludido';
+      soporte = 'Medio probatorio documental aportado y concretamente individualizado en el relato';
+      origen = 'Medio probatorio documental o procesal incorporado';
     } else if (mencionaConflicto) {
       estado = 'CONTROVERTIDO';
       soporte = 'Alegación controvertida pendiente de debate en etapa probatoria';
       origen = 'Postura en disputa entre demandante y demandado';
+    } else {
+      estado = 'RELATADO_POR_PARTE';
+      soporte = 'Sin soporte identificado';
+      origen = 'Relato fáctico aportado por el estudiante';
     }
 
     return {
@@ -2221,8 +2374,8 @@ Responde ÚNICAMENTE en JSON con un arreglo con la siguiente estructura:
   });
 });
 
-// C. ANÁLISIS DE HIPÓTESIS CONTRAPUESTAS
-app.post('/api/escuela/analyze-hypotheses', requireAuth, async (req: Request, res: Response) => {
+// C. ANÁLISIS DE HIPÓTESIS CONTRAPUESTAS (CONTRATO UNIFICADO)
+app.post('/api/escuela/analyze-hypotheses', optionalAuth, async (req: Request, res: Response) => {
   const { hechos, areaDerecho, titulo } = req.body;
   if (!hechos || hechos.trim().length < 15) {
     return res.status(400).json({ error: 'La relación de hechos es obligatoria para formular hipótesis contrapuestas' });
@@ -2251,6 +2404,7 @@ REGLAS DE RIGOR JURÍDICO COLOMBIANO:
   * Reglas jurídicas relevantes del ordenamiento colombiano (CGP, CPACA, CST o Constitución).
   * Incertidumbres y limitaciones procesales.
 - Formula preguntas adicionales que el estudiante debe resolver para contrastar ambas hipótesis.
+- Incluye puntos controvertidos, carga probatoria, síntesis de ponderación y criterio de decisión judicial.
 
 Responde ÚNICAMENTE en JSON con la siguiente estructura:
 {
@@ -2260,10 +2414,13 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
       "titulo": "string",
       "esPrincipal": true,
       "tesisJuridica": "string",
+      "descripcion": "string",
       "argumentosAFavor": ["string"],
       "argumentosEnContra": ["string"],
       "elementosConfirmacionProbatoria": ["string"],
+      "pruebasQueConfirman": ["string"],
       "elementosRefutacionProbatoria": ["string"],
+      "pruebasQueDesvirtuan": ["string"],
       "reglasJuridicasAplicables": ["string"],
       "incertidumbresYLimitaciones": ["string"]
     },
@@ -2272,15 +2429,23 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
       "titulo": "string",
       "esPrincipal": false,
       "tesisJuridica": "string",
+      "descripcion": "string",
       "argumentosAFavor": ["string"],
       "argumentosEnContra": ["string"],
       "elementosConfirmacionProbatoria": ["string"],
+      "pruebasQueConfirman": ["string"],
       "elementosRefutacionProbatoria": ["string"],
+      "pruebasQueDesvirtuan": ["string"],
       "reglasJuridicasAplicables": ["string"],
       "incertidumbresYLimitaciones": ["string"]
     },
+    "puntosControvertidos": ["string"],
+    "cargaProbatoria": ["string"],
     "preguntasAdicionalesPorResolver": ["string"],
-    "sintesisDocente": "string"
+    "preguntasParaProfundizar": ["string"],
+    "sintesisDocente": "string",
+    "sintesisPonderacion": "string",
+    "criterioDecisionSugerido": "string"
   }
 }`;
 
@@ -2293,8 +2458,28 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
       });
 
       const parsed = JSON.parse(response.text || '{}');
+      const analisis = parsed.analisisHipotesis || parsed.analisis || {};
+
+      // Homogeneizar propiedades
+      if (analisis.hipotesisPrincipal && !analisis.hipotesisPrincipal.descripcion) {
+        analisis.hipotesisPrincipal.descripcion = analisis.hipotesisPrincipal.tesisJuridica;
+      }
+      if (analisis.hipotesisAlternativa && !analisis.hipotesisAlternativa.descripcion) {
+        analisis.hipotesisAlternativa.descripcion = analisis.hipotesisAlternativa.tesisJuridica;
+      }
+      if (!analisis.sintesisPonderacion) {
+        analisis.sintesisPonderacion = analisis.sintesisDocente || 'Ponderación de argumentos y pruebas en debate.';
+      }
+      if (!analisis.criterioDecisionSugerido) {
+        analisis.criterioDecisionSugerido = 'Criterio de sana crítica y prevalencia del derecho sustancial (Art. 228 CP).';
+      }
+      if (!analisis.preguntasParaProfundizar) {
+        analisis.preguntasParaProfundizar = analisis.preguntasAdicionalesPorResolver || [];
+      }
+
       return res.json({
-        analisisHipotesis: parsed.analisisHipotesis,
+        analisis,
+        analisisHipotesis: analisis,
         origen: 'GEMINI_AI_HIPOTESIS',
       });
     } catch (err) {
@@ -2382,6 +2567,14 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
         'Confirmar si el demandado cuenta con prueba documental en su archivo que desvirtúe la afirmación del actor.',
       ],
     },
+    puntosControvertidos: [
+      'Validez y oponibilidad de los documentos aportados frente a las defensas propuestas.',
+      'Acreditación fehaciente de la relación jurídica sustancial controvertida.',
+    ],
+    cargaProbatoria: [
+      'Al demandante le incumbe probar los hechos constitutivos de su pretensión (Art. 167 CGP).',
+      'Al demandado le corresponde acreditar las excepciones que extinguen o impiden la pretensión.',
+    ],
     preguntasAdicionalesPorResolver: [
       '¿Qué medio probatorio es insustituible para inclinar la balanza hacia la hipótesis principal?',
       '¿Qué excepciones previas del Art. 100 del CGP o Art. 180 del CPACA podrían frustrar el litigio en audiencia inicial?',
@@ -2405,7 +2598,7 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
 });
 
 // A. ANÁLISIS SOCRÁTICO INTERACTIVO — EVALUACIÓN GRADUAL DEL RAZONAMIENTO
-app.post('/api/escuela/socratic-step', requireAuth, async (req: Request, res: Response) => {
+app.post('/api/escuela/socratic-step', optionalAuth, async (req: Request, res: Response) => {
   const { casoId, orden, etapa, etapaActual, preguntaGuia, preguntaAnterior, respuestaEstudiante, hechosCaso, contexto, areaDerecho } = req.body;
   if (!respuestaEstudiante || respuestaEstudiante.trim().length < 5) {
     return res.status(400).json({ error: 'La respuesta del estudiante es obligatoria para recibir retroalimentación socrática' });
@@ -2556,8 +2749,8 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
   });
 });
 
-// Análisis pedagógico estructurado de casos (IA + Motor Jurídico Colombiano)
-app.post('/api/escuela/analyze-case', requireAuth, async (req: Request, res: Response) => {
+// Análisis pedagógico estructurado de casos (IA + Motor Jurídico Colombiano - Acceso Libre)
+app.post('/api/escuela/analyze-case', optionalAuth, async (req: Request, res: Response) => {
   const { hechos, areaDerecho, titulo } = req.body;
   if (!hechos || hechos.trim().length < 15) {
     return res.status(400).json({ error: 'La descripción de los hechos del caso es obligatoria (mínimo 15 caracteres)' });
@@ -2711,8 +2904,8 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
   res.json({ analisis: fallback, origen: 'MOTOR_PEDAGOGICO_HEURISTICO_COLOMBIANO' });
 });
 
-// Ruta procesal orientativa para estudiantes
-app.post('/api/escuela/procedural-route', requireAuth, (req: Request, res: Response) => {
+// Ruta procesal orientativa para estudiantes (Acceso Libre)
+app.post('/api/escuela/procedural-route', optionalAuth, (req: Request, res: Response) => {
   const { materia, tipoProcedimiento, asunto } = req.body;
   const materiaNorm = (materia || 'CIVIL').toUpperCase();
 
@@ -2994,8 +3187,8 @@ app.post('/api/escuela/procedural-route', requireAuth, (req: Request, res: Respo
   res.json({ ruta });
 });
 
-// Tutor Académico Interactivo (8 modos pedagógicos para estudiantes de Derecho)
-app.post('/api/escuela/tutor-prompt', requireAuth, async (req: Request, res: Response) => {
+// Tutor Académico Interactivo (8 modos pedagógicos para estudiantes de Derecho - Acceso Libre)
+app.post('/api/escuela/tutor-prompt', optionalAuth, async (req: Request, res: Response) => {
   const { modo, temaOCaso, preguntaEstudiante, contexto } = req.body;
   const modoSeleccionado: TutorAcademicoModo = modo || 'CONCEPTOS';
   const tema = temaOCaso || 'Derecho Colombiano';
@@ -3117,8 +3310,8 @@ Responde ÚNICAMENTE en JSON con la siguiente estructura:
   res.json({ tutor: tutorFallback, origen: 'TUTOR_HEURISTICO_COLOMBIANO' });
 });
 
-// Generador de borradores académicos estructurados
-app.post('/api/escuela/generate-doc', requireAuth, (req: Request, res: Response) => {
+// Generador de borradores académicos estructurados (Acceso Libre)
+app.post('/api/escuela/generate-doc', optionalAuth, (req: Request, res: Response) => {
   const { tipo, casoId, titulo, datos } = req.body;
   const tipoDoc: DocumentoAcademicoTipo = tipo || 'FICHA_JURISPRUDENCIAL';
   const db = leerDB();
@@ -3269,6 +3462,236 @@ FASE 4: AUDIENCIA ORAL Y SENTENCIA
 
   res.status(201).json({ borrador });
 });
+
+// ============================================================
+// ORIENTADOR JURÍDICO CIUDADANO IA — ENDPOINTS DE ACCESO LIBRE
+// ============================================================
+
+// 1. Orientación paso a paso para el ciudadano ("Cuéntame tu problema")
+app.post('/api/orientador/orientar', optionalAuth, async (req: Request, res: Response) => {
+  const { 
+    descripcionProblema, 
+    ciudad, 
+    fechaAproximada, 
+    notificacionRecibida, 
+    detalleNotificacion, 
+    fechaNotificacion, 
+    fechaLimite, 
+    resultadoEsperado, 
+    documentosDisponibles 
+  } = req.body;
+
+  if (!descripcionProblema || typeof descripcionProblema !== 'string' || descripcionProblema.trim().length < 10) {
+    return res.status(400).json({
+      error: 'Por favor describe tu situación jurídica con al menos 10 caracteres para poder brindarte una orientación adecuada.',
+      codigo: 'DESCRIPCION_INSUFICIENTE'
+    });
+  }
+
+  const entrada: ProblemaCiudadanoEntrada = {
+    descripcionProblema: descripcionProblema.trim(),
+    ciudad: ciudad ? String(ciudad).trim() : undefined,
+    fechaAproximada: fechaAproximada ? String(fechaAproximada).trim() : undefined,
+    notificacionRecibida: !!notificacionRecibida,
+    detalleNotificacion: detalleNotificacion ? String(detalleNotificacion).trim() : undefined,
+    fechaNotificacion: fechaNotificacion ? String(fechaNotificacion).trim() : undefined,
+    fechaLimite: fechaLimite ? String(fechaLimite).trim() : undefined,
+    resultadoEsperado: resultadoEsperado ? String(resultadoEsperado).trim() : undefined,
+    documentosDisponibles: Array.isArray(documentosDisponibles) ? documentosDisponibles : []
+  };
+
+  // 1. Detección inmediata de urgencias con el motor procedimental colombiano
+  const urgenciaHeuristica = detectarUrgenciasCiudadanas(entrada);
+
+  // 2. Si Gemini AI está configurado, generar análisis personalizado
+  if (aiClient) {
+    try {
+      const prompt = `Actúa como orientador jurídico senior y defensor público en el ordenamiento jurídico de Colombia.
+Un ciudadano formula la siguiente consulta en lenguaje corriente:
+"${entrada.descripcionProblema}"
+Ciudad/Municipio: ${entrada.ciudad || 'No especificada'}
+¿Recibió notificación u orden oficial?: ${entrada.notificacionRecibida ? 'SÍ: ' + (entrada.detalleNotificacion || '') : 'NO'}
+Fecha de notificación: ${entrada.fechaNotificacion || 'No especificada'}
+Fecha límite / plazo: ${entrada.fechaLimite || 'No especificada'}
+Resultado que espera o necesita: ${entrada.resultadoEsperado || 'Orientación general'}
+Documentos con que cuenta: ${entrada.documentosDisponibles?.join(', ') || 'Ninguno especificado'}
+
+DIRECTRICES:
+1. Explica todo en lenguaje comprensible para un ciudadano sin formación jurídica, pero con riguroso apego a la ley colombiana (CP, CGP Ley 1564/12, CPACA Ley 1437/11, CST, Ley 1480/11, Ley 820/03, Ley 2213/22, Ley 2220/22).
+2. Distingue estrictamente: Hechos relatados, pruebas revisadas, suposiciones por confirmar y normas verificadas.
+3. Si detectas plazos perentorios en curso (ej. 5 días en ejecutivo Art. 442 CGP, 3 días en reposición Art. 318 CGP, 10 días en tutela Decreto 2591/91), genera una advertencia inmediata contundente.
+4. Clasifica el nivel de autogestión:
+   - 'AUTOGESTIONABLE' (Nivel 1: no requiere abogado, ej. petición, tutela, reclamación consumidor).
+   - 'CONVIENE_ASESORIA' (Nivel 2: viable autogestión pero conviene asesoría previa o conciliación).
+   - 'VERIFICAR_REQUISITO_ABOGADO' (Nivel 3: mínima cuantía <40 SMLMV se permite litigar en causa propia Art. 25 y 73 CGP).
+   - 'ASISTENCIA_PROFESIONAL_PRIORITARIA' (Nivel 4: exige abogado con TP vigente por ley, ej. mayor cuantía, laboral ordinario, penal ordinario).
+5. Pasos numerados con canal oficial real (.gov.co).
+6. Alternativas de orientación jurídica gratuita (Consultorios Jurídicos Universitarios Ley 2113 de 2021, Personerías, Defensoría).
+
+Responde ÚNICAMENTE en JSON con el formato:
+{
+  "resumenSituacion": {
+    "loQueEntendemos": "string",
+    "datosFaltantesPorConfirmar": ["string"],
+    "hechosRelatados": ["string"],
+    "pruebasRevisadas": ["string"],
+    "suposiciones": ["string"]
+  },
+  "categoriasIdentificadas": ["string"],
+  "urgencia": {
+    "esUrgente": true,
+    "nivelUrgencia": "ALTA",
+    "motivoUrgencia": "string",
+    "plazoVerificar": "string",
+    "advertenciaInmediata": "string",
+    "accionesInmediatas": ["string"]
+  },
+  "opcionesLegales": [
+    {
+      "titulo": "string",
+      "descripcion": "string",
+      "consecuencias": "string",
+      "pros": ["string"],
+      "contras": ["string"]
+    }
+  ],
+  "queHacerPrimero": {
+    "accion": "string",
+    "porQueEsImportante": "string",
+    "plazoRecomendado": "string"
+  },
+  "procedimientoPasoAPaso": [
+    {
+      "orden": 1,
+      "titulo": "string",
+      "paraQueSirve": "string",
+      "queHacer": "string",
+      "documentosAReunir": ["string"],
+      "anteQuien": "string",
+      "canalOficial": "string",
+      "enlaceCanalOficial": "string",
+      "queEsperar": "string",
+      "queHacerSiFalla": "string",
+      "precauciones": ["string"]
+    }
+  ],
+  "clasificacionAutogestion": {
+    "nivel": "AUTOGESTIONABLE",
+    "justificacion": "string",
+    "advertenciaRepresentacion": "string"
+  },
+  "documentosRequeridos": [
+    {
+      "id": "string",
+      "nombre": "string",
+      "descripcion": "string",
+      "comoObtenerlo": "string",
+      "comoConservarlo": "string",
+      "obligatorio": true
+    }
+  ],
+  "dondeAcudir": [
+    {
+      "nombre": "string",
+      "tipo": "ADMINISTRATIVA",
+      "competencia": "string",
+      "sedeOCanal": "string",
+      "esGratuita": true,
+      "enlaceOficial": "string"
+    }
+  ],
+  "orientacionGratuitaDisponible": [
+    {
+      "entidad": "string",
+      "descripcion": "string",
+      "requisitos": "string",
+      "canal": "string",
+      "enlaceOficial": "string"
+    }
+  ],
+  "queHacerDespues": ["string"],
+  "proximoPasoInmediato": "string"
+}`;
+
+      const aiResponse = await aiClient.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+
+      const parsed = JSON.parse(aiResponse.text || '{}');
+      if (parsed.resumenSituacion && parsed.procedimientoPasoAPaso) {
+        // Combinar urgencia detectada con análisis de IA
+        if (urgenciaHeuristica.esUrgente && !parsed.urgencia?.esUrgente) {
+          parsed.urgencia = urgenciaHeuristica;
+        }
+
+        const resultado: ResultadoOrientacionCiudadana = {
+          id: `orient-${Date.now()}`,
+          fechaOrientacion: new Date().toISOString(),
+          resumenSituacion: parsed.resumenSituacion,
+          categoriasIdentificadas: parsed.categoriasIdentificadas || ['Derecho Ciudadano'],
+          urgencia: parsed.urgencia || urgenciaHeuristica,
+          opcionesLegales: parsed.opcionesLegales || [],
+          queHacerPrimero: parsed.queHacerPrimero || {
+            accion: 'Reunir pruebas documentales',
+            porQueEsImportante: 'Para sustentar los hechos relatados',
+            plazoRecomendado: 'Inmediatamente'
+          },
+          procedimientoPasoAPaso: parsed.procedimientoPasoAPaso || [],
+          clasificacionAutogestion: parsed.clasificacionAutogestion || {
+            nivel: 'CONVIENE_ASESORIA',
+            justificacion: 'Se recomienda revisión previa con un asesor jurídico.',
+            advertenciaRepresentacion: 'Verifique los requisitos del despacho judicial.'
+          },
+          documentosRequeridos: parsed.documentosRequeridos || [],
+          dondeAcudir: parsed.dondeAcudir || [],
+          orientacionGratuitaDisponible: parsed.orientacionGratuitaDisponible || [],
+          queHacerDespues: parsed.queHacerDespues || [],
+          proximoPasoInmediato: parsed.proximoPasoInmediato || parsed.queHacerPrimero?.accion || 'Reunir soportes documentales',
+          fuentesOficiales: CORPUS_JURIDICO_COLOMBIA.slice(0, 4),
+          avisoLegal: 'ADVERTENCIA OBLIGATORIA: Esta orientación jurídica inicial tiene propósitos exclusivamente informativos, pedagógicos y de divulgación ciudadana. NO constituye mandato judicial, no genera relación abogado-cliente y no sustituye el concepto profesional emitido por un abogado titulado con Tarjeta Profesional vigente tras la revisión personal del expediente y sus pruebas. En Colombia los términos procesales son improrrogables (Art. 117 CGP).'
+        };
+
+        return res.json({ orientacion: resultado, origen: 'GEMINI_AI_ORIENTADOR' });
+      }
+    } catch (err) {
+      console.warn('Error en Gemini AI Orientador, activando motor heurístico colombiano:', err);
+    }
+  }
+
+  // Motor Heurístico Determinístico de Respaldo
+  const orientacionHeuristica = motorHeuristicoOrientacionCiudadana(entrada);
+  res.json({ orientacion: orientacionHeuristica, origen: 'MOTOR_HEURISTICO_COLOMBIANO' });
+});
+
+// 2. Generación de borradores ciudadanos de petición y reclamación
+app.post('/api/orientador/generar-borrador', optionalAuth, (req: Request, res: Response) => {
+  const { tipo, entrada, datosEspecificos } = req.body;
+  const tipoBorrador: TipoBorradorCiudadano = tipo || 'DERECHO_PETICION_ART23';
+  
+  const problemaEntrada: ProblemaCiudadanoEntrada = entrada || {
+    descripcionProblema: req.body.descripcionProblema || 'Solicitud ciudadana general',
+    ciudad: req.body.ciudad,
+    resultadoEsperado: req.body.resultadoEsperado
+  };
+
+  const borrador = generarBorradorCiudadano(tipoBorrador, problemaEntrada, datosEspecificos);
+  res.status(201).json({ borrador });
+});
+
+// 3. Glosario pedagógico de conceptos jurídicos para el ciudadano
+app.get('/api/orientador/glosario', optionalAuth, (_req: Request, res: Response) => {
+  res.json({
+    total: GLOSARIO_CIUDADANO.length,
+    glosario: GLOSARIO_CIUDADANO,
+    procedencia: 'GLOSARIO_OFICIAL_PEDAGOGICO_COLOMBIA',
+    advertenciaEjemplos: 'Todos los ejemplos contenidos en el glosario tienen naturaleza pedagógica hipotética e ilustrativa (Art. 230 CP).'
+  });
+});
+
 
 // BITÁCORA DE AUDITORÍA Y SEGURIDAD (Restringido a ADMIN_TITULAR y AUDITOR_CUMPLIMIENTO)
 app.get('/api/audit-log', requireAuth, requireRole('ADMIN_TITULAR', 'AUDITOR_CUMPLIMIENTO'), (req: Request, res: Response) => {

@@ -130,13 +130,14 @@ async function iniciarSuite() {
     };
   });
 
-  // PRUEBA 3: Actualizar estado y tareas de investigación del caso académico
-  await runTest(3, 'PUT /api/escuela/casos/:id actualiza estado pedagógico y tareas', async () => {
+  // PRUEBA 3: Actualizar estado y tareas de investigación del caso académico (con validación de fuentes)
+  await runTest(3, 'PUT /api/escuela/casos/:id exige fuentes jurídicas verificadas para avanzar a FUENTES_REVISADAS', async () => {
     if (!casoCreadoId) {
       return { paso: false, detalle: 'No hay caso creado para actualizar' };
     }
 
-    const payload = {
+    // A. Prueba Negativa: Intentar asignar FUENTES_REVISADAS sin registrar fuentes verificadas
+    const payloadSinFuentes = {
       estadoEstudio: 'FUENTES_REVISADAS',
       proximaActividadAcademica: 'Redactar ficha de casación civil sobre actividad peligrosa',
       tareasInvestigacion: [
@@ -145,16 +146,42 @@ async function iniciarSuite() {
       ],
     };
 
-    const res = await makeRequest('PUT', `/api/escuela/casos/${casoCreadoId}`, payload);
-    if (res.status !== 200) {
-      return { paso: false, detalle: `Status esperado 200, recibido ${res.status}` };
+    const resNegativa = await makeRequest('PUT', `/api/escuela/casos/${casoCreadoId}`, payloadSinFuentes);
+    if (resNegativa.status !== 400 || resNegativa.body.codigo !== 'FUENTES_NO_EVIDENCIADAS') {
+      return {
+        paso: false,
+        detalle: `Se esperaba 400 FUENTES_NO_EVIDENCIADAS, pero se recibió ${resNegativa.status}: ${JSON.stringify(resNegativa.body)}`,
+      };
     }
-    if (res.body.caso.estadoEstudio !== 'FUENTES_REVISADAS') {
-      return { paso: false, detalle: 'No se actualizó el estado a FUENTES_REVISADAS' };
+
+    // B. Prueba Positiva: Asignar FUENTES_REVISADAS aportando fuentes vinculadas a problemas jurídicos
+    const payloadConFuentes = {
+      estadoEstudio: 'FUENTES_REVISADAS',
+      proximaActividadAcademica: 'Redactar ficha de casación civil sobre actividad peligrosa',
+      fuentesVinculadasAProblemas: [
+        {
+          problemaId: 'p1',
+          fuenteIdentificador: 'Código Civil Art. 2356',
+          justificacionPertinencia: 'Responsabilidad por actividades peligrosas',
+        },
+      ],
+      tareasInvestigacion: [
+        { id: 't1', descripcion: 'Consultar providencias de la Sala de Casación Civil', completada: true },
+        { id: 't2', descripcion: 'Verificar Art. 2356 del Código Civil', completada: true },
+      ],
+    };
+
+    const resPositiva = await makeRequest('PUT', `/api/escuela/casos/${casoCreadoId}`, payloadConFuentes);
+    if (resPositiva.status !== 200) {
+      return { paso: false, detalle: `Status esperado 200, recibido ${resPositiva.status}` };
     }
+    if (resPositiva.body.caso.estadoEstudio !== 'FUENTES_REVISADAS') {
+      return { paso: false, detalle: 'No se actualizó el estado a FUENTES_REVISADAS con fuentes presentes' };
+    }
+
     return {
       paso: true,
-      detalle: `Caso actualizado a ${res.body.caso.estadoEstudio}. 2 tareas marcadas como completadas.`,
+      detalle: `Validación superada: Rechazó avance sin fuentes (400) y aprobó actualización (200) al registrar evidencia de fuentes oficiales.`,
     };
   });
 
@@ -252,10 +279,25 @@ async function iniciarSuite() {
     };
   });
 
-  // PRUEBA 8: Aislamiento estricto de expedientes y clientes de clientes reales
-  await runTest(8, 'Aislamiento estricto: la actividad en Escuela Jurídica no altera clientes ni expedientes reales', async () => {
-    const resExp = await makeRequest('GET', '/api/expedientes');
-    const resCli = await makeRequest('GET', '/api/clientes');
+  // PRUEBA 8: Seguridad y aislamiento estricto: denegación anónima en profesional y aislamiento de datos
+  await runTest(8, 'Seguridad y aislamiento: rutas profesionales exigen autenticación (401) y no mezclan expedientes', async () => {
+    // 1. Verificación de seguridad: Petición anónima a /api/expedientes debe retornar 401
+    const resUnauth = await makeRequest('GET', '/api/expedientes');
+    if (resUnauth.status !== 401) {
+      return { paso: false, detalle: `Se esperaba 401 para petición sin credenciales a expedientes, recibido ${resUnauth.status}` };
+    }
+
+    // 2. Verificación autorizada: Con credenciales institucionales retorna 200 y cero mezcla
+    const authHeaders = {
+      'Authorization': 'Bearer jairrestaura-demo-session-token-2026',
+      'x-user-id': 'usr-jair-01',
+    };
+    const resExp = await makeRequest('GET', '/api/expedientes', undefined, authHeaders);
+    const resCli = await makeRequest('GET', '/api/clientes', undefined, authHeaders);
+
+    if (resExp.status !== 200 || resCli.status !== 200) {
+      return { paso: false, detalle: `Error cargando expedientes autorizados: exp ${resExp.status}, cli ${resCli.status}` };
+    }
 
     const totalExpedientes = resExp.body.expedientes.length;
     const totalClientes = resCli.body.clientes.length;
@@ -268,15 +310,19 @@ async function iniciarSuite() {
 
     return {
       paso: true,
-      detalle: `Verificado: ${totalExpedientes} expedientes judiciales y ${totalClientes} clientes reales permanecen intactos y aislados. Cero contaminación cruzada.`,
+      detalle: `Seguridad y aislamiento verificados: Bloqueo anónimo (401) efectivo. ${totalExpedientes} expedientes y ${totalClientes} clientes protegidos sin contaminación pedagógica.`,
     };
   });
 
-  // PRUEBA 9: Matriz de Hechos y Pruebas con clasificación estricta (Art. 167 CGP)
-  await runTest(9, 'POST /api/escuela/analyze-matrix clasifica narraciones en RELATADO_POR_PARTE sin confundirlas con hechos probados', async () => {
+  // PRUEBA 9: Matriz de Hechos y Pruebas con clasificación estricta (Art. 167 CGP, pruebas positivas y negativas)
+  await runTest(9, 'POST /api/escuela/analyze-matrix no confunde documentos pendientes con soporte y distingue afirmación de prueba', async () => {
     const payload = {
       casoId: casoCreadoId,
-      hechos: 'El consultante manifiesta haber prestado servicios por 3 años bajo subordinación. No se aportan copias de memorandos. Se aporta certificación de pagos de tesorería.',
+      hechos:
+        'El consultante manifiesta haber prestado servicios por 3 años bajo subordinación continua. ' +
+        'La empresa solicitó el informe meteorológico a la capitanía, el cual aún está pendiente de expedición y entrega. ' +
+        'El empleador niega rotundamente la subordinación y alega autonomía técnica. ' +
+        'Se aporta certificación de pagos de tesorería y copia auténtica del contrato de prestación.',
     };
 
     const res = await makeRequest('POST', '/api/escuela/analyze-matrix', payload);
@@ -284,23 +330,56 @@ async function iniciarSuite() {
       return { paso: false, detalle: `Status esperado 200, recibido ${res.status}` };
     }
     const matriz = res.body.matriz;
-    if (!Array.isArray(matriz) || matriz.length === 0) {
-      return { paso: false, detalle: 'La matriz debe contener enunciados clasificados' };
+    if (!Array.isArray(matriz) || matriz.length < 3) {
+      return { paso: false, detalle: 'La matriz debe contener enunciados clasificados para cada oración fáctica' };
     }
 
-    const hechoSinSoporte = matriz.find((h: any) => h.soporteProbatorioIdentificado === 'Sin soporte identificado');
-    if (!hechoSinSoporte || hechoSinSoporte.estado !== 'RELATADO_POR_PARTE') {
-      return { paso: false, detalle: 'El hecho sin documento idóneo debe tener estado estricto RELATADO_POR_PARTE' };
+    // 1. Verificación de prueba negativa (documento pendiente NO debe ser clasificado como RESPALDADO_POR_SOPORTE)
+    const hechoPendiente = matriz.find((h: any) =>
+      h.texto.toLowerCase().includes('pendiente de expedición') || h.texto.toLowerCase().includes('capitanía')
+    );
+    if (!hechoPendiente) {
+      return { paso: false, detalle: 'No se procesó la oración con el informe pendiente' };
+    }
+    if (hechoPendiente.estado === 'RESPALDADO_POR_SOPORTE') {
+      return {
+        paso: false,
+        detalle: 'ERROR DE FALSO POSITIVO: Se clasificó como RESPALDADO_POR_SOPORTE un informe que el texto dice que está pendiente de expedición.',
+      };
+    }
+    if (hechoPendiente.estado !== 'PENDIENTE_CORROBORACION') {
+      return {
+        paso: false,
+        detalle: `El informe pendiente debe tener estado PENDIENTE_CORROBORACION, pero tiene: ${hechoPendiente.estado}`,
+      };
+    }
+
+    // 2. Verificación de afirmación unilateral (RELATADO_POR_PARTE)
+    const hechoNarrado = matriz.find((h: any) => h.texto.toLowerCase().includes('manifiesta haber prestado'));
+    if (!hechoNarrado || hechoNarrado.estado !== 'RELATADO_POR_PARTE') {
+      return { paso: false, detalle: 'La manifestación unilateral debe tener estado RELATADO_POR_PARTE' };
+    }
+
+    // 3. Verificación de controversia (CONTROVERTIDO)
+    const hechoControvertido = matriz.find((h: any) => h.texto.toLowerCase().includes('niega'));
+    if (!hechoControvertido || hechoControvertido.estado !== 'CONTROVERTIDO') {
+      return { paso: false, detalle: 'La negativa del empleador debe tener estado CONTROVERTIDO' };
+    }
+
+    // 4. Verificación de prueba positiva concretamente aportada (RESPALDADO_POR_SOPORTE)
+    const hechoAportado = matriz.find((h: any) => h.texto.toLowerCase().includes('se aporta'));
+    if (!hechoAportado || hechoAportado.estado !== 'RESPALDADO_POR_SOPORTE') {
+      return { paso: false, detalle: 'El documento auténtico aportado debe tener estado RESPALDADO_POR_SOPORTE' };
     }
 
     return {
       paso: true,
-      detalle: `Matriz generada con ${matriz.length} enunciados. Regla epistemológica cumplida: narración clasificada como RELATADO_POR_PARTE.`,
+      detalle: `Filtro antirruido y epistemología probatoria cumplidos: PENDIENTE_CORROBORACION detectado (sin falsos positivos), RELATADO_POR_PARTE, CONTROVERTIDO y RESPALDADO_POR_SOPORTE verificados.`,
     };
   });
 
-  // PRUEBA 10: Análisis de Hipótesis Contrapuestas (Tesis vs Antítesis)
-  await runTest(10, 'POST /api/escuela/analyze-hypotheses compara postura accionante vs excepciones de contraparte', async () => {
+  // PRUEBA 10: Análisis de Hipótesis Contrapuestas con contrato unificado
+  await runTest(10, 'POST /api/escuela/analyze-hypotheses entrega contrato unificado con hipótesis simétricas y criterios', async () => {
     const payload = {
       casoId: casoCreadoId,
       hechos: 'Un empleado solicita reliquidación de horas extras y dominicales alegando jornada continua de 12 horas. El empleador alega cargo de confianza y manejo.',
@@ -311,16 +390,19 @@ async function iniciarSuite() {
     if (res.status !== 200) {
       return { paso: false, detalle: `Status esperado 200, recibido ${res.status}` };
     }
-    const a = res.body.analisis;
+    const a = res.body.analisis || res.body.analisisHipotesis;
     if (!a.hipotesisPrincipal || !a.hipotesisAlternativa) {
       return { paso: false, detalle: 'Debe contener hipótesis principal y alternativa' };
+    }
+    if (!a.puntosControvertidos || !a.cargaProbatoria) {
+      return { paso: false, detalle: 'El contrato unificado debe incluir puntosControvertidos y cargaProbatoria' };
     }
     if (!a.sintesisPonderacion || !a.criterioDecisionSugerido) {
       return { paso: false, detalle: 'Falta síntesis de ponderación y criterio de decisión' };
     }
     return {
       paso: true,
-      detalle: `Hipótesis contrapuestas contrastadas: '${a.hipotesisPrincipal.titulo}' vs '${a.hipotesisAlternativa.titulo}'. Criterio judicial validado.`,
+      detalle: `Contrato unificado verificado (${res.body.origen}): '${a.hipotesisPrincipal.titulo}' vs '${a.hipotesisAlternativa.titulo}'. Criterio de decisión y carga probatoria validados.`,
     };
   });
 
@@ -396,6 +478,44 @@ async function iniciarSuite() {
     return {
       paso: true,
       detalle: `Borrador MATRIZ_PROBATORIA generado con éxito. Reglas probatorias y salvaguarda no radicable verificadas.`,
+    };
+  });
+
+  // PRUEBA 14: Acceso Educativo Libre (sin requerir autenticación ni sesión)
+  await runTest(14, 'Acceso Educativo Libre: endpoints de estudio responden 200 sin credenciales ni sesión', async () => {
+    const resCasos = await makeRequest('GET', '/api/escuela/casos');
+    const resMatrix = await makeRequest('POST', '/api/escuela/analyze-matrix', {
+      hechos: 'El estudiante redacta una situación fáctica de estudio para analizar la carga de la prueba.',
+    });
+    const resSearch = await makeRequest('GET', '/api/investigacion/search?q=tutela');
+
+    if (resCasos.status !== 200 || resMatrix.status !== 200 || resSearch.status !== 200) {
+      return {
+        paso: false,
+        detalle: `Falla de acceso libre: casos=${resCasos.status}, matrix=${resMatrix.status}, search=${resSearch.status}`,
+      };
+    }
+
+    return {
+      paso: true,
+      detalle: 'Acceso educativo libre comprobado: recursos pedagógicos y catálogo oficial accesibles sin credenciales ni barreras.',
+    };
+  });
+
+  // PRUEBA 15: Teardown controlado: eliminar caso creado para evitar duplicados en la base de datos
+  await runTest(15, 'Teardown y Preservación: eliminar caso temporal de pruebas sin dejar duplicados', async () => {
+    if (!casoCreadoId) {
+      return { paso: true, detalle: 'No se requirió limpieza al no haber ID de caso temporal.' };
+    }
+
+    const resDel = await makeRequest('DELETE', `/api/escuela/casos/${casoCreadoId}`);
+    if (resDel.status !== 200) {
+      return { paso: false, detalle: `Status esperado 200 al eliminar caso de prueba, recibido ${resDel.status}` };
+    }
+
+    return {
+      paso: true,
+      detalle: `Caso temporal ${casoCreadoId} eliminado exitosamente. Estado de la base de datos preservado limpio e intacto.`,
     };
   });
 

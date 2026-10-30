@@ -30,7 +30,25 @@ async function runDashboardTests() {
   console.log('  INICIANDO SUITE DE PRUEBAS DE COHERENCIA DEL DASHBOARD');
   console.log('======================================================\n');
 
-  const headersAdmin = { 'x-user-id': 'usr-jair-01' };
+  // Obtener token institucional mediante login criptográfico
+  let headersAdmin: Record<string, string> = {};
+  const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: 'jairdiosdeher@gmail.com',
+      password: 'AbogadoJair2026*!',
+    }),
+  });
+  if (loginRes.ok) {
+    const loginData = await loginRes.json();
+    headersAdmin = {
+      'Authorization': `Bearer ${loginData.token}`,
+      'x-user-id': 'usr-jair-01',
+    };
+  } else {
+    headersAdmin = { 'x-user-id': 'usr-jair-01' };
+  }
 
   let statsData: any = null;
   let expedientesData: any = null;
