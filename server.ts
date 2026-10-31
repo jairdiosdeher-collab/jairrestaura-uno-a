@@ -1030,7 +1030,37 @@ app.post('/api/clientes', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASO
   const nuevoClienteData = req.body;
 
   if (!nuevoClienteData.nombreCompletoORazonSocial || !nuevoClienteData.numeroIdentificacion) {
-    return res.status(400).json({ error: 'El nombre/razón social y la identificación son obligatorios' });
+    return res.status(400).json({ error: 'El nombre/razón social y la identificación son obligatorios.' });
+  }
+
+  // 1. Control estricto de duplicados por identificación y organización
+  const numIdLimpio = String(nuevoClienteData.numeroIdentificacion || '').replace(/\D/g, '');
+  const duplicado = db.clientes.find(
+    (c) => c.organizacionId === authReq.user.organizacionId &&
+           c.numeroIdentificacion.replace(/\D/g, '') === numIdLimpio
+  );
+
+  if (duplicado) {
+    return res.status(409).json({
+      error: `Ya existe un cliente registrado con la identificación ${nuevoClienteData.tipoIdentificacion || 'CC'} ${nuevoClienteData.numeroIdentificacion} en su organización (${duplicado.nombreCompletoORazonSocial}).`,
+      codigo: 'CLIENT_ALREADY_EXISTS'
+    });
+  }
+
+  // 2. Validación de formato de correo electrónico (RFC 5322 simplificado)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (nuevoClienteData.emailPrincipal && !emailRegex.test(nuevoClienteData.emailPrincipal.trim())) {
+    return res.status(400).json({ error: 'El correo electrónico principal no tiene un formato válido (ej. usuario@dominio.com).' });
+  }
+  if (nuevoClienteData.emailNotificacionesJudiciales && !emailRegex.test(nuevoClienteData.emailNotificacionesJudiciales.trim())) {
+    return res.status(400).json({ error: 'El buzón de notificaciones judiciales no tiene un formato de correo válido.' });
+  }
+
+  // 3. Validación de Persona Jurídica (exige Representante Legal)
+  if (nuevoClienteData.tipoPersona === 'JURIDICA') {
+    if (!nuevoClienteData.representanteLegal || !nuevoClienteData.representanteLegal.nombre || !nuevoClienteData.representanteLegal.nombre.trim()) {
+      return res.status(400).json({ error: 'Para personas jurídicas es obligatorio registrar el nombre del representante legal.' });
+    }
   }
 
   const nuevoCliente: Cliente = {
@@ -1041,12 +1071,19 @@ app.post('/api/clientes', requireAuth, requireRole('ADMIN_TITULAR', 'ABOGADO_ASO
     fechaActualizacion: new Date().toISOString(),
     expedientesIds: [],
     estado: nuevoClienteData.estado || 'ACTIVO',
-    consentimientoLey1581: nuevoClienteData.consentimientoLey1581 || {
-      autorizado: false,
-      fechaAutorizacion: new Date().toISOString(),
-      canalAutorizacion: 'DIGITAL_APP',
-      finalidadTratamiento: 'Pendiente de suscripción y acuse formal de autorización según Ley 1581 de 2012',
-    },
+    consentimientoLey1581: nuevoClienteData.consentimientoLey1581 && typeof nuevoClienteData.consentimientoLey1581.autorizado === 'boolean'
+      ? {
+          autorizado: nuevoClienteData.consentimientoLey1581.autorizado,
+          fechaAutorizacion: nuevoClienteData.consentimientoLey1581.fechaAutorizacion || new Date().toISOString(),
+          canalAutorizacion: nuevoClienteData.consentimientoLey1581.canalAutorizacion || 'DIGITAL_APP',
+          finalidadTratamiento: nuevoClienteData.consentimientoLey1581.finalidadTratamiento || 'Gestión procesal, representación judicial y custodia de expedientes conforme a la Ley 1581 de 2012.',
+        }
+      : {
+          autorizado: false,
+          fechaAutorizacion: new Date().toISOString(),
+          canalAutorizacion: 'PENDIENTE',
+          finalidadTratamiento: 'Pendiente de suscripción y acuse formal de autorización según Ley 1581 de 2012',
+        },
   };
 
   db.clientes.unshift(nuevoCliente);

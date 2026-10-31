@@ -30,7 +30,7 @@ export interface Usuario {
 export interface ConsentimientoHabeasData {
   autorizado: boolean;
   fechaAutorizacion: string;
-  canalAutorizacion: 'DIGITAL_APP' | 'FIRMA_FISICA' | 'CORREO_ELECTRONICO';
+  canalAutorizacion: 'DIGITAL_APP' | 'FIRMA_FISICA' | 'CORREO_ELECTRONICO' | 'PENDIENTE';
   finalidadTratamiento: string;
   soporteId?: string;
 }

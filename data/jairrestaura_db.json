@@ -17,7 +17,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-01-10T08:00:00Z",
-      "ultimoAcceso": "2026-10-31T16:33:50.557Z"
+      "ultimoAcceso": "2026-10-31T19:54:29.434Z"
     },
     {
       "id": "usr-marcela-02",
@@ -38,7 +38,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-03-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-31T16:33:44.115Z"
+      "ultimoAcceso": "2026-10-31T19:53:37.556Z"
     },
     {
       "id": "usr-externo-04",
@@ -49,10 +49,178 @@
       "organizacionId": "org-externa-002",
       "organizacionNombre": "Firma Legal Andina Externa Ltda.",
       "fechaCreacion": "2026-04-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-31T16:33:44.126Z"
+      "ultimoAcceso": "2026-10-31T19:53:37.567Z"
     }
   ],
   "clientes": [
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901469443",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793476469443",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793476469443@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793476469443@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-10-31T19:54:29.459Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793476469459-1afb",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-10-31T19:54:29.459Z",
+      "fechaActualizacion": "2026-10-31T19:54:29.459Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80469443",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793476469443",
+      "emailPrincipal": "natural_1793476469443@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793476469443@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-10-31T19:54:29.450Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793476469453-ceca",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-10-31T19:54:29.453Z",
+      "fechaActualizacion": "2026-10-31T19:54:29.453Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901405562",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793476405562",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793476405562@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793476405562@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-10-31T19:53:25.592Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793476405592-631a",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-10-31T19:53:25.592Z",
+      "fechaActualizacion": "2026-10-31T19:53:25.592Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80405562",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793476405562",
+      "emailPrincipal": "natural_1793476405562@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793476405562@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-10-31T19:53:25.569Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793476405577-77cc",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-10-31T19:53:25.577Z",
+      "fechaActualizacion": "2026-10-31T19:53:25.577Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901353960",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793476353960",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793476353960@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793476353960@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-10-31T19:52:33.980Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793476353980-5100",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-10-31T19:52:33.980Z",
+      "fechaActualizacion": "2026-10-31T19:52:33.980Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80353960",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793476353960",
+      "emailPrincipal": "natural_1793476353960@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793476353960@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-10-31T19:52:33.967Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793476353973-db0e",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-10-31T19:52:33.973Z",
+      "fechaActualizacion": "2026-10-31T19:52:33.973Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
     {
       "id": "cli-andinas-01",
       "tipoPersona": "JURIDICA",
@@ -511,6 +679,220 @@
     }
   ],
   "auditoria": [
+    {
+      "id": "aud-1793476469461-3762c5",
+      "timestamp": "2026-10-31T19:54:29.461Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793476469459-1afb",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793476469443 (NIT 901469443)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476469455-a7922a",
+      "timestamp": "2026-10-31T19:54:29.455Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793476469453-ceca",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793476469443 (CC 80469443)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476469436-a0c7af",
+      "timestamp": "2026-10-31T19:54:29.436Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793476424299-329dc6",
+      "timestamp": "2026-10-31T19:53:44.299Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793476417616-94c688",
+      "timestamp": "2026-10-31T19:53:37.616Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGOUT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Cierre formal de sesión y revocación de token criptográfico",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476417579-8ce550",
+      "timestamp": "2026-10-31T19:53:37.579Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "EXPORT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Exportación autorizada de respaldo institucional de datos (Ley 1581 de 2012)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476417569-2fe681",
+      "timestamp": "2026-10-31T19:53:37.569Z",
+      "usuarioId": "usr-externo-04",
+      "usuarioNombre": "Dra. Camila Soto (Firma Externa)",
+      "usuarioRol": "ABOGADO_ASOCIADO",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-externa-002",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793476417558-31235b",
+      "timestamp": "2026-10-31T19:53:37.558Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793476417546-5bf277",
+      "timestamp": "2026-10-31T19:53:37.546Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793476416791-bfc43b",
+      "timestamp": "2026-10-31T19:53:36.791Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "DELETE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793476416142-6959",
+      "descripcionDetallada": "Caso académico eliminado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476416154-4e7605",
+      "timestamp": "2026-10-31T19:53:36.154Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793476416142-6959",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476416144-3b259a",
+      "timestamp": "2026-10-31T19:53:36.144Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793476416142-6959",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476405596-064a41",
+      "timestamp": "2026-10-31T19:53:25.596Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793476405592-631a",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793476405562 (NIT 901405562)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476405579-68e560",
+      "timestamp": "2026-10-31T19:53:25.579Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793476405577-77cc",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793476405562 (CC 80405562)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476405553-61fe63",
+      "timestamp": "2026-10-31T19:53:25.553Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793476353981-65e27a",
+      "timestamp": "2026-10-31T19:52:33.981Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793476353980-5100",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793476353960 (NIT 901353960)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476353974-fa14dd",
+      "timestamp": "2026-10-31T19:52:33.974Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793476353973-db0e",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793476353960 (CC 80353960)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793476353950-81dafd",
+      "timestamp": "2026-10-31T19:52:33.950Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
     {
       "id": "aud-1793464430558-11d0f1",
       "timestamp": "2026-10-31T16:33:50.558Z",

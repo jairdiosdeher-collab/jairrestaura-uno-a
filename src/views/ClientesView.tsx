@@ -27,8 +27,8 @@ import type { Cliente, TipoPersona, TipoIdentificacion } from '../types/legal';
 
 interface ClientesViewProps {
   clientes: Cliente[];
-  onCrearCliente: (cliente: Partial<Cliente>) => Promise<void>;
-  onEditarCliente: (id: string, cliente: Partial<Cliente>) => Promise<void>;
+  onCrearCliente: (cliente: Partial<Cliente>) => Promise<{ exito: boolean; error?: string }>;
+  onEditarCliente: (id: string, cliente: Partial<Cliente>) => Promise<{ exito: boolean; error?: string } | void>;
   onArchivarCliente: (id: string) => Promise<void>;
   onVerExpediente: (expedienteId: string) => void;
 }
@@ -49,6 +49,8 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editandoClienteId, setEditandoClienteId] = useState<string | null>(null);
   const [modalConfirmarArchivar, setModalConfirmarArchivar] = useState<Cliente | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [errorFormulario, setErrorFormulario] = useState<string | null>(null);
 
   // Estado del formulario
   const [formData, setFormData] = useState<{
@@ -84,11 +86,13 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
     ciudad: 'Bogotá D.C.',
     departamento: 'Cundinamarca',
     notasInternas: '',
-    autorizaHabeasData: true,
+    autorizaHabeasData: false,
   });
 
   const abrirModalCrear = () => {
     setEditandoClienteId(null);
+    setErrorFormulario(null);
+    setGuardando(false);
     setFormData({
       tipoPersona: 'NATURAL',
       tipoIdentificacion: 'CC',
@@ -105,13 +109,15 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
       ciudad: 'Bogotá D.C.',
       departamento: 'Cundinamarca',
       notasInternas: '',
-      autorizaHabeasData: true,
+      autorizaHabeasData: false,
     });
     setModalAbierto(true);
   };
 
   const abrirModalEditar = (cliente: Cliente) => {
     setEditandoClienteId(cliente.id);
+    setErrorFormulario(null);
+    setGuardando(false);
     setFormData({
       tipoPersona: cliente.tipoPersona,
       tipoIdentificacion: cliente.tipoIdentificacion,
@@ -128,37 +134,57 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
       ciudad: cliente.ciudad,
       departamento: cliente.departamento,
       notasInternas: cliente.notasInternas || '',
-      autorizaHabeasData: cliente.consentimientoLey1581.autorizado,
+      autorizaHabeasData: !!cliente.consentimientoLey1581?.autorizado,
     });
     setModalAbierto(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nombreCompletoORazonSocial || !formData.numeroIdentificacion) {
-      alert('Por favor ingrese el nombre o razón social y la identificación.');
+    setErrorFormulario(null);
+
+    // 1. Validación de campos obligatorios
+    if (!formData.nombreCompletoORazonSocial.trim() || !formData.numeroIdentificacion.trim()) {
+      setErrorFormulario('Por favor ingrese el nombre o razón social y el número de identificación.');
+      return;
+    }
+
+    // 2. Validación de formato de correo electrónico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (formData.emailPrincipal && !emailRegex.test(formData.emailPrincipal.trim())) {
+      setErrorFormulario('El correo electrónico principal no tiene un formato válido (ej. usuario@dominio.com).');
+      return;
+    }
+    if (formData.emailNotificacionesJudiciales && !emailRegex.test(formData.emailNotificacionesJudiciales.trim())) {
+      setErrorFormulario('El buzón de notificaciones judiciales no tiene un formato de correo válido.');
+      return;
+    }
+
+    // 3. Validación de Persona Jurídica (exige Representante Legal)
+    if (formData.tipoPersona === 'JURIDICA' && (!formData.representanteNombre || !formData.representanteNombre.trim())) {
+      setErrorFormulario('Para personas jurídicas es obligatorio ingresar el nombre del representante legal.');
       return;
     }
 
     const payload: Partial<Cliente> = {
       tipoPersona: formData.tipoPersona,
       tipoIdentificacion: formData.tipoIdentificacion,
-      numeroIdentificacion: formData.numeroIdentificacion,
-      dv: formData.tipoPersona === 'JURIDICA' ? formData.dv : undefined,
-      nombreCompletoORazonSocial: formData.nombreCompletoORazonSocial,
+      numeroIdentificacion: formData.numeroIdentificacion.trim(),
+      dv: formData.tipoPersona === 'JURIDICA' ? formData.dv.trim() : undefined,
+      nombreCompletoORazonSocial: formData.nombreCompletoORazonSocial.trim(),
       representanteLegal: formData.tipoPersona === 'JURIDICA' && formData.representanteNombre ? {
-        nombre: formData.representanteNombre,
+        nombre: formData.representanteNombre.trim(),
         tipoIdentificacion: 'CC',
-        numeroIdentificacion: formData.representanteId,
-        cargo: formData.representanteCargo,
+        numeroIdentificacion: formData.representanteId.trim(),
+        cargo: formData.representanteCargo.trim(),
       } : undefined,
-      emailPrincipal: formData.emailPrincipal,
-      emailNotificacionesJudiciales: formData.emailNotificacionesJudiciales || formData.emailPrincipal,
-      telefono: formData.telefono,
-      direccion: formData.direccion,
-      ciudad: formData.ciudad,
-      departamento: formData.departamento,
-      notasInternas: formData.notasInternas,
+      emailPrincipal: formData.emailPrincipal.trim(),
+      emailNotificacionesJudiciales: formData.emailNotificacionesJudiciales.trim() || formData.emailPrincipal.trim(),
+      telefono: formData.telefono.trim(),
+      direccion: formData.direccion.trim(),
+      ciudad: formData.ciudad.trim(),
+      departamento: formData.departamento.trim(),
+      notasInternas: formData.notasInternas.trim(),
       consentimientoLey1581: {
         autorizado: formData.autorizaHabeasData,
         fechaAutorizacion: new Date().toISOString(),
@@ -167,13 +193,29 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
       },
     };
 
-    if (editandoClienteId) {
-      await onEditarCliente(editandoClienteId, payload);
-    } else {
-      await onCrearCliente(payload);
+    setGuardando(true);
+    try {
+      if (editandoClienteId) {
+        const res = await onEditarCliente(editandoClienteId, payload);
+        if (res && !res.exito) {
+          setErrorFormulario(res.error || 'Error al actualizar el cliente.');
+          return;
+        }
+        setModalAbierto(false);
+      } else {
+        const res = await onCrearCliente(payload);
+        if (res && res.exito) {
+          setModalAbierto(false);
+        } else {
+          // El formulario permanece abierto preservando los datos
+          setErrorFormulario(res?.error || 'Error al registrar el cliente. Revise los datos e intente de nuevo.');
+        }
+      }
+    } catch (err: any) {
+      setErrorFormulario(err?.message || 'Error inesperado de comunicación.');
+    } finally {
+      setGuardando(false);
     }
-
-    setModalAbierto(false);
   };
 
   // Filtrado reactivo
@@ -356,12 +398,18 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
                 {/* Cumplimiento Habeas Data Ley 1581 */}
                 <div className="mt-3 p-2 rounded bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-[10px]">
                   <span className="text-slate-500 flex items-center gap-1">
-                    <FileCheck className="w-3 h-3 text-emerald-500" />
+                    <FileCheck className={`w-3 h-3 ${cliente.consentimientoLey1581?.autorizado ? 'text-emerald-500' : 'text-amber-500'}`} />
                     Habeas Data Ley 1581
                   </span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    Autorizado
-                  </span>
+                  {cliente.consentimientoLey1581?.autorizado ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                      Autorizado
+                    </span>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                      Pendiente
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -410,6 +458,13 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
             </div>
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+              {/* Mensaje de Error en Formulario (sin cerrar modal) */}
+              {errorFormulario && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorFormulario}</span>
+                </div>
+              )}
               {/* Tipo Persona */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -618,9 +673,13 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm"
+                  disabled={guardando}
+                  className="px-4 py-2 text-xs font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2"
                 >
-                  {editandoClienteId ? 'Guardar Cambios' : 'Registrar Cliente'}
+                  {guardando && (
+                    <span className="inline-block w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span>{editandoClienteId ? (guardando ? 'Guardando...' : 'Guardar Cambios') : (guardando ? 'Registrando...' : 'Registrar Cliente')}</span>
                 </button>
               </div>
             </form>

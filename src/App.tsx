@@ -224,30 +224,139 @@ export default function App() {
   };
 
   // Handlers de Clientes
-  const handleCrearCliente = async (clienteData: Partial<Cliente>) => {
-    const res = await fetch('/api/clientes', {
-      method: 'POST',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(clienteData),
-    });
-    if (res.ok) {
-      mostrarNotificacion('Cliente registrado con autorización de Habeas Data');
-      cargarDatos();
-    } else {
-      const err = await res.json();
-      alert(err.error || 'Error al crear cliente');
+  const handleCrearCliente = async (clienteData: Partial<Cliente>): Promise<{ exito: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/clientes', {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(clienteData),
+      });
+
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.cliente) {
+          setClientes((prev) => [data.cliente, ...prev.filter((c) => c.id !== data.cliente.id)]);
+        }
+        mostrarNotificacion(
+          clienteData.consentimientoLey1581?.autorizado
+            ? 'Cliente registrado con autorización de Habeas Data'
+            : 'Cliente registrado (Habeas Data pendiente de confirmación)'
+        );
+        cargarDatos();
+        return { exito: true };
+      }
+
+      // Si el servidor responde con 404 (ej. GitHub Pages estático sin serverless activo)
+      if (res.status === 404) {
+        // Fallback local resiliente en navegador
+        const idLimpio = String(clienteData.numeroIdentificacion || '').replace(/\D/g, '');
+        const dup = clientes.find((c) => c.numeroIdentificacion.replace(/\D/g, '') === idLimpio);
+        if (dup) {
+          return {
+            exito: false,
+            error: `Ya existe un cliente registrado con la identificación ${clienteData.numeroIdentificacion} en su organización (${dup.nombreCompletoORazonSocial}).`,
+          };
+        }
+
+        const nuevoClienteLocal: Cliente = {
+          id: `cli-local-${Date.now()}`,
+          organizacionId: organizacion.id,
+          tipoPersona: clienteData.tipoPersona || 'NATURAL',
+          tipoIdentificacion: clienteData.tipoIdentificacion || 'CC',
+          numeroIdentificacion: clienteData.numeroIdentificacion || '',
+          dv: clienteData.dv,
+          nombreCompletoORazonSocial: clienteData.nombreCompletoORazonSocial || '',
+          representanteLegal: clienteData.representanteLegal,
+          emailPrincipal: clienteData.emailPrincipal || '',
+          emailNotificacionesJudiciales: clienteData.emailNotificacionesJudiciales || clienteData.emailPrincipal || '',
+          telefono: clienteData.telefono || '',
+          direccion: clienteData.direccion || '',
+          ciudad: clienteData.ciudad || 'Bogotá D.C.',
+          departamento: clienteData.departamento || 'Cundinamarca',
+          estado: 'ACTIVO',
+          expedientesIds: [],
+          consentimientoLey1581: clienteData.consentimientoLey1581 || {
+            autorizado: false,
+            fechaAutorizacion: new Date().toISOString(),
+            canalAutorizacion: 'PENDIENTE',
+            finalidadTratamiento: 'Tratamiento conforme a la Ley 1581 de 2012',
+          },
+          notasInternas: clienteData.notasInternas,
+          fechaCreacion: new Date().toISOString(),
+          fechaActualizacion: new Date().toISOString(),
+        };
+
+        setClientes((prev) => [nuevoClienteLocal, ...prev]);
+        mostrarNotificacion('Cliente registrado localmente en modo desconectado');
+        return { exito: true };
+      }
+
+      const err = await res.json().catch(() => ({}));
+      return {
+        exito: false,
+        error: err.error || `Error al crear cliente (código ${res.status}).`,
+      };
+    } catch (netErr: any) {
+      // Error de red total: guardar en memoria local
+      const idLimpio = String(clienteData.numeroIdentificacion || '').replace(/\D/g, '');
+      const dup = clientes.find((c) => c.numeroIdentificacion.replace(/\D/g, '') === idLimpio);
+      if (dup) {
+        return {
+          exito: false,
+          error: `Ya existe un cliente con esta identificación en el registro local.`,
+        };
+      }
+
+      const nuevoClienteLocal: Cliente = {
+        id: `cli-local-${Date.now()}`,
+        organizacionId: organizacion.id,
+        tipoPersona: clienteData.tipoPersona || 'NATURAL',
+        tipoIdentificacion: clienteData.tipoIdentificacion || 'CC',
+        numeroIdentificacion: clienteData.numeroIdentificacion || '',
+        dv: clienteData.dv,
+        nombreCompletoORazonSocial: clienteData.nombreCompletoORazonSocial || '',
+        representanteLegal: clienteData.representanteLegal,
+        emailPrincipal: clienteData.emailPrincipal || '',
+        emailNotificacionesJudiciales: clienteData.emailNotificacionesJudiciales || clienteData.emailPrincipal || '',
+        telefono: clienteData.telefono || '',
+        direccion: clienteData.direccion || '',
+        ciudad: clienteData.ciudad || 'Bogotá D.C.',
+        departamento: clienteData.departamento || 'Cundinamarca',
+        estado: 'ACTIVO',
+        expedientesIds: [],
+        consentimientoLey1581: clienteData.consentimientoLey1581 || {
+          autorizado: false,
+          fechaAutorizacion: new Date().toISOString(),
+          canalAutorizacion: 'PENDIENTE',
+          finalidadTratamiento: 'Tratamiento conforme a la Ley 1581 de 2012',
+        },
+        notasInternas: clienteData.notasInternas,
+        fechaCreacion: new Date().toISOString(),
+        fechaActualizacion: new Date().toISOString(),
+      };
+
+      setClientes((prev) => [nuevoClienteLocal, ...prev]);
+      mostrarNotificacion('Cliente registrado localmente (sin conexión)');
+      return { exito: true };
     }
   };
 
-  const handleEditarCliente = async (id: string, clienteData: Partial<Cliente>) => {
-    const res = await fetch(`/api/clientes/${id}`, {
-      method: 'PUT',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(clienteData),
-    });
-    if (res.ok) {
-      mostrarNotificacion('Datos del cliente actualizados');
-      cargarDatos();
+  const handleEditarCliente = async (id: string, clienteData: Partial<Cliente>): Promise<{ exito: boolean; error?: string }> => {
+    try {
+      const res = await fetch(`/api/clientes/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(clienteData),
+      });
+      if (res.ok) {
+        mostrarNotificacion('Datos del cliente actualizados');
+        cargarDatos();
+        return { exito: true };
+      }
+      const err = await res.json().catch(() => ({}));
+      return { exito: false, error: err.error || 'Error al actualizar cliente' };
+    } catch (err: any) {
+      return { exito: false, error: err.message || 'Error de conexión' };
     }
   };
 
