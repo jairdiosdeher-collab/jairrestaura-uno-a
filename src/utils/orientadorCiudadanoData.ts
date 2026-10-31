@@ -544,84 +544,84 @@ export function motorHeuristicoOrientacionCiudadana(
   } else if (areaDerecho === 'ARRENDAMIENTOS') {
     opciones = [
       {
-        titulo: 'Notificación y Requerimiento Escrito según Ley 820 de 2003',
-        descripcion: 'Notificar al arrendatario o arrendador sobre el incumplimiento del canon o necesidad de entrega.',
-        consecuencias: 'Fija en mora a la contraparte conforme al Art. 12 y Art. 22 de la Ley 820 de 2003.',
-        pros: ['Trámite ágil y económico', 'Requisito probatorio fundamental para el juez'],
-        contras: ['Requiere envío formal por correo postal certificado autorizado para que tenga validez plena']
+        titulo: 'Requerimiento Amistoso o Cobro Escrito Extrajudicial',
+        descripcion: 'Notificar al arrendatario sobre los cánones en mora o preaviso de no prórroga conforme al Art. 22 de la Ley 820 de 2003.',
+        consecuencias: 'Facilita un posible acuerdo voluntario de entrega o pago sin costos judiciales.',
+        pros: ['Vía rápida y económica', 'Evidencia la buena fe contractual'],
+        contras: ['Si el contrato suscrito incluyó renuncia a requerimientos para constituir en mora (Art. 2007 Código Civil), no es requisito legal obligatorio previo para presentar la demanda judicial de restitución']
       },
       {
-        titulo: 'Audiencia de Conciliación Extrajudicial en Arrendamiento',
-        descripcion: 'Citar ante Centro de Conciliación, Casa de Justicia o Notaría para acordar fecha de entrega y pago.',
-        consecuencias: 'El acta firmada presta mérito ejecutivo y permite solicitar entrega inmediata al juez si se incumple.',
-        pros: ['Evita el juicio largo de restitución', 'Trámite rápido'],
-        contras: ['Depende de la voluntad de comparecer del arrendatario']
+        titulo: 'Audiencia de Conciliación Extrajudicial en Derecho (Ley 2220 de 2022)',
+        descripcion: 'Citar ante Centro de Conciliación, Casa de Justicia o Personería para acordar entrega voluntaria y pago.',
+        consecuencias: 'El acta de conciliación presta mérito ejecutivo y hace tránsito a cosa juzgada. Si se incumple, faculta solicitar la entrega judicial directa.',
+        pros: ['Trámite rápido y gratuito en entidades públicas', 'Evita el proceso judicial contencioso'],
+        contras: ['Depende de la voluntad de comparecencia del inquilino. EXONERACIÓN LEGAL: Conforme al Art. 68 de la Ley 2220 de 2022 y Art. 590 parágrafo 1 del CGP, si en la demanda se solicitan medidas cautelares de embargo o entrega provisional, NO es obligatorio agotar conciliación prejudicial previa.']
       },
       {
         titulo: 'Proceso Judicial de Restitución de Inmueble Arrendado (Art. 384 CGP)',
-        descripcion: 'Demandar la terminación judicial del contrato y la entrega material forzosa mediante diligencia de lanzamiento.',
-        consecuencias: 'Orden judicial que restituye el inmueble y decreta embargo de cánones.',
-        pros: ['Recuperación coactiva del bien', 'Embargo preventivo de bienes del inquilino y fiadores'],
-        contras: ['Tarda entre 6 y 14 meses', 'Requiere abogado si supera la mínima cuantía']
+        descripcion: 'Demanda ante Juez Civil Municipal competente para declarar la terminación del contrato y ordenar la restitución de la tenencia.',
+        consecuencias: 'Sentencia judicial que ordena la restitución y faculta la diligencia de entrega material / lanzamiento comisionada a la autoridad policiva.',
+        pros: ['REGLA PROCESAL NUCLEAR: El demandado NO será oído en el proceso si no consigna o demuestra el pago de los cánones adeudados (Art. 384 num. 3 CGP)', 'Permite solicitar medidas cautelares de embargo y secuestro sobre bienes y cuentas (Art. 384 num. 7 CGP)'],
+        contras: ['El lanzamiento no es automático: requiere sentencia judicial o auto de entrega provisional y programación de diligencia con comisionado', 'Requiere abogado si la cuantía (Art. 26 num. 6 CGP) supera 40 SMLMV']
       }
     ];
 
     queHacerPrimero = {
-      accion: 'Verificar el contrato de arrendamiento firmado y la dirección de notificaciones contractual.',
-      porQueEsImportante: 'La Ley 820 de 2003 exige que las notificaciones entre las partes se envíen a la dirección estipulada en el contrato mediante servicio postal autorizado.',
-      plazoRecomendado: 'En las próximas 24 horas.'
+      accion: 'Verificar el contrato de arrendamiento y corroborar si las partes renunciaron a requerimientos de constitución en mora (Art. 2007 Código Civil).',
+      porQueEsImportante: 'Conforme al Art. 384 num. 1 del CGP, el contrato es el anexo esencial. Si contiene renuncia expresa a requerimientos, se puede acudir a la demanda sin necesidad de cartas previas.',
+      plazoRecomendado: 'En las próximas 24 a 48 horas.'
     };
 
     pasosRuta = [
       {
         orden: 1,
-        titulo: 'Revisión del Contrato y Liquidación de Cánones / Servicios',
-        paraQueSirve: 'Determinar la causa exacta de terminación (falta de pago, vencimiento del término o uso prohibido).',
-        queHacer: 'Revisa las cláusulas del contrato, certifica los meses adeudados y consigue copias de los recibos de servicios públicos en mora.',
-        documentosAReunir: ['Contrato de arrendamiento original o copia íntegra', 'Comprobantes de pago de los últimos cánones cancelados', 'Facturas de servicios públicos con saldo en mora'],
-        anteQuien: 'Arrendador o arrendatario',
-        canalOficial: 'Archivo personal',
-        queEsperar: 'Tener una cifra exacta y comprobada de la deuda.',
-        queHacerSiFalla: 'Si el contrato fue verbal, preparar la prueba testimonial o confesión ficta mediante interrogatorio de parte extraprocesal.',
-        precauciones: ['No cortar servicios públicos ni intentar ingresar por la fuerza (puede constituir delito de perturbación a la posesión).']
+        titulo: 'Revisión del Contrato, Liquidación de Mora y Cómputo de Cuantía',
+        paraQueSirve: 'Verificar cláusulas de mora, renuncia a requerimientos y determinar si se requiere abogado obligatorio.',
+        queHacer: 'Revisa si el contrato es escrito. Constata si existe renuncia a requerimientos (Art. 2007 CC). Liquida la cuantía según el Art. 26 num. 6 CGP (valor actual del canon multiplicado por el término pactado en el contrato).',
+        documentosAReunir: ['Contrato de arrendamiento debidamente suscrito', 'Relación detallada de cánones en mora', 'Recibos de servicios públicos con deuda'],
+        anteQuien: 'Arrendador o asesor jurídico',
+        canalOficial: 'Archivo privado',
+        queEsperar: 'Determinar si es de Mínima Cuantía (hasta 40 SMLMV, permite litigar en causa propia sin abogado según Art. 73 CGP) o Menor/Mayor Cuantía (exige abogado con Tarjeta Profesional).',
+        queHacerSiFalla: 'Si el contrato fue verbal, preparar interrogatorio de parte extraprocesal para obtener confesión ficta o prueba testimonial sumaria (Art. 384 num. 1 CGP).',
+        precauciones: ['No cortar servicios públicos ni intentar ingresar o cambiar cerraduras por la fuerza (puede constituir delito de perturbación de la posesión sobre inmueble).']
       },
       {
         orden: 2,
-        titulo: 'Envío de Comunicación Escrita por Correo Postal Certificado',
-        paraQueSirve: 'Dejar constancia legalmente irrebatible de la comunicación o requerimiento.',
-        queHacer: 'Enviar carta física por empresa de mensajería autorizada (4-72, Servientrega) a la dirección pactada en el contrato, solicitando copia del cotejo y guía de entrega.',
-        documentosAReunir: ['Carta con exposición clara de motivos y plazo otorgado', 'Copia de cotejo para el remitente'],
-        anteQuien: 'Inquilino o arrendador a su dirección contractual',
-        canalOficial: 'Servicio postal autorizado en Colombia (Art. 12 Ley 820 de 2003)',
-        queEsperar: 'Entrega en 2 a 3 días hábiles con guía firmada.',
-        queHacerSiFalla: 'Conservar la constancia de devolución si el destinatario rehúsa recibir.',
-        precauciones: ['El simple mensaje de WhatsApp no sustituye el envío postal certificado si el contrato estipuló este medio.']
+        titulo: 'Opción de Vía Directa: Cobro Escrito o Conciliación Voluntaria',
+        paraQueSirve: 'Procurar acuerdo inmediato de entrega y plan de pagos.',
+        queHacer: 'Si existe disposición de pago o entrega pacífica, citar a audiencia ante Centro de Conciliación universitario gratuito (Ley 2113 de 2021) o Personería (Ley 2220 de 2022).',
+        documentosAReunir: ['Copia del contrato de arrendamiento', 'Liquidación de cánones', 'Copia de cédula de ciudadanía'],
+        anteQuien: 'Centro de Conciliación, Personería Municipal o Casa de Justicia',
+        canalOficial: 'https://www.minjusticia.gov.co',
+        enlaceCanalOficial: 'https://www.minjusticia.gov.co',
+        queEsperar: 'Acta de conciliación con fecha cierta de entrega y pago que presta mérito ejecutivo.',
+        queHacerSiFalla: 'Si no hay acuerdo o el inquilino no asiste, se expide constancia para demandar. REGLA: Si vas a solicitar medidas cautelares, puedes radicar la demanda judicial directamente sin agotar este paso (Art. 68 Ley 2220 de 2022).',
+        precauciones: ['No otorgar prórrogas tácitas ni recibir abonos parciales sin dejar constancia escrita de que no implican novación ni renuncia a exigir la restitución.']
       },
       {
         orden: 3,
-        titulo: 'Solicitud de Conciliación ante Personería o Casa de Justicia',
-        paraQueSirve: 'Concertar la entrega voluntaria del inmueble y el plan de pagos de los cánones atrasados.',
-        queHacer: 'Radicar solicitud ante la Casa de Justicia de tu localidad o Centro de Conciliación de la Personería.',
-        documentosAReunir: ['Copia del contrato de arrendamiento', 'Guía de la carta previa', 'Cédula de ciudadanía'],
-        anteQuien: 'Personería Municipal, Casa de Justicia o Centro de Conciliación (Ley 2220 de 2022)',
-        canalOficial: 'https://www.personeriabogota.gov.co o Personería de tu municipio',
-        enlaceCanalOficial: 'https://www.personeriabogota.gov.co',
-        queEsperar: 'Audiencia presencial o virtual con citación formal a las partes.',
-        queHacerSiFalla: 'Si no comparece o no hay acuerdo, se expide constancia para radicar de inmediato la demanda judicial.',
-        precauciones: ['Verificar que el acta contenga fecha exacta y hora de entrega del inmueble con entrega de llaves.']
+        titulo: 'Demanda Judicial de Restitución de Inmueble (Art. 384 CGP)',
+        paraQueSirve: 'Obtener la terminación judicial del contrato y la orden judicial vinculante de restitución.',
+        queHacer: 'Presentar demanda ante el Juez Civil Municipal competente anexando el contrato (Art. 384 num. 1 CGP). Solicitar medidas cautelares de embargo y secuestro (num. 7) y entrega provisional si el inmueble está desocupado o deteriorado.',
+        documentosAReunir: ['Poder especial al abogado (salvo mínima cuantía)', 'Prueba documental del contrato de arrendamiento', 'Liquidación de la mora'],
+        anteQuien: 'Juez Civil Municipal o de Pequeñas Causas del lugar de ubicación del inmueble',
+        canalOficial: 'https://www.ramajudicial.gov.co',
+        enlaceCanalOficial: 'https://www.ramajudicial.gov.co',
+        queEsperar: 'Auto admisorio y traslado al demandado. REGLA NUCLEAR: Si la demanda es por falta de pago, el demandado NO será oído en el proceso hasta tanto demuestre que ha cancelado los cánones o consigne a órdenes del juzgado las sumas adeudadas (Art. 384 num. 3 CGP). Si no contesta, el juez dicta sentencia de plano (num. 5).',
+        queHacerSiFalla: 'Si el demandado acredita pago con recibos auténticos o consignaciones legales, se tramitan las excepciones en audiencia.',
+        precauciones: ['Cumplir estrictamente las cargas de notificación electrónica de la Ley 2213 de 2022 (Art. 8).']
       },
       {
         orden: 4,
-        titulo: 'Demanda de Restitución de Inmueble Arrendado (Art. 384 CGP)',
-        paraQueSirve: 'Obtener la orden judicial de desalojo y la entrega forzosa del predio.',
-        queHacer: 'Presentar demanda ante el Juez Civil Municipal competente anexando el contrato y la prueba de mora.',
-        documentosAReunir: ['Poder conferido al abogado', 'Contrato de arrendamiento', 'Pruebas de la causal invocada'],
-        anteQuien: 'Juez Civil Municipal del lugar donde está ubicado el inmueble',
-        canalOficial: 'https://www.ramajudicial.gov.co',
-        enlaceCanalOficial: 'https://www.ramajudicial.gov.co',
-        queEsperar: 'Si el demandado no consigna los cánones adeudados en la cuenta del juzgado, NO puede ser oído en el proceso (Art. 384 num. 2 CGP).',
-        queHacerSiFalla: 'Solicitar de inmediato diligencia de entrega material con comisionado policivo.',
-        precauciones: ['Solicitar medidas cautelares de embargo sobre cuentas y bienes de los deudores solidarios.']
+        titulo: 'Diligencia Judicial de Restitución Material / Lanzamiento',
+        paraQueSirve: 'Hacer efectiva la entrega física del inmueble con auxilio de la fuerza pública.',
+        queHacer: 'Una vez ejecutoriada la sentencia, el juez comisiona mediante despacho comisorio a la Inspección de Policía para practicar la diligencia de entrega material.',
+        documentosAReunir: ['Copia auténtica de la sentencia ejecutoriada', 'Despacho comisorio del juzgado', 'Logística de cerrajería y transporte'],
+        anteQuien: 'Inspector de Policía comisionado',
+        canalOficial: 'Inspección de Policía de la jurisdicción del inmueble',
+        queEsperar: 'Diligencia oficial en la cual se restituye la tenencia física y se hace entrega de las llaves al arrendador.',
+        queHacerSiFalla: 'Si un tercero formula oposición fundada como poseedor (Art. 309 CGP), el comisionado remitirá el trámite al juez de conocimiento.',
+        precauciones: ['El lanzamiento no es automático: toda entrega forzosa debe ser ordenada por el juez y ejecutada por la autoridad comisionada. No incurrir en vías de hecho.']
       }
     ];
 
@@ -629,25 +629,25 @@ export function motorHeuristicoOrientacionCiudadana(
       {
         id: 'doc-arr-1',
         nombre: 'Contrato de Arrendamiento debidamente suscrito',
-        descripcion: 'Documento donde se fijó el canon, términos de entrega y dirección para notificaciones.',
+        descripcion: 'Documento donde se fijó la renta, plazo, inmueble y renuncia a requerimientos. Es el anexo probatorio esencial según el Art. 384 num. 1 del CGP.',
         comoObtenerlo: 'Copia en poder del arrendador o arrendatario.',
-        comoConservarlo: 'Conservar con todas las hojas y anexos.',
+        comoConservarlo: 'Documento original o copia auténtica digital legible.',
         obligatorio: true
       },
       {
         id: 'doc-arr-2',
-        nombre: 'Certificado de Tradición y Libertad del Inmueble',
-        descripcion: 'Acredita quién es el propietario legítimo y los linderos del predio.',
-        comoObtenerlo: 'Descargar con el número de matrícula en la ventanilla única de registro (VUR) de la SNR.',
-        comoConservarlo: 'PDF digital no mayor a 30 días de expedición.',
-        obligatorio: true
+        nombre: 'Certificado de Tradición y Libertad del Inmueble (Documento Complementario)',
+        descripcion: 'Acredita matrícula inmobiliaria y linderos. Conforme al Art. 84 y Art. 384 del CGP, NO es un anexo obligatorio para demandar la tenencia por arrendamiento, pero es muy conveniente para la plena identificación del predio.',
+        comoObtenerlo: 'Descargar en la ventanilla única de registro (VUR) de la Superintendencia de Notariado y Registro.',
+        comoConservarlo: 'PDF digital expedido recientemente.',
+        obligatorio: false
       },
       {
         id: 'doc-arr-3',
-        nombre: 'Comprobantes de Envío Postal Certificado (4-72 / Servientrega)',
-        descripcion: 'Guía y cotejo que acreditan el envío y entrega de la carta de preaviso o cobro.',
-        comoObtenerlo: 'Conservar la guía y descargar la constancia de entrega en la web de la empresa postal.',
-        comoConservarlo: 'PDF o foto nítida de la guía con código de seguimiento.',
+        nombre: 'Historial de Pagos y Liquidación de Cánones en Mora',
+        descripcion: 'Relación cronológica de los meses impagos y comprobantes de las transferencias recibidas.',
+        comoObtenerlo: 'Extractos de cuenta bancaria o recibos de caja.',
+        comoConservarlo: 'Archivo digital organizado.',
         obligatorio: false
       }
     ];
@@ -859,19 +859,49 @@ export function motorHeuristicoOrientacionCiudadana(
     resumenSituacion: {
       loQueEntendemos: `De acuerdo con tu narración, el conflicto se enmarca en ${categorias.join(', ')}. Se identifican elementos fácticos que requieren verificación documental para consolidar una estrategia procesal sólida.`,
       datosFaltantesPorConfirmar: [
-        entrada.fechaNotificacion ? `Fecha de notificación: ${entrada.fechaNotificacion}` : 'Fecha exacta en que se recibió cualquier comunicación o notificación judicial.',
-        entrada.ciudad ? `Ciudad de los hechos: ${entrada.ciudad}` : 'Municipio o ciudad donde ocurrieron los hechos o donde está pactado el cumplimiento.',
+        entrada.ciudad && entrada.ciudad.trim() ? `Ciudad / Municipio: ${entrada.ciudad}` : 'Ciudad / Municipio de los hechos o del inmueble: «Pendiente de confirmar»',
+        entrada.fechaNotificacion && entrada.fechaNotificacion.trim() ? `Fecha de notificación: ${entrada.fechaNotificacion}` : 'Fecha de notificación o requerimiento formal: «Pendiente de confirmar»',
+        entrada.fechaAproximada && entrada.fechaAproximada.trim() ? `Fecha aproximada de los hechos: ${entrada.fechaAproximada}` : 'Fecha exacta de inicio de la relación o mora: «Pendiente de confirmar»',
         entrada.documentosDisponibles && entrada.documentosDisponibles.length > 0
-          ? `Documentos aportados: ${entrada.documentosDisponibles.join(', ')}`
-          : 'Existencia de contrato escrito, constancias de pago o mensajes cruzados.',
-        'Monto económico líquido pretendido o cuantía estimada del perjuicio.'
+          ? `Documentos aportados por el ciudadano: ${entrada.documentosDisponibles.join(', ')}`
+          : 'Contrato suscrito u otros documentos originales: «Pendiente de confirmar»',
+        'Liquidación exacta y cuantía total de la pretensión: «Pendiente de confirmar»'
       ],
       hechosRelatados: [
         entrada.descripcionProblema,
-        entrada.detalleNotificacion || 'Sin notificación previa detallada.',
-        entrada.resultadoEsperado ? `Resultado deseado: ${entrada.resultadoEsperado}` : 'Se busca clarificación de derechos y alternativas de cobro/defensa.'
+        entrada.detalleNotificacion ? `Notificación manifestada: ${entrada.detalleNotificacion}` : 'Sin notificación previa detallada por el ciudadano.',
+        entrada.resultadoEsperado ? `Resultado pretendido: ${entrada.resultadoEsperado}` : 'Se busca orientación diagnóstica y ruta procesal aplicable.'
       ],
-      pruebasRevisadas: entrada.documentosDisponibles || ['Relato ciudadano inicial sin anexos adjuntos revisados formalmente'],
+      pruebasRevisadas: (entrada.documentosDisponibles && entrada.documentosDisponibles.length > 0)
+        ? entrada.documentosDisponibles
+        : ['Ningún documento físico o digital ha sido aportado ni revisado (análisis basado exclusivamente en la narración del ciudadano)'],
+      hechosNoComprobados: [
+        entrada.ciudad && entrada.ciudad.trim() ? `Lugar verificado: ${entrada.ciudad}` : 'Ubicación territorial o jurisdicción: «Pendiente de confirmar»',
+        entrada.fechaAproximada && entrada.fechaAproximada.trim() ? `Fecha indicada: ${entrada.fechaAproximada}` : 'Cómputo exacto de términos o prescripción: «Pendiente de confirmar»',
+        (entrada.documentosDisponibles && entrada.documentosDisponibles.length > 0) ? 'Documentos anunciados pendientes de cotejo de autenticidad' : 'Existencia y validez de contrato o soportes probatorios: «Pendiente de confirmar»'
+      ],
+      normasAplicables: areaDerecho === 'ARRENDAMIENTOS' ? [
+        'Código General del Proceso (Ley 1564 de 2012, Art. 25, 26 num. 6, 73, 82, 84 y 384 num. 3 y 7)',
+        'Ley 820 de 2003 (Régimen de Arrendamiento de Vivienda Urbana, Art. 12 y 22)',
+        'Estatuto de Conciliación en Colombia (Ley 2220 de 2022, Art. 68)',
+        'Código Civil Colombiano (Art. 1608 y 2007: mora y renuncia a requerimientos)',
+        'Ley 2213 de 2022 (Vigencia permanente de las TIC en actuaciones judiciales y notificación electrónica, Art. 8)',
+        'Ley 2113 de 2021 (Régimen de Consultorios Jurídicos Universitarios)'
+      ] : [
+        'Constitución Política de Colombia (Art. 23, 29, 86 y 229)',
+        'Código General del Proceso (Ley 1564 de 2012)',
+        'Estatuto de Conciliación (Ley 2220 de 2022)',
+        'Ley 2213 de 2022 (Actuaciones judiciales y notificaciones electrónicas)'
+      ],
+      hipotesisYAlternativas: areaDerecho === 'ARRENDAMIENTOS' ? [
+        'Alternativa 1 (Arreglo Directo / Conciliación): Citar ante Centro de Conciliación o Personería para acordar entrega voluntaria y pago si existe voluntad de la contraparte.',
+        'Alternativa 2 (Demanda Directa con Medidas Cautelares): Radicar demanda de restitución ante el Juez Civil solicitando medidas cautelares de embargo (Art. 384 num. 7 CGP) sin agotar conciliación previa (Art. 68 Ley 2220 de 2022).',
+        'Alternativa 3 (Defensa del Demandado): Si se formula oposición, el arrendatario NO será oído hasta tanto consigne a órdenes del juzgado los cánones adeudados (Art. 384 num. 3 CGP).'
+      ] : [
+        'Alternativa 1: Reclamación o petición directa ante la contraparte para agotar trámite extraprocesal.',
+        'Alternativa 2: Acción constitucional o demanda judicial con la debida carga de la prueba (Art. 167 CGP).'
+      ],
+      recomendacionProfesional: 'Esta orientación diagnóstica es pedagógica e informativa. Toda decisión judicial, redacción de demanda de restitución o formulación de excepciones debe ser convalidada por un abogado con Tarjeta Profesional vigente o mediante un Consultorio Jurídico Universitario autorizado (Ley 2113 de 2021).',
       suposiciones: [
         'Se asume preliminarmente la veracidad y buena fe de las afirmaciones expresadas por el consultante.',
         'La contraparte podría formular excepciones de pago, caducidad o falta de legitimación en la causa.'
@@ -906,7 +936,7 @@ export function generarBorradorCiudadano(
   datosEspecificos?: any
 ): BorradorCiudadano {
   const fechaHoy = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
-  const ciudad = entrada.ciudad || '[COMPLETAR: Ciudad o Municipio]';
+  const ciudad = (entrada.ciudad && entrada.ciudad.trim()) ? entrada.ciudad.trim() : '«Pendiente de confirmar»';
 
   const encabezadoAdvertencia = `========================================================================================
 [BORRADOR CIUDADANO PARA REVISIÓN - NO ES RADICACIÓN FORMAL]

@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
+    "build:pages": "vite build --base=/jairrestaura-uno-a/ --outDir=docs && cp docs/index.html docs/404.html && touch docs/.nojekyll",
     "start": "tsx server.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist server.js docs",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

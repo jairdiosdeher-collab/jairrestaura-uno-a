@@ -301,6 +301,87 @@ async function runOrientadorTests() {
     }
   });
 
+  // TEST 13: Cita legal exacta del Art. 384 num. 3 CGP en restitución por mora
+  await ejecutarPrueba(13, 'Rigor procesal en arrendamiento: cita exactamente Art. 384 num. 3 CGP (regla de no ser oído)', async () => {
+    const res = await fetch(`${BASE_URL}/api/orientador/orientar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        descripcionProblema: 'El inquilino de mi casa de habitación lleva 3 meses de mora en el pago del canon de arrendamiento.',
+        ciudad: 'Bucaramanga'
+      })
+    });
+    const data = await res.json();
+    const textoCompleto = JSON.stringify(data.orientacion);
+
+    if (!textoCompleto.includes('384 num. 3') && !textoCompleto.includes('384 numeral 3')) {
+      throw new Error('La orientación de restitución por mora debe citar expresamente el Artículo 384 num. 3 del CGP');
+    }
+    if (textoCompleto.includes('384 num. 2 CGP') || textoCompleto.includes('384 numeral 2 CGP')) {
+      throw new Error('Error de citación procesal detectado: el numeral 2 regula notificaciones, no la regla de no ser oído');
+    }
+  });
+
+  // TEST 14: Exoneración legal de conciliación prejudicial cuando se piden medidas cautelares
+  await ejecutarPrueba(14, 'Conciliación y medidas cautelares: advierte exoneración de conciliación según Ley 2220 de 2022 Art. 68', async () => {
+    const res = await fetch(`${BASE_URL}/api/orientador/orientar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        descripcionProblema: 'Arrendatario no paga arriendo y requiero demandar solicitando embargo preventivo de sus cuentas.',
+        ciudad: 'Cali'
+      })
+    });
+    const data = await res.json();
+    const textoCompleto = JSON.stringify(data.orientacion);
+
+    if (!textoCompleto.includes('2220') || !textoCompleto.includes('590')) {
+      throw new Error('Debe advertirse la regla del Art. 68 Ley 2220 de 2022 y Art. 590 CGP sobre exoneración de conciliación previa con medidas cautelares');
+    }
+  });
+
+  // TEST 15: Certificado de Tradición y Libertad clasificado como complementario (no obligatorio)
+  await ejecutarPrueba(15, 'Naturaleza probatoria de tenencia: Certificado de Tradición es complementario (obligatorio: false)', async () => {
+    const res = await fetch(`${BASE_URL}/api/orientador/orientar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        descripcionProblema: 'Demanda de restitución de inmueble arrendado por no pago del arriendo.',
+        ciudad: 'Barranquilla'
+      })
+    });
+    const data = await res.json();
+    const docTradicion = data.orientacion.documentosRequeridos?.find(
+      (d: any) => d.nombre.toLowerCase().includes('tradición') || d.id === 'doc-arr-2'
+    );
+
+    if (!docTradicion) {
+      throw new Error('Debe existir referencia al Certificado de Tradición en documentos requeridos');
+    }
+    if (docTradicion.obligatorio !== false) {
+      throw new Error('Inexactitud procesal: el Certificado de Tradición NO es un anexo obligatorio de la demanda de tenencia (Art. 84 y 384 CGP)');
+    }
+  });
+
+  // TEST 16: Protección contra datos asumidos o inventados con rótulo «Pendiente de confirmar»
+  await ejecutarPrueba(16, 'Protección contra datos inventados: campos ausentes devuelven «Pendiente de confirmar»', async () => {
+    const res = await fetch(`${BASE_URL}/api/orientador/orientar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        descripcionProblema: 'Incumplimiento de contrato de arrendamiento por cánones vencidos.'
+        // Sin ciudad, sin fecha, sin documentos
+      })
+    });
+    const data = await res.json();
+    const datosFaltantes = data.orientacion.resumenSituacion?.datosFaltantesPorConfirmar || [];
+    const textoFaltantes = datosFaltantes.join(' ');
+
+    if (!textoFaltantes.includes('Pendiente de confirmar')) {
+      throw new Error('Los datos fácticos no suministrados deben marcarse expresamente como «Pendiente de confirmar»');
+    }
+  });
+
   console.log('\n======================================================');
   const superadas = resultados.filter(r => r.paso).length;
   console.log(`  RESUMEN: ${superadas}/${resultados.length} PRUEBAS SUPERADAS`);

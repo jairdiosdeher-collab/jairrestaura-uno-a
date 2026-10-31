@@ -591,6 +591,10 @@ export interface ResultadoOrientacionCiudadana {
     hechosRelatados: string[];
     pruebasRevisadas: string[];
     suposiciones: string[];
+    hechosNoComprobados?: string[];
+    normasAplicables?: string[];
+    hipotesisYAlternativas?: string[];
+    recomendacionProfesional?: string;
   };
   categoriasIdentificadas: string[];
   urgencia: UrgenciaCiudadana;

@@ -105,17 +105,25 @@ Fecha límite / plazo: ${entrada.fechaLimite || 'No especificada'}
 Resultado que espera o necesita: ${entrada.resultadoEsperado || 'Orientación general'}
 Documentos con que cuenta: ${entrada.documentosDisponibles?.join(', ') || 'Ninguno especificado'}
 
-DIRECTRICES:
-1. Explica todo en lenguaje comprensible para un ciudadano sin formación jurídica, pero con riguroso apego a la ley colombiana (CP, CGP Ley 1564/12, CPACA Ley 1437/11, CST, Ley 1480/11, Ley 820/03, Ley 2213/22, Ley 2220/22).
-2. Distingue estrictamente: Hechos relatados, pruebas revisadas, suposiciones por confirmar y normas verificadas.
-3. Si detectas plazos perentorios en curso (ej. 5 días en ejecutivo Art. 442 CGP, 3 días en reposición Art. 318 CGP, 10 días en tutela Decreto 2591/91), genera una advertencia inmediata contundente.
-4. Clasifica el nivel de autogestión:
+DIRECTRICES OBLIGATORIAS DE RIGOR JURÍDICO COLOMBIANO:
+1. Explica todo en lenguaje comprensible para un ciudadano sin formación jurídica, pero con riguroso apego al derecho procesal colombiano (CGP Ley 1564/12, Ley 820/03, Ley 2213/22, Ley 2220/22, Ley 2113/21).
+2. EN ARRENDAMIENTO DE INMUEBLE:
+   - En demanda de restitución por falta de pago del canon, la regla de limitación probatoria por no pago está en el ARTÍCULO 384 NUMERAL 3 DEL CGP (el demandado NO será oído hasta que demuestre el pago o consigne los cánones adeudados).
+   - La conciliación prejudicial extrajudicial NO es obligatoria si en la demanda se solicitan medidas cautelares de embargo o entrega provisional (Art. 68 Ley 2220 de 2022 y Art. 590 parágrafo 1 del CGP).
+   - El Certificado de Tradición y Libertad es un documento complementario no obligatorio para demandar la tenencia por arrendamiento (Art. 84 y 384 CGP).
+   - Si el contrato incluyó renuncia a requerimientos para constituir en mora (Art. 2007 Código Civil), no se exige carta postal certificada previa para demandar por mora.
+3. PROTECCIÓN CONTRA DATOS ASUMIDOS O INVENTADOS:
+   - Nunca asumas ciudad, fechas, montos ni la existencia de un contrato escrito si el ciudadano no los suministró.
+   - En cualquier dato faltante o no comprobado, debes colocar explícitamente: «Pendiente de confirmar».
+4. TRANSPARENCIA PROBATORIA:
+   - Separa nítidamente: hechosRelatados por el ciudadano, pruebasRevisadas formalmente, hechosNoComprobados («Pendiente de confirmar»), normasAplicables específicas, hipotesisYAlternativas procesales, y recomendacionProfesional.
+5. Si detectas plazos perentorios en curso (ej. 5 días en ejecutivo Art. 442 CGP, 3 días en reposición Art. 318 CGP, 10 días en tutela Decreto 2591/91), genera una advertencia inmediata contundente.
+6. Clasifica el nivel de autogestión:
    - 'AUTOGESTIONABLE' (Nivel 1: no requiere abogado, ej. petición, tutela, reclamación consumidor).
    - 'CONVIENE_ASESORIA' (Nivel 2: viable autogestión pero conviene asesoría previa o conciliación).
-   - 'VERIFICAR_REQUISITO_ABOGADO' (Nivel 3: mínima cuantía <40 SMLMV se permite litigar en causa propia Art. 25 y 73 CGP).
-   - 'ASISTENCIA_PROFESIONAL_PRIORITARIA' (Nivel 4: exige abogado con TP vigente por ley, ej. mayor cuantía, laboral ordinario, penal ordinario).
-5. Pasos numerados con canal oficial real (.gov.co).
-6. Alternativas de orientación jurídica gratuita (Consultorios Jurídicos Universitarios Ley 2113 de 2021, Personerías, Defensoría).
+   - 'VERIFICAR_REQUISITO_ABOGADO' (Nivel 3: mínima cuantía <40 SMLMV se permite litigar en causa propia Art. 25, 26 num. 6 y 73 CGP).
+   - 'ASISTENCIA_PROFESIONAL_PRIORITARIA' (Nivel 4: exige abogado con TP vigente por ley).
+7. Pasos numerados con canal oficial real (.gov.co) y alternativas gratuitas (Consultorios Jurídicos Universitarios Ley 2113 de 2021, Personerías).
 
 Responde ÚNICAMENTE en JSON con el formato:
 {
@@ -124,6 +132,10 @@ Responde ÚNICAMENTE en JSON con el formato:
     "datosFaltantesPorConfirmar": ["string"],
     "hechosRelatados": ["string"],
     "pruebasRevisadas": ["string"],
+    "hechosNoComprobados": ["string"],
+    "normasAplicables": ["string"],
+    "hipotesisYAlternativas": ["string"],
+    "recomendacionProfesional": "string",
     "suposiciones": ["string"]
   },
   "categoriasIdentificadas": ["string"],

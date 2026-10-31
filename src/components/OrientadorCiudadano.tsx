@@ -707,30 +707,95 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
               {resultado.resumenSituacion.loQueEntendemos}
             </p>
 
-            {/* Distinción probatoria de rigor */}
+            {/* Matriz de Transparencia Probatoria en 6 Dimensiones (Art. 167 CGP) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-xs space-y-2">
-                <span className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                  <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-                  Datos que faltan por confirmar para mayor certeza:
+              {/* 1. Hechos Narrados */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-500" />
+                  1. Hechos Narrados por el Ciudadano:
                 </span>
-                <ul className="space-y-1 list-disc list-inside text-slate-700 dark:text-slate-300">
-                  {resultado.resumenSituacion.datosFaltantesPorConfirmar.map((d, i) => (
-                    <li key={i}>{d}</li>
+                <ul className="space-y-1 list-disc list-inside text-slate-600 dark:text-slate-400">
+                  {resultado.resumenSituacion.hechosRelatados.map((h, i) => (
+                    <li key={i}>{h}</li>
                   ))}
                 </ul>
               </div>
 
+              {/* 2. Pruebas Revisadas */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-2">
-                <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
-                  Distinción Deontológica y Probatoria:
+                <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  2. Documentos Aportados / Revisados:
                 </span>
-                <p className="text-slate-600 dark:text-slate-400">
-                  En el derecho colombiano (Art. 167 CGP), quien afirma un hecho debe probarlo. Esta guía distingue entre los <strong>hechos relatados</strong> por ti y las <strong>pruebas o documentos revisados</strong>.
-                </p>
+                <ul className="space-y-1 list-disc list-inside text-slate-600 dark:text-slate-400">
+                  {resultado.resumenSituacion.pruebasRevisadas.map((p, i) => (
+                    <li key={i}>{p}</li>
+                  ))}
+                </ul>
               </div>
+
+              {/* 3. Datos y Hechos Pendientes de Confirmar */}
+              <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-xs space-y-2 md:col-span-2">
+                <span className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+                  3. Hechos No Comprobados / Datos Faltantes por Confirmar:
+                </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-slate-700 dark:text-slate-300">
+                  {resultado.resumenSituacion.datosFaltantesPorConfirmar.map((d, i) => (
+                    <div key={i} className="flex items-start gap-1.5 p-2 rounded-lg bg-white/70 dark:bg-slate-900/60 border border-amber-200/40 dark:border-amber-900/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
+                      <span>{d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Normas Aplicables Específicas */}
+              {resultado.resumenSituacion.normasAplicables && resultado.resumenSituacion.normasAplicables.length > 0 && (
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                  <span className="font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-1.5">
+                    <Scale className="w-3.5 h-3.5 text-indigo-500" />
+                    4. Marco Normativo Aplicable y Verificado:
+                  </span>
+                  <ul className="space-y-1 list-disc list-inside text-slate-600 dark:text-slate-400">
+                    {resultado.resumenSituacion.normasAplicables.map((n, i) => (
+                      <li key={i}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* 5. Hipótesis y Alternativas */}
+              {resultado.resumenSituacion.hipotesisYAlternativas && resultado.resumenSituacion.hipotesisYAlternativas.length > 0 && (
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-2">
+                  <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 text-amber-500" />
+                    5. Hipótesis y Alternativas Procesales:
+                  </span>
+                  <ul className="space-y-1 text-slate-600 dark:text-slate-400">
+                    {resultado.resumenSituacion.hipotesisYAlternativas.map((hip, i) => (
+                      <li key={i} className="p-1.5 rounded bg-white/50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60">
+                        {hip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
+
+            {/* 6. Recomendación Profesional Sujeta a Revisión */}
+            {resultado.resumenSituacion.recomendacionProfesional && (
+              <div className="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-900/40 text-xs flex items-start gap-2.5 text-indigo-950 dark:text-indigo-200">
+                <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block mb-0.5">6. Salvaguarda Deontológica Profesional:</span>
+                  <p className="leading-relaxed text-indigo-900/90 dark:text-indigo-300">
+                    {resultado.resumenSituacion.recomendacionProfesional}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* SECCIÓN B: OPCIONES LEGALES DISPONIBLES */}
