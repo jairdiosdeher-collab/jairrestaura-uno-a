@@ -17,7 +17,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-01-10T08:00:00Z",
-      "ultimoAcceso": "2026-10-30T17:20:02.352Z"
+      "ultimoAcceso": "2026-10-31T15:47:45.672Z"
     },
     {
       "id": "usr-marcela-02",
@@ -38,7 +38,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-03-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-30T17:19:58.418Z"
+      "ultimoAcceso": "2026-10-31T15:47:42.119Z"
     },
     {
       "id": "usr-externo-04",
@@ -49,7 +49,7 @@
       "organizacionId": "org-externa-002",
       "organizacionNombre": "Firma Legal Andina Externa Ltda.",
       "fechaCreacion": "2026-04-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-30T17:19:58.428Z"
+      "ultimoAcceso": "2026-10-31T15:47:42.130Z"
     }
   ],
   "clientes": [
@@ -511,6 +511,112 @@
     }
   ],
   "auditoria": [
+    {
+      "id": "aud-1793461665673-0fb483",
+      "timestamp": "2026-10-31T15:47:45.673Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793461662155-b71b3f",
+      "timestamp": "2026-10-31T15:47:42.155Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGOUT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Cierre formal de sesión y revocación de token criptográfico",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793461662143-eca430",
+      "timestamp": "2026-10-31T15:47:42.143Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "EXPORT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Exportación autorizada de respaldo institucional de datos (Ley 1581 de 2012)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793461662132-4380c0",
+      "timestamp": "2026-10-31T15:47:42.132Z",
+      "usuarioId": "usr-externo-04",
+      "usuarioNombre": "Dra. Camila Soto (Firma Externa)",
+      "usuarioRol": "ABOGADO_ASOCIADO",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-externa-002",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793461662121-a47dcb",
+      "timestamp": "2026-10-31T15:47:42.121Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793461662109-5eb79f",
+      "timestamp": "2026-10-31T15:47:42.109Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793461658823-10c182",
+      "timestamp": "2026-10-31T15:47:38.823Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "DELETE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793461657951-38b0",
+      "descripcionDetallada": "Caso académico eliminado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793461657965-ff5598",
+      "timestamp": "2026-10-31T15:47:37.965Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793461657951-38b0",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793461657953-9d4aee",
+      "timestamp": "2026-10-31T15:47:37.954Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793461657951-38b0",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
     {
       "id": "aud-1793381065440-6d836d",
       "timestamp": "2026-10-30T17:24:25.440Z",

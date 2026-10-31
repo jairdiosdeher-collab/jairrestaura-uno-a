@@ -46,6 +46,12 @@ import type {
   NivelAutogestion
 } from '../types/legal.ts';
 
+import {
+  GLOSARIO_CIUDADANO,
+  motorHeuristicoOrientacionCiudadana,
+  generarBorradorCiudadano
+} from '../utils/orientadorCiudadanoData.ts';
+
 interface OrientadorCiudadanoProps {
   onAbrirInvestigacion?: () => void;
 }
@@ -81,23 +87,26 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
   const [generandoBorrador, setGenerandoBorrador] = useState<boolean>(false);
 
   const [mostrarModalGlosario, setMostrarModalGlosario] = useState<boolean>(false);
-  const [glosario, setGlosario] = useState<ConceptoGlosarioCiudadano[]>([]);
+  const [glosario, setGlosario] = useState<ConceptoGlosarioCiudadano[]>(GLOSARIO_CIUDADANO);
   const [busquedaGlosario, setBusquedaGlosario] = useState<string>('');
   const [categoriaGlosario, setCategoriaGlosario] = useState<string>('TODAS');
   const [cargandoGlosario, setCargandoGlosario] = useState<boolean>(false);
 
-  // Cargar glosario pedagógico al inicio
+  // Cargar glosario pedagógico al inicio (con revalidación de servidor)
   useEffect(() => {
     const cargarGlosario = async () => {
       try {
         setCargandoGlosario(true);
         const res = await fetch('/api/orientador/glosario');
-        if (res.ok) {
+        const contentType = res.headers.get('content-type');
+        if (res.ok && contentType && contentType.includes('application/json')) {
           const data = await res.json();
-          setGlosario(data.glosario || []);
+          if (Array.isArray(data.glosario) && data.glosario.length > 0) {
+            setGlosario(data.glosario);
+          }
         }
       } catch (err) {
-        console.warn('Error cargando glosario:', err);
+        console.warn('Uso de glosario pedagógico local:', err);
       } finally {
         setCargandoGlosario(false);
       }
@@ -121,7 +130,7 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
     setErrorValidacion(null);
   };
 
-  // Enviar consulta de orientación
+  // Enviar consulta de orientación con doble capa de resiliencia (Serverless API + Motor Jurídico Local)
   const handleConsultar = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!descripcionProblema.trim() || descripcionProblema.trim().length < 10) {
@@ -149,27 +158,53 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
         documentosDisponibles: docsArray
       };
 
-      const res = await fetch('/api/orientador/orientar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      let orientacionFinal: ResultadoOrientacionCiudadana | null = null;
 
-      if (res.ok) {
-        const data = await res.json();
-        setResultado(data.orientacion);
-        // Inicializar documentos checklist
-        const inicialChecklist: Record<string, boolean> = {};
-        (data.orientacion.documentosRequeridos || []).forEach((d: any) => {
-          inicialChecklist[d.id] = false;
+      try {
+        const res = await fetch('/api/orientador/orientar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
-        setDocumentosReunidos(inicialChecklist);
-      } else {
-        const err = await res.json();
-        setErrorValidacion(err.error || 'Error al procesar la orientación.');
+
+        const contentType = res.headers.get('content-type');
+        if (res.ok && contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data?.orientacion) {
+            orientacionFinal = data.orientacion;
+          }
+        } else if (res.status === 400 && contentType && contentType.includes('application/json')) {
+          const err = await res.json();
+          setErrorValidacion(err.error || 'Por favor verifica la información ingresada.');
+          setAnalizando(false);
+          return;
+        }
+      } catch (fetchErr) {
+        console.warn('Servicio remoto no disponible o con respuesta no-JSON. Activando motor jurídico local:', fetchErr);
       }
+
+      // Si el servidor no respondió con JSON válido (o estamos en modo estático/offline),
+      // se utiliza directamente el motor heurístico jurídico colombiano
+      if (!orientacionFinal) {
+        orientacionFinal = motorHeuristicoOrientacionCiudadana(payload);
+      }
+
+      setResultado(orientacionFinal);
+
+      // Inicializar documentos checklist
+      const inicialChecklist: Record<string, boolean> = {};
+      (orientacionFinal.documentosRequeridos || []).forEach((d: any) => {
+        inicialChecklist[d.id] = false;
+      });
+      setDocumentosReunidos(inicialChecklist);
     } catch (err: any) {
-      setErrorValidacion('Error de conexión con el servidor. Intenta nuevamente.');
+      console.error('Error general en consulta:', err);
+      // Fallback final garantizado
+      const payloadEmergencia: ProblemaCiudadanoEntrada = {
+        descripcionProblema: descripcionProblema.trim(),
+        ciudad: ciudad.trim() || undefined
+      };
+      setResultado(motorHeuristicoOrientacionCiudadana(payloadEmergencia));
     } finally {
       setAnalizando(false);
     }
@@ -199,30 +234,49 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
     }));
   };
 
-  // Generar borrador
+  // Generar borrador con doble capa (Serverless API + Generador Local)
   const handleGenerarBorrador = async (tipo: TipoBorradorCiudadano) => {
     try {
       setGenerandoBorrador(true);
       setTipoBorradorSeleccionado(tipo);
 
-      const res = await fetch('/api/orientador/generar-borrador', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tipo,
-          entrada: {
-            descripcionProblema,
-            ciudad,
-            resultadoEsperado
-          }
-        })
-      });
+      let borradorFinal: BorradorCiudadano | null = null;
 
-      if (res.ok) {
-        const data = await res.json();
-        setBorradorGenerado(data.borrador);
-        setMostrarModalBorrador(true);
+      try {
+        const res = await fetch('/api/orientador/generar-borrador', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo,
+            entrada: {
+              descripcionProblema,
+              ciudad,
+              resultadoEsperado
+            }
+          })
+        });
+
+        const contentType = res.headers.get('content-type');
+        if (res.ok && contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data?.borrador) {
+            borradorFinal = data.borrador;
+          }
+        }
+      } catch (fetchErr) {
+        console.warn('Generación remota no disponible. Activando generador local:', fetchErr);
       }
+
+      if (!borradorFinal) {
+        borradorFinal = generarBorradorCiudadano(tipo, {
+          descripcionProblema,
+          ciudad,
+          resultadoEsperado
+        });
+      }
+
+      setBorradorGenerado(borradorFinal);
+      setMostrarModalBorrador(true);
     } catch (err) {
       console.warn('Error generando borrador:', err);
     } finally {
