@@ -29,6 +29,25 @@ interface AsistenteIAViewProps {
   onRedactarDocumento?: (tipoDoc: string, contexto: string) => void;
 }
 
+
+/** Lee respuestas JSON de API sin convertir páginas HTML de error en errores opacos. */
+async function readApiResponse(res: Response): Promise<any> {
+  const raw = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    if (res.status === 404) {
+      throw new Error('La función de IA no está disponible en este despliegue (404). Compruebe las rutas API de Vercel.');
+    }
+    throw new Error(`El servidor respondió con un formato inesperado (HTTP ${res.status}). Revise el despliegue de la API e inténtelo de nuevo.`);
+  }
+  if (!res.ok) {
+    throw new Error(typeof data?.error === 'string' ? data.error : `La solicitud falló (HTTP ${res.status}).`);
+  }
+  return data;
+}
+
 interface MensajeChat {
   id: string;
   rol: 'usuario' | 'asistente';
@@ -87,7 +106,7 @@ Estoy configurado bajo el ordenamiento jurídico de la República de Colombia (C
         }),
       });
 
-      const data = await res.json();
+      const data = await readApiResponse(res);
       if (res.ok && data.analisis) {
         setAnalisisResultado(data.analisis);
       } else {
@@ -114,7 +133,6 @@ Estoy configurado bajo el ordenamiento jurídico de la República de Colombia (C
     };
 
     setMensajes((prev) => [...prev, nuevoMsgUsuario]);
-    setInputChat('');
     setCargandoChat(true);
 
     try {
@@ -135,7 +153,7 @@ Estoy configurado bajo el ordenamiento jurídico de la República de Colombia (C
         }),
       });
 
-      const data = await res.json();
+      const data = await readApiResponse(res);
       if (res.ok && data.respuesta) {
         const nuevoMsgAsistente: MensajeChat = {
           id: `msg-${Date.now() + 1}`,
@@ -144,6 +162,7 @@ Estoy configurado bajo el ordenamiento jurídico de la República de Colombia (C
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
         setMensajes((prev) => [...prev, nuevoMsgAsistente]);
+        setInputChat('');
       } else {
         alert(data.error || 'Error en comunicación con asistente jurídico');
       }
