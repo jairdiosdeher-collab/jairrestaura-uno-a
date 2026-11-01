@@ -86,13 +86,13 @@ export default async function handler(req: any, res: any) {
   // nunca deben pasar primero por una clasificación civil genérica ni por Gemini.
   const relatoNormalizado = entrada.descripcionProblema
     .normalize('NFD')
-    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
   const indicadoresViolencia = [
-    /\\b(le pega|la pega|le golpea|la golpea|golpea a|golpeo a|agrede|agredio|agresion fisica)\\b/,
-    /\\b(violencia intrafamiliar|maltrato fisico|maltrata|amenaza de muerte|amenazas)\\b/,
-    /\\b(la empuja|le empuja|la cachetea|le da golpes|la asfixia|abuso sexual)\\b/,
-    /\\b(tiene miedo de su pareja|teme por su vida|no la deja salir|la controla y la amenaza)\\b/
+    /\b(le pega|la pega|le golpea|la golpea|golpea a|golpeo a|agrede|agredio|agresion fisica)\b/,
+    /\b(violencia intrafamiliar|maltrato fisico|maltrata|amenaza de muerte|amenazas)\b/,
+    /\b(la empuja|le empuja|la cachetea|le da golpes|la asfixia|abuso sexual)\b/,
+    /\b(tiene miedo de su pareja|teme por su vida|no la deja salir|la controla y la amenaza)\b/
   ];
   const posibleViolencia = indicadoresViolencia.some((patron) => patron.test(relatoNormalizado));
 
