@@ -189,6 +189,9 @@ export default function App() {
   };
 
   useEffect(() => {
+    // El portal social público no debe iniciar cargas de expedientes ni datos administrativos.
+    const ruta = window.location.pathname.replace(/\\/+$/, '') || '/';
+    if (ruta === '/' || ruta === '/servicio-social') return;
     cargarDatos();
   }, []);
 
@@ -619,8 +622,12 @@ export default function App() {
 
   const expedienteActivo = expedientes.find((e) => e.id === expedienteSeleccionadoId);
 
-  if (typeof window !== 'undefined' && window.location.pathname.replace(/\\/+$/, '') === '/servicio-social') {
-    return <ServicioSocialView />;
+  if (typeof window !== 'undefined') {
+    const ruta = window.location.pathname.replace(/\\/+$/, '') || '/';
+    if (ruta === '/' || ruta === '/servicio-social') return <ServicioSocialView />;
+    if (ruta === '/administracion') {
+      return <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6"><section className="max-w-xl rounded-2xl border border-amber-700/50 bg-slate-900 p-8"><h1 className="text-2xl font-bold">Administración protegida</h1><p className="mt-3 text-sm leading-6 text-slate-300">El acceso administrativo está temporalmente deshabilitado mientras se implementa y verifica autenticación real, autorización por roles y persistencia segura. El servicio social gratuito continúa abierto sin registro ni pago.</p><a className="mt-6 inline-block rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold text-slate-950" href="/servicio-social">Ir al servicio social gratuito</a></section></main>;
+    }
   }
 
   return (
