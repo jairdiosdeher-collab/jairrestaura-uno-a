@@ -19,6 +19,7 @@ import { TerminosView } from './views/TerminosView';
 import { AnalisisDocumentalView } from './views/AnalisisDocumentalView';
 import { HonorariosView } from './views/HonorariosView';
 import { SeguridadView } from './views/SeguridadView';
+import { ServicioSocialView } from './views/ServicioSocialView';
 import type { 
   Usuario, 
   Cliente, 
@@ -617,6 +618,10 @@ export default function App() {
   };
 
   const expedienteActivo = expedientes.find((e) => e.id === expedienteSeleccionadoId);
+
+  if (typeof window !== 'undefined' && window.location.pathname.replace(/\\/+$/, '') === '/servicio-social') {
+    return <ServicioSocialView />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
