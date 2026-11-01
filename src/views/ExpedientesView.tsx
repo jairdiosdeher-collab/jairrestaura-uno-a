@@ -39,8 +39,8 @@ interface ExpedientesViewProps {
   clientes: Cliente[];
   selectedExpedienteId?: string | null;
   onSelectExpediente: (id: string | null) => void;
-  onCrearExpediente: (expediente: Partial<Expediente>) => Promise<void>;
-  onRegistrarActuacion: (expedienteId: string, actuacion: any) => Promise<void>;
+  onCrearExpediente: (expediente: Partial<Expediente>) => Promise<{ exito: boolean; error?: string }>;
+  onRegistrarActuacion: (expedienteId: string, actuacion: any) => Promise<{ exito: boolean; error?: string }>;
   onAbrirAsistenteIA: (expediente: Expediente) => void;
   onRedactarDocumento: (expediente: Expediente) => void;
 }
@@ -65,6 +65,10 @@ export const ExpedientesView: React.FC<ExpedientesViewProps> = ({
   // Modal para crear expediente
   const [modalCrearAbierto, setModalCrearAbierto] = useState(false);
   const [modalActuacionAbierto, setModalActuacionAbierto] = useState(false);
+  const [guardandoExp, setGuardandoExp] = useState(false);
+  const [errorExp, setErrorExp] = useState<string | null>(null);
+  const [guardandoAct, setGuardandoAct] = useState(false);
+  const [errorAct, setErrorAct] = useState<string | null>(null);
 
   // Formulario nuevo expediente
   const [nuevoExp, setNuevoExp] = useState<{
@@ -129,65 +133,95 @@ export const ExpedientesView: React.FC<ExpedientesViewProps> = ({
 
   const handleCrearExpedienteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorExp(null);
+
     const clienteSeleccionado = clientes.find((c) => c.id === nuevoExp.clienteId);
     if (!clienteSeleccionado) {
-      alert('Seleccione un cliente registrado');
+      setErrorExp('Por favor seleccione un cliente registrado en el directorio.');
       return;
     }
 
-    // Validación de radicado de 23 dígitos si se suministra
-    if (nuevoExp.radicadoJudicial && nuevoExp.radicadoJudicial.replace(/\D/g, '').length !== 23) {
-      const confirma = window.confirm(
-        'El radicado judicial colombiano estándar de la Rama Judicial consta de 23 dígitos numéricos. ¿Desea guardarlo aún si difiere de este estándar?'
-      );
-      if (!confirma) return;
+    if (!nuevoExp.demandado.trim() || !nuevoExp.sintesisHechos.trim()) {
+      setErrorExp('La contraparte (demandado/accionado) y la síntesis de hechos son obligatorias.');
+      return;
     }
 
-    await onCrearExpediente({
-      clienteId: clienteSeleccionado.id,
-      clienteNombre: clienteSeleccionado.nombreCompletoORazonSocial,
-      areaJuridica: nuevoExp.areaJuridica,
-      jurisdiccion: nuevoExp.jurisdiccion,
-      despachoJudicial: nuevoExp.despachoJudicial,
-      radicadoJudicial: nuevoExp.radicadoJudicial ? nuevoExp.radicadoJudicial.replace(/\D/g, '') : undefined,
-      autoridadCompetente: nuevoExp.despachoJudicial,
-      partes: {
-        demandanteOAccionante: nuevoExp.demandante || clienteSeleccionado.nombreCompletoORazonSocial,
-        demandadoOAccionado: nuevoExp.demandado,
-      },
-      sintesisHechos: nuevoExp.sintesisHechos,
-      pretensionesUObjetivos: nuevoExp.pretensiones,
-      cuantiaEstimadaCOP: nuevoExp.cuantiaCOP ? Number(nuevoExp.cuantiaCOP) : undefined,
-      esMayorCuantia: nuevoExp.cuantiaCOP ? Number(nuevoExp.cuantiaCOP) > 200000000 : false,
-      estado: nuevoExp.estado,
-      estrategiaDefensiva: nuevoExp.estrategiaDefensiva,
-      notasPrivadas: nuevoExp.notasPrivadas,
-      abogadoResponsableId: 'usr-jair-01',
-      abogadoResponsableNombre: 'Dr. Jair',
-    });
+    const radLimpio = nuevoExp.radicadoJudicial ? nuevoExp.radicadoJudicial.replace(/\D/g, '') : undefined;
 
-    setModalCrearAbierto(false);
+    setGuardandoExp(true);
+    try {
+      const res = await onCrearExpediente({
+        clienteId: clienteSeleccionado.id,
+        clienteNombre: clienteSeleccionado.nombreCompletoORazonSocial,
+        areaJuridica: nuevoExp.areaJuridica,
+        jurisdiccion: nuevoExp.jurisdiccion,
+        despachoJudicial: nuevoExp.despachoJudicial,
+        radicadoJudicial: radLimpio,
+        autoridadCompetente: nuevoExp.despachoJudicial,
+        partes: {
+          demandanteOAccionante: nuevoExp.demandante || clienteSeleccionado.nombreCompletoORazonSocial,
+          demandadoOAccionado: nuevoExp.demandado.trim(),
+        },
+        sintesisHechos: nuevoExp.sintesisHechos.trim(),
+        pretensionesUObjetivos: nuevoExp.pretensiones.trim(),
+        cuantiaEstimadaCOP: nuevoExp.cuantiaCOP ? Number(nuevoExp.cuantiaCOP) : undefined,
+        esMayorCuantia: nuevoExp.cuantiaCOP ? Number(nuevoExp.cuantiaCOP) > 200000000 : false,
+        estado: nuevoExp.estado,
+        estrategiaDefensiva: nuevoExp.estrategiaDefensiva.trim(),
+        notasPrivadas: nuevoExp.notasPrivadas.trim(),
+        abogadoResponsableId: 'usr-jair-01',
+        abogadoResponsableNombre: 'Dr. Jair',
+      });
+
+      if (res && res.exito) {
+        setModalCrearAbierto(false);
+      } else {
+        setErrorExp(res?.error || 'Error al registrar el expediente. Revise los datos e intente de nuevo.');
+      }
+    } catch (err: any) {
+      setErrorExp(err.message || 'Error inesperado de comunicación.');
+    } finally {
+      setGuardandoExp(false);
+    }
   };
 
   const handleRegistrarActuacionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!expedienteActivo) return;
+    setErrorAct(null);
 
-    await onRegistrarActuacion(expedienteActivo.id, {
-      ...nuevaAct,
-      terminoDias: nuevaAct.tieneTermino ? Number(nuevaAct.terminoDias) : undefined,
-    });
+    if (!nuevaAct.anotacion.trim()) {
+      setErrorAct('La anotación o extracto de la providencia es obligatoria.');
+      return;
+    }
 
-    setModalActuacionAbierto(false);
-    setNuevaAct({
-      fechaActuacion: new Date().toISOString().split('T')[0],
-      cuaderno: 'Cuaderno Principal 1',
-      tipoProvidencia: 'AUTO_INTERLOCUTORIO',
-      anotacion: '',
-      tieneTermino: false,
-      terminoDias: '3',
-      tipoDias: 'HABILES',
-    });
+    setGuardandoAct(true);
+    try {
+      const res = await onRegistrarActuacion(expedienteActivo.id, {
+        ...nuevaAct,
+        anotacion: nuevaAct.anotacion.trim(),
+        terminoDias: nuevaAct.tieneTermino ? Number(nuevaAct.terminoDias) : undefined,
+      });
+
+      if (res && res.exito) {
+        setModalActuacionAbierto(false);
+        setNuevaAct({
+          fechaActuacion: new Date().toISOString().split('T')[0],
+          cuaderno: 'Cuaderno Principal 1',
+          tipoProvidencia: 'AUTO_INTERLOCUTORIO',
+          anotacion: '',
+          tieneTermino: false,
+          terminoDias: '3',
+          tipoDias: 'HABILES',
+        });
+      } else {
+        setErrorAct(res?.error || 'Error al registrar la actuación procesal.');
+      }
+    } catch (err: any) {
+      setErrorAct(err.message || 'Error inesperado de comunicación.');
+    } finally {
+      setGuardandoAct(false);
+    }
   };
 
   return (
@@ -564,6 +598,12 @@ export const ExpedientesView: React.FC<ExpedientesViewProps> = ({
             </div>
 
             <form onSubmit={handleCrearExpedienteSubmit} className="mt-4 space-y-4 text-xs">
+              {errorExp && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorExp}</span>
+                </div>
+              )}
               {/* Cliente Asociado */}
               <div>
                 <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -727,9 +767,13 @@ export const ExpedientesView: React.FC<ExpedientesViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm"
+                  disabled={guardandoExp}
+                  className="px-4 py-2 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2"
                 >
-                  Abrir Expediente
+                  {guardandoExp && (
+                    <span className="inline-block w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span>{guardandoExp ? 'Abriendo Expediente...' : 'Abrir Expediente'}</span>
                 </button>
               </div>
             </form>
@@ -754,6 +798,12 @@ export const ExpedientesView: React.FC<ExpedientesViewProps> = ({
             </div>
 
             <form onSubmit={handleRegistrarActuacionSubmit} className="mt-4 space-y-3 text-xs">
+              {errorAct && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorAct}</span>
+                </div>
+              )}
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 mb-1">
                   Tipo de Providencia / Actuación
@@ -838,9 +888,13 @@ export const ExpedientesView: React.FC<ExpedientesViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-3.5 py-1.5 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-lg"
+                  disabled={guardandoAct}
+                  className="px-3.5 py-1.5 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-2"
                 >
-                  Guardar Actuación
+                  {guardandoAct && (
+                    <span className="inline-block w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span>{guardandoAct ? 'Guardando...' : 'Guardar Actuación'}</span>
                 </button>
               </div>
             </form>

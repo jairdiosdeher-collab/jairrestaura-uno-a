@@ -26,8 +26,8 @@ interface HonorariosViewProps {
   honorarios: RegistroHonorario[];
   expedientes: Expediente[];
   clientes: Cliente[];
-  onCrearHonorario: (honorario: Partial<RegistroHonorario>) => Promise<void>;
-  onRegistrarPago: (honorarioId: string, pago: any) => Promise<void>;
+  onCrearHonorario: (honorario: Partial<RegistroHonorario>) => Promise<{ exito: boolean; error?: string }>;
+  onRegistrarPago: (honorarioId: string, pago: any) => Promise<{ exito: boolean; error?: string }>;
 }
 
 export const HonorariosView: React.FC<HonorariosViewProps> = ({
@@ -39,6 +39,10 @@ export const HonorariosView: React.FC<HonorariosViewProps> = ({
 }) => {
   const [modalNuevoHonorario, setModalNuevoHonorario] = useState(false);
   const [modalNuevoPago, setModalNuevoPago] = useState<RegistroHonorario | null>(null);
+  const [guardandoHon, setGuardandoHon] = useState(false);
+  const [errorHon, setErrorHon] = useState<string | null>(null);
+  const [guardandoPago, setGuardandoPago] = useState(false);
+  const [errorPago, setErrorPago] = useState<string | null>(null);
 
   // Formulario nuevo honorario
   const [nuevoHon, setNuevoHon] = useState({
@@ -64,46 +68,79 @@ export const HonorariosView: React.FC<HonorariosViewProps> = ({
 
   const handleCrearHonorarioSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorHon(null);
+
     if (!nuevoHon.concepto.trim() || !nuevoHon.valorCOP) {
-      alert('El concepto y el valor en COP son obligatorios');
+      setErrorHon('El concepto y el valor acordado en COP son obligatorios.');
       return;
     }
 
     const cliente = clientes.find((c) => c.id === nuevoHon.clienteId);
     const exp = expedientes.find((e) => e.id === nuevoHon.expedienteId);
 
-    await onCrearHonorario({
-      clienteId: nuevoHon.clienteId,
-      clienteNombre: cliente?.nombreCompletoORazonSocial || 'Cliente',
-      expedienteId: exp?.id,
-      expedienteCodigo: exp?.codigoInterno,
-      concepto: nuevoHon.concepto,
-      modalidad: nuevoHon.modalidad as any,
-      valorAcordadoCOP: Number(nuevoHon.valorCOP),
-      fechaAcuerdo: nuevoHon.fechaAcuerdo,
-    });
+    setGuardandoHon(true);
+    try {
+      const res = await onCrearHonorario({
+        clienteId: nuevoHon.clienteId,
+        clienteNombre: cliente?.nombreCompletoORazonSocial || 'Cliente',
+        expedienteId: exp?.id,
+        expedienteCodigo: exp?.codigoInterno,
+        concepto: nuevoHon.concepto.trim(),
+        modalidad: nuevoHon.modalidad as any,
+        valorAcordadoCOP: Number(nuevoHon.valorCOP),
+        fechaAcuerdo: nuevoHon.fechaAcuerdo,
+      });
 
-    setModalNuevoHonorario(false);
+      if (res && res.exito) {
+        setModalNuevoHonorario(false);
+        setNuevoHon({
+          clienteId: clientes[0]?.id || '',
+          expedienteId: '',
+          concepto: '',
+          modalidad: 'CUOTA_FIJA',
+          valorCOP: '',
+          fechaAcuerdo: new Date().toISOString().split('T')[0],
+        });
+      } else {
+        setErrorHon(res?.error || 'Error al guardar el acuerdo de honorarios.');
+      }
+    } catch (err: any) {
+      setErrorHon(err.message || 'Error inesperado de comunicación.');
+    } finally {
+      setGuardandoHon(false);
+    }
   };
 
   const handleRegistrarPagoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!modalNuevoPago || !nuevoPago.montoCOP) return;
+    setErrorPago(null);
 
-    await onRegistrarPago(modalNuevoPago.id, {
-      montoCOP: Number(nuevoPago.montoCOP),
-      medioPago: nuevoPago.medioPago,
-      numeroComprobante: nuevoPago.numeroComprobante,
-      verificadoPorContabilidad: nuevoPago.verificadoPorContabilidad,
-    });
+    setGuardandoPago(true);
+    try {
+      const res = await onRegistrarPago(modalNuevoPago.id, {
+        montoCOP: Number(nuevoPago.montoCOP),
+        medioPago: nuevoPago.medioPago,
+        numeroComprobante: nuevoPago.numeroComprobante.trim(),
+        verificadoPorContabilidad: nuevoPago.verificadoPorContabilidad,
+      });
 
-    setModalNuevoPago(null);
-    setNuevoPago({
-      montoCOP: '',
-      medioPago: 'TRANSFERENCIA_BANCARIA',
-      numeroComprobante: '',
-      verificadoPorContabilidad: true,
-    });
+      if (res && res.exito) {
+        setModalNuevoPago(null);
+        setNuevoPago({
+          montoCOP: '',
+          medioPago: 'TRANSFERENCIA_BANCARIA',
+          numeroComprobante: '',
+          verificadoPorContabilidad: true,
+        });
+      } else {
+        setErrorPago(res?.error || 'Error al registrar el abono.');
+      }
+    } catch (err: any) {
+      setErrorPago(err.message || 'Error inesperado de comunicación.');
+    } finally {
+      setGuardandoPago(false);
+    }
   };
 
   return (
@@ -309,6 +346,12 @@ export const HonorariosView: React.FC<HonorariosViewProps> = ({
             </div>
 
             <form onSubmit={handleCrearHonorarioSubmit} className="mt-4 space-y-3 text-xs">
+              {errorHon && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorHon}</span>
+                </div>
+              )}
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 mb-1 font-medium">
                   Cliente Titular *
@@ -402,9 +445,13 @@ export const HonorariosView: React.FC<HonorariosViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-3.5 py-1.5 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm"
+                  disabled={guardandoHon}
+                  className="px-3.5 py-1.5 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2"
                 >
-                  Guardar Acuerdo
+                  {guardandoHon && (
+                    <span className="inline-block w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span>{guardandoHon ? 'Guardando...' : 'Guardar Acuerdo'}</span>
                 </button>
               </div>
             </form>
@@ -429,6 +476,12 @@ export const HonorariosView: React.FC<HonorariosViewProps> = ({
             </div>
 
             <form onSubmit={handleRegistrarPagoSubmit} className="mt-4 space-y-3 text-xs">
+              {errorPago && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorPago}</span>
+                </div>
+              )}
               <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-[11px] text-slate-500">
                 Cliente: <strong>{modalNuevoPago.clienteNombre}</strong> · Saldo pendiente:{' '}
                 <strong>${modalNuevoPago.saldoPendienteCOP.toLocaleString('es-CO')} COP</strong>
@@ -504,9 +557,13 @@ export const HonorariosView: React.FC<HonorariosViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-3.5 py-1.5 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-lg shadow-sm"
+                  disabled={guardandoPago}
+                  className="px-3.5 py-1.5 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2"
                 >
-                  Confirmar Abono
+                  {guardandoPago && (
+                    <span className="inline-block w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span>{guardandoPago ? 'Registrando...' : 'Confirmar Abono'}</span>
                 </button>
               </div>
             </form>

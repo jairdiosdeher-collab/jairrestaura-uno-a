@@ -54,6 +54,7 @@ async function runClientesTests() {
     };
   } else {
     headersAdmin = {
+      'Authorization': 'Bearer jairrestaura-demo-session-token-2026',
       'Content-Type': 'application/json',
       'x-user-id': 'usr-jair-01',
       'x-organizacion-id': adminOrgId,

@@ -372,43 +372,147 @@ export default function App() {
   };
 
   // Handlers de Expedientes
-  const handleCrearExpediente = async (expData: Partial<Expediente>) => {
-    const res = await fetch('/api/expedientes', {
-      method: 'POST',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(expData),
-    });
-    if (res.ok) {
-      mostrarNotificacion('Expediente judicial abierto exitosamente');
-      cargarDatos();
-    } else {
-      const err = await res.json();
-      alert(err.error || 'Error al crear expediente');
+  const handleCrearExpediente = async (expData: Partial<Expediente>): Promise<{ exito: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/expedientes', {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(expData),
+      });
+
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.expediente) {
+          setExpedientes((prev) => [data.expediente, ...prev.filter((e) => e.id !== data.expediente.id)]);
+        }
+        mostrarNotificacion('Expediente judicial abierto exitosamente');
+        cargarDatos();
+        return { exito: true };
+      }
+
+      if (res.status === 404) {
+        // Fallback local desconectado
+        const nuevoExpLocal: Expediente = {
+          id: `exp-local-${Date.now()}`,
+          codigoInterno: `EXP-${new Date().getFullYear()}-${String(expedientes.length + 1).padStart(3, '0')}`,
+          radicadoJudicial: expData.radicadoJudicial,
+          despachoJudicial: expData.despachoJudicial || 'Juzgado Civil',
+          clienteId: expData.clienteId || clientes[0]?.id || 'cli-01',
+          clienteNombre: expData.clienteNombre || clientes[0]?.nombreCompletoORazonSocial || 'Cliente',
+          areaJuridica: expData.areaJuridica || 'CIVIL_COMERCIAL',
+          jurisdiccion: expData.jurisdiccion || 'ORDINARIA',
+          autoridadCompetente: expData.autoridadCompetente || expData.despachoJudicial || '',
+          partes: expData.partes || {
+            demandanteOAccionante: expData.clienteNombre || 'Demandante',
+            demandadoOAccionado: 'Contraparte',
+          },
+          sintesisHechos: expData.sintesisHechos || '',
+          pretensionesUObjetivos: expData.pretensionesUObjetivos || '',
+          cuantiaEstimadaCOP: expData.cuantiaEstimadaCOP,
+          esMayorCuantia: !!expData.esMayorCuantia,
+          estado: expData.estado || 'PREJUDICIAL',
+          estrategiaDefensiva: expData.estrategiaDefensiva,
+          notasPrivadas: expData.notasPrivadas,
+          abogadoResponsableId: usuarioActivo.id,
+          abogadoResponsableNombre: usuarioActivo.nombre,
+          organizacionId: organizacion.id,
+          fechaInicio: new Date().toISOString(),
+          fechaActualizacion: new Date().toISOString(),
+        };
+
+        setExpedientes((prev) => [nuevoExpLocal, ...prev]);
+        mostrarNotificacion('Expediente registrado en almacenamiento local');
+        return { exito: true };
+      }
+
+      const err = await res.json().catch(() => ({}));
+      return {
+        exito: false,
+        error: err.error || `Error al abrir expediente (código ${res.status}).`,
+      };
+    } catch (netErr: any) {
+      return { exito: false, error: netErr.message || 'Error de conexión con el servidor.' };
     }
   };
 
-  const handleRegistrarActuacion = async (expedienteId: string, actuacionData: any) => {
-    const res = await fetch(`/api/expedientes/${expedienteId}/actuaciones`, {
-      method: 'POST',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(actuacionData),
-    });
-    if (res.ok) {
-      mostrarNotificacion('Actuación procesal registrada en la cronología');
-      cargarDatos();
+  const handleRegistrarActuacion = async (expedienteId: string, actuacionData: any): Promise<{ exito: boolean; error?: string }> => {
+    try {
+      const res = await fetch(`/api/expedientes/${expedienteId}/actuaciones`, {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(actuacionData),
+      });
+
+      if (res.ok) {
+        mostrarNotificacion('Actuación procesal registrada en la cronología');
+        cargarDatos();
+        return { exito: true };
+      }
+
+      const err = await res.json().catch(() => ({}));
+      return {
+        exito: false,
+        error: err.error || `Error al registrar actuación (${res.status}).`,
+      };
+    } catch (netErr: any) {
+      return { exito: false, error: netErr.message || 'Error de conexión.' };
     }
   };
 
   // Handlers de Términos
-  const handleCrearTermino = async (terminoData: Partial<TerminoAgenda>) => {
-    const res = await fetch('/api/terminos', {
-      method: 'POST',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(terminoData),
-    });
-    if (res.ok) {
-      mostrarNotificacion('Término programado con cómputo legal');
-      cargarDatos();
+  const handleCrearTermino = async (terminoData: Partial<TerminoAgenda>): Promise<{ exito: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/terminos', {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(terminoData),
+      });
+
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.termino) {
+          setTerminos((prev) => [data.termino, ...prev.filter((t) => t.id !== data.termino.id)]);
+        }
+        mostrarNotificacion('Término programado con cómputo legal');
+        cargarDatos();
+        return { exito: true };
+      }
+
+      if (res.status === 404) {
+        // Fallback local
+        const nuevoTermLocal: TerminoAgenda = {
+          id: `term-local-${Date.now()}`,
+          titulo: terminoData.titulo || 'Término',
+          descripcion: terminoData.descripcion || '',
+          tipoTermino: terminoData.tipoTermino || 'RECURSO_REPOSICION',
+          expedienteId: terminoData.expedienteId,
+          expedienteCodigo: terminoData.expedienteCodigo,
+          clienteId: terminoData.clienteId,
+          clienteNombre: terminoData.clienteNombre,
+          fechaNotificacionOInicio: terminoData.fechaNotificacionOInicio || new Date().toISOString().split('T')[0],
+          duracionDias: terminoData.duracionDias || 3,
+          tipoDias: terminoData.tipoDias || 'HABILES_JUDICIALES',
+          aplicaReglaLey2213: terminoData.aplicaReglaLey2213 !== false,
+          fechaVencimientoCalculada: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+          calculoConfirmadoPorAbogado: false,
+          estado: 'PENDIENTE',
+          prioridad: terminoData.prioridad || 'MEDIA',
+          responsableId: terminoData.responsableId || usuarioActivo.id,
+          responsableNombre: terminoData.responsableNombre || usuarioActivo.nombre,
+          organizacionId: organizacion.id,
+        };
+        setTerminos((prev) => [nuevoTermLocal, ...prev]);
+        mostrarNotificacion('Término registrado localmente');
+        return { exito: true };
+      }
+
+      const err = await res.json().catch(() => ({}));
+      return {
+        exito: false,
+        error: err.error || `Error al programar término (${res.status}).`,
+      };
+    } catch (netErr: any) {
+      return { exito: false, error: netErr.message || 'Error de conexión.' };
     }
   };
 
@@ -461,27 +565,45 @@ export default function App() {
   };
 
   // Handlers de Honorarios
-  const handleCrearHonorario = async (honData: Partial<RegistroHonorario>) => {
-    const res = await fetch('/api/honorarios', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(honData),
-    });
-    if (res.ok) {
-      mostrarNotificacion('Acuerdo de honorarios registrado');
-      cargarDatos();
+  const handleCrearHonorario = async (honData: Partial<RegistroHonorario>): Promise<{ exito: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/honorarios', {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(honData),
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.honorario) {
+          setHonorarios((prev) => [data.honorario, ...prev.filter((h) => h.id !== data.honorario.id)]);
+        }
+        mostrarNotificacion('Acuerdo de honorarios registrado exitosamente');
+        cargarDatos();
+        return { exito: true };
+      }
+      const err = await res.json().catch(() => ({}));
+      return { exito: false, error: err.error || `Error al guardar honorarios (${res.status}).` };
+    } catch (netErr: any) {
+      return { exito: false, error: netErr.message || 'Error de conexión con el servidor.' };
     }
   };
 
-  const handleRegistrarPago = async (honorarioId: string, pagoData: any) => {
-    const res = await fetch(`/api/honorarios/${honorarioId}/pagos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(pagoData),
-    });
-    if (res.ok) {
-      mostrarNotificacion('Abono registrado en cartera de honorarios');
-      cargarDatos();
+  const handleRegistrarPago = async (honorarioId: string, pagoData: any): Promise<{ exito: boolean; error?: string }> => {
+    try {
+      const res = await fetch(`/api/honorarios/${honorarioId}/pagos`, {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(pagoData),
+      });
+      if (res.ok) {
+        mostrarNotificacion('Abono registrado en cartera de honorarios');
+        cargarDatos();
+        return { exito: true };
+      }
+      const err = await res.json().catch(() => ({}));
+      return { exito: false, error: err.error || `Error al registrar abono (${res.status}).` };
+    } catch (netErr: any) {
+      return { exito: false, error: netErr.message || 'Error de conexión.' };
     }
   };
 

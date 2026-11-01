@@ -26,7 +26,7 @@ import type { TerminoAgenda, Expediente, TipoTermino } from '../types/legal';
 interface TerminosViewProps {
   terminos: TerminoAgenda[];
   expedientes: Expediente[];
-  onCrearTermino: (termino: Partial<TerminoAgenda>) => Promise<void>;
+  onCrearTermino: (termino: Partial<TerminoAgenda>) => Promise<{ exito: boolean; error?: string }>;
   onConfirmarTermino: (id: string) => Promise<void>;
   onCompletarTermino: (id: string) => Promise<void>;
 }
@@ -41,6 +41,8 @@ export const TerminosView: React.FC<TerminosViewProps> = ({
   const [filtroEstado, setFiltroEstado] = useState<'TODOS' | 'PENDIENTE' | 'VERIFICADO' | 'CUMPLIDO'>('TODOS');
   const [modalCalculadoraAbierto, setModalCalculadoraAbierto] = useState(false);
   const [modalNuevoTermino, setModalNuevoTermino] = useState(false);
+  const [guardandoTerm, setGuardandoTerm] = useState(false);
+  const [errorTerm, setErrorTerm] = useState<string | null>(null);
 
   // Estado de la Calculadora Judicial Colombiana
   const [calcFechaInicio, setCalcFechaInicio] = useState(new Date().toISOString().split('T')[0]);
@@ -84,29 +86,53 @@ export const TerminosView: React.FC<TerminosViewProps> = ({
 
   const handleCrearTerminoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorTerm(null);
+
     if (!formData.titulo.trim()) {
-      alert('El título del término es obligatorio');
+      setErrorTerm('El título del término o diligencia procesal es obligatorio.');
       return;
     }
 
     const exp = expedientes.find((e) => e.id === formData.expedienteId);
 
-    await onCrearTermino({
-      titulo: formData.titulo,
-      descripcion: formData.descripcion,
-      tipoTermino: formData.tipoTermino,
-      expedienteId: exp?.id,
-      expedienteCodigo: exp?.codigoInterno,
-      clienteId: exp?.clienteId,
-      clienteNombre: exp?.clienteNombre,
-      fechaNotificacionOInicio: formData.fechaInicio,
-      duracionDias: formData.duracionDias,
-      tipoDias: formData.tipoDias,
-      aplicaReglaLey2213: formData.aplicaLey2213,
-      prioridad: formData.prioridad,
-    });
+    setGuardandoTerm(true);
+    try {
+      const res = await onCrearTermino({
+        titulo: formData.titulo.trim(),
+        descripcion: formData.descripcion.trim(),
+        tipoTermino: formData.tipoTermino,
+        expedienteId: exp?.id,
+        expedienteCodigo: exp?.codigoInterno,
+        clienteId: exp?.clienteId,
+        clienteNombre: exp?.clienteNombre,
+        fechaNotificacionOInicio: formData.fechaInicio,
+        duracionDias: formData.duracionDias,
+        tipoDias: formData.tipoDias,
+        aplicaReglaLey2213: formData.aplicaLey2213,
+        prioridad: formData.prioridad,
+      });
 
-    setModalNuevoTermino(false);
+      if (res && res.exito) {
+        setModalNuevoTermino(false);
+        setFormData({
+          titulo: '',
+          descripcion: '',
+          tipoTermino: 'RECURSO_REPOSICION',
+          expedienteId: expedientes[0]?.id || '',
+          fechaInicio: new Date().toISOString().split('T')[0],
+          duracionDias: 3,
+          tipoDias: 'HABILES_JUDICIALES',
+          aplicaLey2213: true,
+          prioridad: 'ALTA',
+        });
+      } else {
+        setErrorTerm(res?.error || 'Error al programar el término procesal.');
+      }
+    } catch (err: any) {
+      setErrorTerm(err.message || 'Error inesperado al guardar el término.');
+    } finally {
+      setGuardandoTerm(false);
+    }
   };
 
   const terminosFiltrados = terminos.filter((t) => {
@@ -411,6 +437,12 @@ export const TerminosView: React.FC<TerminosViewProps> = ({
             </div>
 
             <form onSubmit={handleCrearTerminoSubmit} className="mt-4 space-y-3 text-xs">
+              {errorTerm && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{errorTerm}</span>
+                </div>
+              )}
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 mb-1 font-medium">
                   Título del Término *
@@ -518,9 +550,13 @@ export const TerminosView: React.FC<TerminosViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 rounded-lg"
+                  disabled={guardandoTerm}
+                  className="px-4 py-2 font-semibold text-slate-900 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center gap-2"
                 >
-                  Guardar Término
+                  {guardandoTerm && (
+                    <span className="inline-block w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  <span>{guardandoTerm ? 'Guardando...' : 'Guardar Término'}</span>
                 </button>
               </div>
             </form>

@@ -17,7 +17,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-01-10T08:00:00Z",
-      "ultimoAcceso": "2026-10-31T19:54:29.434Z"
+      "ultimoAcceso": "2026-11-01T10:52:27.745Z"
     },
     {
       "id": "usr-marcela-02",
@@ -38,7 +38,7 @@
       "organizacionId": "org-jairrestaura-001",
       "organizacionNombre": "JairRestaura Uno A & Asociados — Firma Jurídica Demostrativa",
       "fechaCreacion": "2026-03-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-31T19:53:37.556Z"
+      "ultimoAcceso": "2026-11-01T10:52:27.759Z"
     },
     {
       "id": "usr-externo-04",
@@ -49,10 +49,290 @@
       "organizacionId": "org-externa-002",
       "organizacionNombre": "Firma Legal Andina Externa Ltda.",
       "fechaCreacion": "2026-04-01T10:00:00Z",
-      "ultimoAcceso": "2026-10-31T19:53:37.567Z"
+      "ultimoAcceso": "2026-11-01T10:52:27.773Z"
     }
   ],
   "clientes": [
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901337891",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793530337891",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793530337891@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793530337891@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-11-01T10:52:17.912Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793530337912-e63a",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:52:17.912Z",
+      "fechaActualizacion": "2026-11-01T10:52:17.912Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80337891",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793530337891",
+      "emailPrincipal": "natural_1793530337891@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793530337891@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-11-01T10:52:17.897Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793530337903-de5a",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:52:17.903Z",
+      "fechaActualizacion": "2026-11-01T10:52:17.903Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901294049",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793530294049",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793530294049@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793530294049@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-11-01T10:51:34.073Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793530294072-7278",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:51:34.073Z",
+      "fechaActualizacion": "2026-11-01T10:51:34.073Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80294049",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793530294049",
+      "emailPrincipal": "natural_1793530294049@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793530294049@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-11-01T10:51:34.060Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793530294064-2dc2",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:51:34.064Z",
+      "fechaActualizacion": "2026-11-01T10:51:34.064Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901277074",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793530277074",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793530277074@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793530277074@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-11-01T10:51:17.094Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793530277094-5932",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:51:17.094Z",
+      "fechaActualizacion": "2026-11-01T10:51:17.094Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80277074",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793530277074",
+      "emailPrincipal": "natural_1793530277074@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793530277074@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-11-01T10:51:17.081Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793530277086-f459",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:51:17.086Z",
+      "fechaActualizacion": "2026-11-01T10:51:17.086Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901203506",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793530203506",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793530203506@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793530203506@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-11-01T10:50:03.527Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793530203527-17b6",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:50:03.527Z",
+      "fechaActualizacion": "2026-11-01T10:50:03.527Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80203506",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793530203506",
+      "emailPrincipal": "natural_1793530203506@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793530203506@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-11-01T10:50:03.513Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793530203517-5e42",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:50:03.517Z",
+      "fechaActualizacion": "2026-11-01T10:50:03.517Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "JURIDICA",
+      "tipoIdentificacion": "NIT",
+      "numeroIdentificacion": "901132867",
+      "dv": "7",
+      "nombreCompletoORazonSocial": "Comercializadora Prueba S.A.S. 1793530132867",
+      "representanteLegal": {
+        "nombre": "Dra. María Claudia Restrepo Gómez",
+        "tipoIdentificacion": "CC",
+        "numeroIdentificacion": "52.123.456",
+        "cargo": "Gerente General y Representante Legal"
+      },
+      "emailPrincipal": "comercial_1793530132867@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "judicial_1793530132867@prueba-jairrestaura.com",
+      "telefono": "+57 601 222 3344",
+      "direccion": "Calle 72 No. 10-07, Piso 8",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "consentimientoLey1581": {
+        "autorizado": false,
+        "fechaAutorizacion": "2026-11-01T10:48:52.887Z",
+        "canalAutorizacion": "PENDIENTE",
+        "finalidadTratamiento": "Pendiente de suscripción física"
+      },
+      "id": "cli-1793530132887-eda9",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:48:52.887Z",
+      "fechaActualizacion": "2026-11-01T10:48:52.887Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
+    {
+      "tipoPersona": "NATURAL",
+      "tipoIdentificacion": "CC",
+      "numeroIdentificacion": "80132867",
+      "nombreCompletoORazonSocial": "Cliente Prueba Natural 1793530132867",
+      "emailPrincipal": "natural_1793530132867@prueba-jairrestaura.com",
+      "emailNotificacionesJudiciales": "notif_1793530132867@prueba-jairrestaura.com",
+      "telefono": "+57 310 999 8877",
+      "direccion": "Carrera 15 No. 85-30, Oficina 401",
+      "ciudad": "Bogotá D.C.",
+      "departamento": "Cundinamarca",
+      "notasInternas": "Cliente de prueba automatizada",
+      "consentimientoLey1581": {
+        "autorizado": true,
+        "fechaAutorizacion": "2026-11-01T10:48:52.874Z",
+        "canalAutorizacion": "DIGITAL_APP",
+        "finalidadTratamiento": "Gestión procesal conforme a Ley 1581 de 2012"
+      },
+      "id": "cli-1793530132879-77a8",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaCreacion": "2026-11-01T10:48:52.879Z",
+      "fechaActualizacion": "2026-11-01T10:48:52.879Z",
+      "expedientesIds": [],
+      "estado": "ACTIVO"
+    },
     {
       "tipoPersona": "JURIDICA",
       "tipoIdentificacion": "NIT",
@@ -253,7 +533,13 @@
       "fechaCreacion": "2026-01-15T14:20:00Z",
       "fechaActualizacion": "2026-10-29T01:17:07.974Z",
       "expedientesIds": [
-        "exp-2026-001"
+        "exp-2026-001",
+        "exp-1793530072965-90f5",
+        "exp-1793530091919-87f4",
+        "exp-1793530204414-8886",
+        "exp-1793530278093-bd3a",
+        "exp-1793530294944-acb0",
+        "exp-1793530338870-ea17"
       ]
     },
     {
@@ -314,6 +600,192 @@
     }
   ],
   "expedientes": [
+    {
+      "codigoInterno": "EXP-2026-009",
+      "radicadoJudicial23Digitos": "11001400300120260012300",
+      "clienteId": "cli-andinas-01",
+      "autoridadODespacho": "Juzgado 01 Civil del Circuito de Bogotá",
+      "ciudadDespacho": "Bogotá D.C.",
+      "areaJuridica": "CIVIL",
+      "tipoProceso": "Verbal Ordinario de Responsabilidad Civil",
+      "pretensionPrincipal": "Indemnización de perjuicios contractuales y daño emergente",
+      "sintesisHechos": "Incumplimiento contractual en contrato de suministro comercial suscrito en 2025.",
+      "cuantiaEstimadaCOP": 150000000,
+      "partes": {
+        "demandantes": [
+          {
+            "nombre": "Inversiones Ficticias Andinas S.A.S.",
+            "identificacion": "900.000.002-1"
+          }
+        ],
+        "demandados": [
+          {
+            "nombre": "Constructora Ejemplo S.A.",
+            "identificacion": "900.123.456-7"
+          }
+        ]
+      },
+      "estado": "ACTIVO",
+      "id": "exp-1793530338870-ea17",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaInicio": "2026-11-01T10:52:18.870Z",
+      "fechaActualizacion": "2026-11-01T10:52:18.885Z"
+    },
+    {
+      "codigoInterno": "EXP-2026-008",
+      "radicadoJudicial23Digitos": "11001400300120260012300",
+      "clienteId": "cli-andinas-01",
+      "autoridadODespacho": "Juzgado 01 Civil del Circuito de Bogotá",
+      "ciudadDespacho": "Bogotá D.C.",
+      "areaJuridica": "CIVIL",
+      "tipoProceso": "Verbal Ordinario de Responsabilidad Civil",
+      "pretensionPrincipal": "Indemnización de perjuicios contractuales y daño emergente",
+      "sintesisHechos": "Incumplimiento contractual en contrato de suministro comercial suscrito en 2025.",
+      "cuantiaEstimadaCOP": 150000000,
+      "partes": {
+        "demandantes": [
+          {
+            "nombre": "Inversiones Ficticias Andinas S.A.S.",
+            "identificacion": "900.000.002-1"
+          }
+        ],
+        "demandados": [
+          {
+            "nombre": "Constructora Ejemplo S.A.",
+            "identificacion": "900.123.456-7"
+          }
+        ]
+      },
+      "estado": "ACTIVO",
+      "id": "exp-1793530294944-acb0",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaInicio": "2026-11-01T10:51:34.944Z",
+      "fechaActualizacion": "2026-11-01T10:51:34.953Z"
+    },
+    {
+      "codigoInterno": "EXP-2026-007",
+      "radicadoJudicial23Digitos": "11001400300120260012300",
+      "clienteId": "cli-andinas-01",
+      "autoridadODespacho": "Juzgado 01 Civil del Circuito de Bogotá",
+      "ciudadDespacho": "Bogotá D.C.",
+      "areaJuridica": "CIVIL",
+      "tipoProceso": "Verbal Ordinario de Responsabilidad Civil",
+      "pretensionPrincipal": "Indemnización de perjuicios contractuales y daño emergente",
+      "sintesisHechos": "Incumplimiento contractual en contrato de suministro comercial suscrito en 2025.",
+      "cuantiaEstimadaCOP": 150000000,
+      "partes": {
+        "demandantes": [
+          {
+            "nombre": "Inversiones Ficticias Andinas S.A.S.",
+            "identificacion": "900.000.002-1"
+          }
+        ],
+        "demandados": [
+          {
+            "nombre": "Constructora Ejemplo S.A.",
+            "identificacion": "900.123.456-7"
+          }
+        ]
+      },
+      "estado": "ACTIVO",
+      "id": "exp-1793530278093-bd3a",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaInicio": "2026-11-01T10:51:18.093Z",
+      "fechaActualizacion": "2026-11-01T10:51:18.102Z"
+    },
+    {
+      "codigoInterno": "EXP-2026-006",
+      "radicadoJudicial23Digitos": "11001400300120260012300",
+      "clienteId": "cli-andinas-01",
+      "autoridadODespacho": "Juzgado 01 Civil del Circuito de Bogotá",
+      "ciudadDespacho": "Bogotá D.C.",
+      "areaJuridica": "CIVIL",
+      "tipoProceso": "Verbal Ordinario de Responsabilidad Civil",
+      "pretensionPrincipal": "Indemnización de perjuicios contractuales y daño emergente",
+      "sintesisHechos": "Incumplimiento contractual en contrato de suministro comercial suscrito en 2025.",
+      "cuantiaEstimadaCOP": 150000000,
+      "partes": {
+        "demandantes": [
+          {
+            "nombre": "Inversiones Ficticias Andinas S.A.S.",
+            "identificacion": "900.000.002-1"
+          }
+        ],
+        "demandados": [
+          {
+            "nombre": "Constructora Ejemplo S.A.",
+            "identificacion": "900.123.456-7"
+          }
+        ]
+      },
+      "estado": "ACTIVO",
+      "id": "exp-1793530204414-8886",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaInicio": "2026-11-01T10:50:04.414Z",
+      "fechaActualizacion": "2026-11-01T10:50:04.423Z"
+    },
+    {
+      "codigoInterno": "EXP-2026-005",
+      "radicadoJudicial23Digitos": "11001400300120260012300",
+      "clienteId": "cli-andinas-01",
+      "autoridadODespacho": "Juzgado 01 Civil del Circuito de Bogotá",
+      "ciudadDespacho": "Bogotá D.C.",
+      "areaJuridica": "CIVIL",
+      "tipoProceso": "Verbal Ordinario de Responsabilidad Civil",
+      "pretensionPrincipal": "Indemnización de perjuicios contractuales y daño emergente",
+      "sintesisHechos": "Incumplimiento contractual en contrato de suministro comercial suscrito en 2025.",
+      "cuantiaEstimadaCOP": 150000000,
+      "partes": {
+        "demandantes": [
+          {
+            "nombre": "Inversiones Ficticias Andinas S.A.S.",
+            "identificacion": "900.000.002-1"
+          }
+        ],
+        "demandados": [
+          {
+            "nombre": "Constructora Ejemplo S.A.",
+            "identificacion": "900.123.456-7"
+          }
+        ]
+      },
+      "estado": "ACTIVO",
+      "id": "exp-1793530091919-87f4",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaInicio": "2026-11-01T10:48:11.919Z",
+      "fechaActualizacion": "2026-11-01T10:48:11.928Z"
+    },
+    {
+      "codigoInterno": "EXP-2026-004",
+      "radicadoJudicial23Digitos": "11001400300120260012300",
+      "clienteId": "cli-andinas-01",
+      "autoridadODespacho": "Juzgado 01 Civil del Circuito de Bogotá",
+      "ciudadDespacho": "Bogotá D.C.",
+      "areaJuridica": "CIVIL",
+      "tipoProceso": "Verbal Ordinario de Responsabilidad Civil",
+      "pretensionPrincipal": "Indemnización de perjuicios contractuales y daño emergente",
+      "sintesisHechos": "Incumplimiento contractual en contrato de suministro comercial suscrito en 2025.",
+      "cuantiaEstimadaCOP": 150000000,
+      "partes": {
+        "demandantes": [
+          {
+            "nombre": "Inversiones Ficticias Andinas S.A.S.",
+            "identificacion": "900.000.002-1"
+          }
+        ],
+        "demandados": [
+          {
+            "nombre": "Constructora Ejemplo S.A.",
+            "identificacion": "900.123.456-7"
+          }
+        ]
+      },
+      "estado": "ACTIVO",
+      "id": "exp-1793530072965-90f5",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaInicio": "2026-11-01T10:47:52.965Z",
+      "fechaActualizacion": "2026-11-01T10:47:52.965Z"
+    },
     {
       "id": "exp-2026-001",
       "codigoInterno": "EXP-2026-001",
@@ -520,9 +992,250 @@
         "creadoPor": "Dr. Jair",
         "fechaCreacion": "2026-10-24T14:00:00Z"
       }
+    ],
+    "exp-1793530072965-90f5": [
+      {
+        "id": "act-1793530072965",
+        "expedienteId": "exp-1793530072965-90f5",
+        "fechaActuacion": "2026-11-01",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "CONSTANCIA",
+        "anotacion": "Apertura formal de expediente en plataforma jurídica JAIRRESTAURA UNO A.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:47:52.965Z"
+      }
+    ],
+    "exp-1793530091919-87f4": [
+      {
+        "fechaActuacion": "2026-11-01",
+        "tipoProvidencia": "AUTO_ADMITE_DEMANDA",
+        "anotacion": "Juzgado admite demanda y ordena correr traslado conforme al Art. 91 del CGP",
+        "cuaderno": "Cuaderno Principal No. 1",
+        "anotacionPrivada": "Verificar término de 20 días para contestación",
+        "id": "act-1793530091928-9158",
+        "expedienteId": "exp-1793530091919-87f4",
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:48:11.928Z"
+      },
+      {
+        "id": "act-1793530091919",
+        "expedienteId": "exp-1793530091919-87f4",
+        "fechaActuacion": "2026-11-01",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "CONSTANCIA",
+        "anotacion": "Apertura formal de expediente en plataforma jurídica JAIRRESTAURA UNO A.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:48:11.919Z"
+      }
+    ],
+    "exp-1793530204414-8886": [
+      {
+        "fechaActuacion": "2026-11-01",
+        "tipoProvidencia": "AUTO_ADMITE_DEMANDA",
+        "anotacion": "Juzgado admite demanda y ordena correr traslado conforme al Art. 91 del CGP",
+        "cuaderno": "Cuaderno Principal No. 1",
+        "anotacionPrivada": "Verificar término de 20 días para contestación",
+        "id": "act-1793530204422-ca6f",
+        "expedienteId": "exp-1793530204414-8886",
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:50:04.423Z"
+      },
+      {
+        "id": "act-1793530204414",
+        "expedienteId": "exp-1793530204414-8886",
+        "fechaActuacion": "2026-11-01",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "CONSTANCIA",
+        "anotacion": "Apertura formal de expediente en plataforma jurídica JAIRRESTAURA UNO A.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:50:04.414Z"
+      }
+    ],
+    "exp-1793530278093-bd3a": [
+      {
+        "fechaActuacion": "2026-11-01",
+        "tipoProvidencia": "AUTO_ADMITE_DEMANDA",
+        "anotacion": "Juzgado admite demanda y ordena correr traslado conforme al Art. 91 del CGP",
+        "cuaderno": "Cuaderno Principal No. 1",
+        "anotacionPrivada": "Verificar término de 20 días para contestación",
+        "id": "act-1793530278102-3c10",
+        "expedienteId": "exp-1793530278093-bd3a",
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:51:18.102Z"
+      },
+      {
+        "id": "act-1793530278093",
+        "expedienteId": "exp-1793530278093-bd3a",
+        "fechaActuacion": "2026-11-01",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "CONSTANCIA",
+        "anotacion": "Apertura formal de expediente en plataforma jurídica JAIRRESTAURA UNO A.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:51:18.093Z"
+      }
+    ],
+    "exp-1793530294944-acb0": [
+      {
+        "fechaActuacion": "2026-11-01",
+        "tipoProvidencia": "AUTO_ADMITE_DEMANDA",
+        "anotacion": "Juzgado admite demanda y ordena correr traslado conforme al Art. 91 del CGP",
+        "cuaderno": "Cuaderno Principal No. 1",
+        "anotacionPrivada": "Verificar término de 20 días para contestación",
+        "id": "act-1793530294953-a8dd",
+        "expedienteId": "exp-1793530294944-acb0",
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:51:34.953Z"
+      },
+      {
+        "id": "act-1793530294944",
+        "expedienteId": "exp-1793530294944-acb0",
+        "fechaActuacion": "2026-11-01",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "CONSTANCIA",
+        "anotacion": "Apertura formal de expediente en plataforma jurídica JAIRRESTAURA UNO A.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:51:34.944Z"
+      }
+    ],
+    "exp-1793530338870-ea17": [
+      {
+        "fechaActuacion": "2026-11-01",
+        "tipoProvidencia": "AUTO_ADMITE_DEMANDA",
+        "anotacion": "Juzgado admite demanda y ordena correr traslado conforme al Art. 91 del CGP",
+        "cuaderno": "Cuaderno Principal No. 1",
+        "anotacionPrivada": "Verificar término de 20 días para contestación",
+        "id": "act-1793530338885-e7c1",
+        "expedienteId": "exp-1793530338870-ea17",
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:52:18.885Z"
+      },
+      {
+        "id": "act-1793530338870",
+        "expedienteId": "exp-1793530338870-ea17",
+        "fechaActuacion": "2026-11-01",
+        "cuaderno": "Cuaderno Principal",
+        "tipoProvidencia": "CONSTANCIA",
+        "anotacion": "Apertura formal de expediente en plataforma jurídica JAIRRESTAURA UNO A.",
+        "tieneTermino": false,
+        "creadoPor": "Dr. Jair (Director Jurídico)",
+        "fechaCreacion": "2026-11-01T10:52:18.870Z"
+      }
     ]
   },
   "terminos": [
+    {
+      "titulo": "Contestación de Demanda - Proceso Verbal Ordinario",
+      "fechaNotificacionOInicio": "2026-05-18",
+      "duracionDias": 20,
+      "tipoTermino": "CONTESTACION_DEMANDA",
+      "aplicaReglaLey2213": true,
+      "expedienteId": "exp-2026-001",
+      "prioridad": "ALTA",
+      "id": "term-1793530339863-b6ad",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaVencimientoCalculada": "2026-06-19",
+      "notasCómputo": "Código General del Proceso (Art. 118 CGP) en consonancia con el Artículo 8 de la Ley 2213 de 2022 (2 días hábiles siguientes al envío del mensaje de datos). - ADVERTENCIA OBLIGATORIA: El cómputo automatizado constituye una herramienta auxiliar. El abogado titular debe verificar personalmente posibles suspensiones intempestivas de términos decretadas por el Consejo Superior de la Judicatura o cese de actividades del despacho competente antes de refrendar el vencimiento.",
+      "calculoConfirmadoPorAbogado": true,
+      "estado": "CUMPLIDO",
+      "responsableId": "usr-jair-01",
+      "responsableNombre": "Dr. Jair (Director Jurídico)",
+      "abogadoQueConfirmo": "Dr. Jair"
+    },
+    {
+      "titulo": "Contestación de Demanda - Proceso Verbal Ordinario",
+      "fechaNotificacionOInicio": "2026-05-18",
+      "duracionDias": 20,
+      "tipoTermino": "CONTESTACION_DEMANDA",
+      "aplicaReglaLey2213": true,
+      "expedienteId": "exp-2026-001",
+      "prioridad": "ALTA",
+      "id": "term-1793530295827-8ae0",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaVencimientoCalculada": "2026-06-19",
+      "notasCómputo": "Código General del Proceso (Art. 118 CGP) en consonancia con el Artículo 8 de la Ley 2213 de 2022 (2 días hábiles siguientes al envío del mensaje de datos). - ADVERTENCIA OBLIGATORIA: El cómputo automatizado constituye una herramienta auxiliar. El abogado titular debe verificar personalmente posibles suspensiones intempestivas de términos decretadas por el Consejo Superior de la Judicatura o cese de actividades del despacho competente antes de refrendar el vencimiento.",
+      "calculoConfirmadoPorAbogado": true,
+      "estado": "CUMPLIDO",
+      "responsableId": "usr-jair-01",
+      "responsableNombre": "Dr. Jair (Director Jurídico)",
+      "abogadoQueConfirmo": "Dr. Jair"
+    },
+    {
+      "titulo": "Contestación de Demanda - Proceso Verbal Ordinario",
+      "fechaNotificacionOInicio": "2026-05-18",
+      "duracionDias": 20,
+      "tipoTermino": "CONTESTACION_DEMANDA",
+      "aplicaReglaLey2213": true,
+      "expedienteId": "exp-2026-001",
+      "prioridad": "ALTA",
+      "id": "term-1793530279072-ffca",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaVencimientoCalculada": "2026-06-19",
+      "notasCómputo": "Código General del Proceso (Art. 118 CGP) en consonancia con el Artículo 8 de la Ley 2213 de 2022 (2 días hábiles siguientes al envío del mensaje de datos). - ADVERTENCIA OBLIGATORIA: El cómputo automatizado constituye una herramienta auxiliar. El abogado titular debe verificar personalmente posibles suspensiones intempestivas de términos decretadas por el Consejo Superior de la Judicatura o cese de actividades del despacho competente antes de refrendar el vencimiento.",
+      "calculoConfirmadoPorAbogado": true,
+      "estado": "CUMPLIDO",
+      "responsableId": "usr-jair-01",
+      "responsableNombre": "Dr. Jair (Director Jurídico)",
+      "abogadoQueConfirmo": "Dr. Jair"
+    },
+    {
+      "titulo": "Contestación de Demanda - Proceso Verbal Ordinario",
+      "fechaNotificacionOInicio": "2026-05-18",
+      "duracionDias": 20,
+      "tipoTermino": "CONTESTACION_DEMANDA",
+      "aplicaReglaLey2213": true,
+      "expedienteId": "exp-2026-001",
+      "prioridad": "ALTA",
+      "id": "term-1793530205304-7491",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaVencimientoCalculada": "2026-06-19",
+      "notasCómputo": "Código General del Proceso (Art. 118 CGP) en consonancia con el Artículo 8 de la Ley 2213 de 2022 (2 días hábiles siguientes al envío del mensaje de datos). - ADVERTENCIA OBLIGATORIA: El cómputo automatizado constituye una herramienta auxiliar. El abogado titular debe verificar personalmente posibles suspensiones intempestivas de términos decretadas por el Consejo Superior de la Judicatura o cese de actividades del despacho competente antes de refrendar el vencimiento.",
+      "calculoConfirmadoPorAbogado": true,
+      "estado": "CUMPLIDO",
+      "responsableId": "usr-jair-01",
+      "responsableNombre": "Dr. Jair (Director Jurídico)",
+      "abogadoQueConfirmo": "Dr. Jair"
+    },
+    {
+      "titulo": "Contestación de Demanda - Proceso Verbal Ordinario",
+      "fechaNotificacionOInicio": "2026-05-18",
+      "duracionDias": 20,
+      "tipoTermino": "CONTESTACION_DEMANDA",
+      "aplicaReglaLey2213": true,
+      "expedienteId": "exp-2026-001",
+      "prioridad": "ALTA",
+      "id": "term-1793530122923-5e0d",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaVencimientoCalculada": "2026-06-19",
+      "notasCómputo": "Código General del Proceso (Art. 118 CGP) en consonancia con el Artículo 8 de la Ley 2213 de 2022 (2 días hábiles siguientes al envío del mensaje de datos). - ADVERTENCIA OBLIGATORIA: El cómputo automatizado constituye una herramienta auxiliar. El abogado titular debe verificar personalmente posibles suspensiones intempestivas de términos decretadas por el Consejo Superior de la Judicatura o cese de actividades del despacho competente antes de refrendar el vencimiento.",
+      "calculoConfirmadoPorAbogado": true,
+      "estado": "CUMPLIDO",
+      "responsableId": "usr-jair-01",
+      "responsableNombre": "Dr. Jair (Director Jurídico)",
+      "abogadoQueConfirmo": "Dr. Jair"
+    },
+    {
+      "titulo": "Contestación de Demanda - Proceso Verbal Ordinario",
+      "fechaNotificacionOInicio": "2026-05-18",
+      "duracionDias": 20,
+      "tipoTermino": "CONTESTACION_DEMANDA",
+      "aplicaReglaLey2213": true,
+      "expedienteId": "exp-2026-001",
+      "prioridad": "ALTA",
+      "id": "term-1793530095844-54a2",
+      "organizacionId": "org-jairrestaura-001",
+      "fechaVencimientoCalculada": "2026-06-19",
+      "notasCómputo": "Código General del Proceso (Art. 118 CGP) en consonancia con el Artículo 8 de la Ley 2213 de 2022 (2 días hábiles siguientes al envío del mensaje de datos). - ADVERTENCIA OBLIGATORIA: El cómputo automatizado constituye una herramienta auxiliar. El abogado titular debe verificar personalmente posibles suspensiones intempestivas de términos decretadas por el Consejo Superior de la Judicatura o cese de actividades del despacho competente antes de refrendar el vencimiento.",
+      "calculoConfirmadoPorAbogado": true,
+      "estado": "CUMPLIDO",
+      "responsableId": "usr-jair-01",
+      "responsableNombre": "Dr. Jair (Director Jurídico)",
+      "abogadoQueConfirmo": "Dr. Jair"
+    },
     {
       "id": "term-001",
       "expedienteId": "exp-2026-001",
@@ -615,6 +1328,114 @@
   ],
   "honorarios": [
     {
+      "clienteId": "cli-andinas-01",
+      "clienteNombre": "Inversiones Ficticias Andinas S.A.S.",
+      "expedienteId": "exp-2026-001",
+      "expedienteCodigo": "EXP-2026-001",
+      "concepto": "Representación en recurso extraordinario de casación",
+      "modalidad": "FIJO_POR_ETAPAS",
+      "valorAcordadoCOP": 20000000,
+      "fechaAcuerdo": "2026-11-01",
+      "id": "hon-1793530340735-188b",
+      "valorPagadoCOP": 5000000,
+      "saldoPendienteCOP": 15000000,
+      "estado": "PARCIAL",
+      "pagosRegistrados": [
+        {
+          "id": "pag-1793530340747",
+          "fechaPago": "2026-11-01",
+          "montoCOP": 5000000,
+          "medioPago": "TRANSFERENCIA_BANCARIA",
+          "numeroComprobante": "TRANS-TEST-0099",
+          "verificadoPorContabilidad": true,
+          "registradoPor": "Dr. Jair (Director Jurídico)"
+        }
+      ],
+      "gastosProcesales": [],
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "clienteId": "cli-andinas-01",
+      "clienteNombre": "Inversiones Ficticias Andinas S.A.S.",
+      "expedienteId": "exp-2026-001",
+      "expedienteCodigo": "EXP-2026-001",
+      "concepto": "Representación en recurso extraordinario de casación",
+      "modalidad": "FIJO_POR_ETAPAS",
+      "valorAcordadoCOP": 20000000,
+      "fechaAcuerdo": "2026-11-01",
+      "id": "hon-1793530296710-542a",
+      "valorPagadoCOP": 5000000,
+      "saldoPendienteCOP": 15000000,
+      "estado": "PARCIAL",
+      "pagosRegistrados": [
+        {
+          "id": "pag-1793530296716",
+          "fechaPago": "2026-11-01",
+          "montoCOP": 5000000,
+          "medioPago": "TRANSFERENCIA_BANCARIA",
+          "numeroComprobante": "TRANS-TEST-0099",
+          "verificadoPorContabilidad": true,
+          "registradoPor": "Dr. Jair (Director Jurídico)"
+        }
+      ],
+      "gastosProcesales": [],
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "clienteId": "cli-andinas-01",
+      "clienteNombre": "Inversiones Ficticias Andinas S.A.S.",
+      "expedienteId": "exp-2026-001",
+      "expedienteCodigo": "EXP-2026-001",
+      "concepto": "Representación en recurso extraordinario de casación",
+      "modalidad": "FIJO_POR_ETAPAS",
+      "valorAcordadoCOP": 20000000,
+      "fechaAcuerdo": "2026-11-01",
+      "id": "hon-1793530279994-edf9",
+      "valorPagadoCOP": 5000000,
+      "saldoPendienteCOP": 15000000,
+      "estado": "PARCIAL",
+      "pagosRegistrados": [
+        {
+          "id": "pag-1793530280003",
+          "fechaPago": "2026-11-01",
+          "montoCOP": 5000000,
+          "medioPago": "TRANSFERENCIA_BANCARIA",
+          "numeroComprobante": "TRANS-TEST-0099",
+          "verificadoPorContabilidad": true,
+          "registradoPor": "Dr. Jair (Director Jurídico)"
+        }
+      ],
+      "gastosProcesales": [],
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "clienteId": "cli-andinas-01",
+      "clienteNombre": "Inversiones Ficticias Andinas S.A.S.",
+      "expedienteId": "exp-2026-001",
+      "expedienteCodigo": "EXP-2026-001",
+      "concepto": "Representación en recurso extraordinario de casación",
+      "modalidad": "FIJO_POR_ETAPAS",
+      "valorAcordadoCOP": 20000000,
+      "fechaAcuerdo": "2026-11-01",
+      "id": "hon-1793530128382-6678",
+      "valorPagadoCOP": 5000000,
+      "saldoPendienteCOP": 15000000,
+      "estado": "PARCIAL",
+      "pagosRegistrados": [
+        {
+          "id": "pag-1793530128419",
+          "fechaPago": "2026-11-01",
+          "montoCOP": 5000000,
+          "medioPago": "TRANSFERENCIA_BANCARIA",
+          "numeroComprobante": "TRANS-TEST-0099",
+          "verificadoPorContabilidad": true,
+          "registradoPor": "Dr. Jair (Director Jurídico)"
+        }
+      ],
+      "gastosProcesales": [],
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
       "id": "hon-001",
       "expedienteId": "exp-2026-001",
       "expedienteCodigo": "EXP-2026-001",
@@ -679,6 +1500,962 @@
     }
   ],
   "auditoria": [
+    {
+      "id": "aud-1793530347834-bd6415",
+      "timestamp": "2026-11-01T10:52:27.834Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGOUT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Cierre formal de sesión y revocación de token criptográfico",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530347791-00ba88",
+      "timestamp": "2026-11-01T10:52:27.791Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "EXPORT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Exportación autorizada de respaldo institucional de datos (Ley 1581 de 2012)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530347776-5943b9",
+      "timestamp": "2026-11-01T10:52:27.776Z",
+      "usuarioId": "usr-externo-04",
+      "usuarioNombre": "Dra. Camila Soto (Firma Externa)",
+      "usuarioRol": "ABOGADO_ASOCIADO",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-externa-002",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530347761-865b56",
+      "timestamp": "2026-11-01T10:52:27.761Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530347748-c36fc4",
+      "timestamp": "2026-11-01T10:52:27.748Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530343825-aa06aa",
+      "timestamp": "2026-11-01T10:52:23.825Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "DELETE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793530342675-6585",
+      "descripcionDetallada": "Caso académico eliminado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530342698-d4263f",
+      "timestamp": "2026-11-01T10:52:22.698Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793530342675-6585",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530342678-79f0ce",
+      "timestamp": "2026-11-01T10:52:22.678Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793530342675-6585",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530341671-25049e",
+      "timestamp": "2026-11-01T10:52:21.672Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530340750-90a9d6",
+      "timestamp": "2026-11-01T10:52:20.750Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "pag-1793530340747",
+      "descripcionDetallada": "Abono a honorarios: $5.000.000 COP (TRANSFERENCIA_BANCARIA)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530340741-2a1e6f",
+      "timestamp": "2026-11-01T10:52:20.741Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "hon-1793530340735-188b",
+      "descripcionDetallada": "Registro de acuerdo de honorarios: Representación en recurso extraordinario de casación ($20.000.000 COP)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530340716-962a33",
+      "timestamp": "2026-11-01T10:52:20.716Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530339886-bda280",
+      "timestamp": "2026-11-01T10:52:19.886Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530339863-b6ad",
+      "descripcionDetallada": "Término procesal marcado como CUMPLIDO: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530339875-f7e2d7",
+      "timestamp": "2026-11-01T10:52:19.875Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530339863-b6ad",
+      "descripcionDetallada": "Abogado titular verificó cómputo de término: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530339865-d8f684",
+      "timestamp": "2026-11-01T10:52:19.865Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530339863-b6ad",
+      "descripcionDetallada": "Nuevo término registrado: Contestación de Demanda - Proceso Verbal Ordinario (Vencimiento: 2026-06-19)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530339836-99a141",
+      "timestamp": "2026-11-01T10:52:19.836Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530338889-f3384f",
+      "timestamp": "2026-11-01T10:52:18.889Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530338870-ea17",
+      "descripcionDetallada": "Nueva actuación registrada en EXP-2026-009: AUTO_ADMITE_DEMANDA",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530338872-e26ebd",
+      "timestamp": "2026-11-01T10:52:18.872Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530338870-ea17",
+      "descripcionDetallada": "Apertura de expediente EXP-2026-009 (CIVIL) para cliente undefined",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530338848-b44f89",
+      "timestamp": "2026-11-01T10:52:18.848Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530337914-e9c795",
+      "timestamp": "2026-11-01T10:52:17.915Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530337912-e63a",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793530337891 (NIT 901337891)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530337905-2c091f",
+      "timestamp": "2026-11-01T10:52:17.905Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530337903-de5a",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793530337891 (CC 80337891)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530337883-09269d",
+      "timestamp": "2026-11-01T10:52:17.883Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530329979-a06972",
+      "timestamp": "2026-11-01T10:52:09.979Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530296719-4d40b1",
+      "timestamp": "2026-11-01T10:51:36.719Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "pag-1793530296716",
+      "descripcionDetallada": "Abono a honorarios: $5.000.000 COP (TRANSFERENCIA_BANCARIA)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530296712-faea13",
+      "timestamp": "2026-11-01T10:51:36.712Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "hon-1793530296710-542a",
+      "descripcionDetallada": "Registro de acuerdo de honorarios: Representación en recurso extraordinario de casación ($20.000.000 COP)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530295852-72a936",
+      "timestamp": "2026-11-01T10:51:35.852Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530295827-8ae0",
+      "descripcionDetallada": "Término procesal marcado como CUMPLIDO: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530295841-67aea8",
+      "timestamp": "2026-11-01T10:51:35.841Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530295827-8ae0",
+      "descripcionDetallada": "Abogado titular verificó cómputo de término: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530295829-c2a8e5",
+      "timestamp": "2026-11-01T10:51:35.829Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530295827-8ae0",
+      "descripcionDetallada": "Nuevo término registrado: Contestación de Demanda - Proceso Verbal Ordinario (Vencimiento: 2026-06-19)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530294957-5d8b79",
+      "timestamp": "2026-11-01T10:51:34.957Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530294944-acb0",
+      "descripcionDetallada": "Nueva actuación registrada en EXP-2026-008: AUTO_ADMITE_DEMANDA",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530294947-0b4030",
+      "timestamp": "2026-11-01T10:51:34.947Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530294944-acb0",
+      "descripcionDetallada": "Apertura de expediente EXP-2026-008 (CIVIL) para cliente undefined",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530294075-09a746",
+      "timestamp": "2026-11-01T10:51:34.075Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530294072-7278",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793530294049 (NIT 901294049)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530294067-1bdbdf",
+      "timestamp": "2026-11-01T10:51:34.067Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530294064-2dc2",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793530294049 (CC 80294049)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530280006-e4b6c1",
+      "timestamp": "2026-11-01T10:51:20.006Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "pag-1793530280003",
+      "descripcionDetallada": "Abono a honorarios: $5.000.000 COP (TRANSFERENCIA_BANCARIA)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530279996-be6d83",
+      "timestamp": "2026-11-01T10:51:19.996Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "hon-1793530279994-edf9",
+      "descripcionDetallada": "Registro de acuerdo de honorarios: Representación en recurso extraordinario de casación ($20.000.000 COP)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530279089-be862b",
+      "timestamp": "2026-11-01T10:51:19.089Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530279072-ffca",
+      "descripcionDetallada": "Término procesal marcado como CUMPLIDO: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530279082-82a66c",
+      "timestamp": "2026-11-01T10:51:19.082Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530279072-ffca",
+      "descripcionDetallada": "Abogado titular verificó cómputo de término: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530279075-b5ceb1",
+      "timestamp": "2026-11-01T10:51:19.075Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530279072-ffca",
+      "descripcionDetallada": "Nuevo término registrado: Contestación de Demanda - Proceso Verbal Ordinario (Vencimiento: 2026-06-19)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530278105-bdc7f2",
+      "timestamp": "2026-11-01T10:51:18.105Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530278093-bd3a",
+      "descripcionDetallada": "Nueva actuación registrada en EXP-2026-007: AUTO_ADMITE_DEMANDA",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530278095-669d51",
+      "timestamp": "2026-11-01T10:51:18.095Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530278093-bd3a",
+      "descripcionDetallada": "Apertura de expediente EXP-2026-007 (CIVIL) para cliente undefined",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530277096-44df4d",
+      "timestamp": "2026-11-01T10:51:17.096Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530277094-5932",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793530277074 (NIT 901277074)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530277088-cbb9ec",
+      "timestamp": "2026-11-01T10:51:17.088Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530277086-f459",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793530277074 (CC 80277074)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530205322-38faae",
+      "timestamp": "2026-11-01T10:50:05.322Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530205304-7491",
+      "descripcionDetallada": "Término procesal marcado como CUMPLIDO: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530205314-7a08ed",
+      "timestamp": "2026-11-01T10:50:05.314Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530205304-7491",
+      "descripcionDetallada": "Abogado titular verificó cómputo de término: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530205307-acdd3a",
+      "timestamp": "2026-11-01T10:50:05.307Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530205304-7491",
+      "descripcionDetallada": "Nuevo término registrado: Contestación de Demanda - Proceso Verbal Ordinario (Vencimiento: 2026-06-19)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530205284-8b87c5",
+      "timestamp": "2026-11-01T10:50:05.284Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530204425-bb860a",
+      "timestamp": "2026-11-01T10:50:04.425Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530204414-8886",
+      "descripcionDetallada": "Nueva actuación registrada en EXP-2026-006: AUTO_ADMITE_DEMANDA",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530204416-67fb8a",
+      "timestamp": "2026-11-01T10:50:04.416Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530204414-8886",
+      "descripcionDetallada": "Apertura de expediente EXP-2026-006 (CIVIL) para cliente undefined",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530204397-4a7e9a",
+      "timestamp": "2026-11-01T10:50:04.397Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530203529-aa41ce",
+      "timestamp": "2026-11-01T10:50:03.529Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530203527-17b6",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793530203506 (NIT 901203506)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530203520-3b8b30",
+      "timestamp": "2026-11-01T10:50:03.520Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530203517-5e42",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793530203506 (CC 80203506)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530203497-06a85a",
+      "timestamp": "2026-11-01T10:50:03.497Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530140253-2b4aa7",
+      "timestamp": "2026-11-01T10:49:00.253Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGOUT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Cierre formal de sesión y revocación de token criptográfico",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530140239-e493f4",
+      "timestamp": "2026-11-01T10:49:00.239Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "EXPORT",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Exportación autorizada de respaldo institucional de datos (Ley 1581 de 2012)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530140227-ebc206",
+      "timestamp": "2026-11-01T10:49:00.227Z",
+      "usuarioId": "usr-externo-04",
+      "usuarioNombre": "Dra. Camila Soto (Firma Externa)",
+      "usuarioRol": "ABOGADO_ASOCIADO",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-externa-002",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530140196-3847be",
+      "timestamp": "2026-11-01T10:49:00.196Z",
+      "usuarioId": "usr-andres-03",
+      "usuarioNombre": "Andrés Felipe Rojas (Demostración)",
+      "usuarioRol": "ASISTENTE_JUDICIAL",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530140183-46c1b6",
+      "timestamp": "2026-11-01T10:49:00.183Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530136248-e069b9",
+      "timestamp": "2026-11-01T10:48:56.248Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "DELETE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793530134965-519d",
+      "descripcionDetallada": "Caso académico eliminado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530134981-b75744",
+      "timestamp": "2026-11-01T10:48:54.981Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "UPDATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793530134965-519d",
+      "descripcionDetallada": "Caso académico actualizado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530134968-a3b3a9",
+      "timestamp": "2026-11-01T10:48:54.968Z",
+      "usuarioId": "usr-estudiante-publico",
+      "usuarioNombre": "Estudiante de Derecho (Acceso Libre)",
+      "usuarioRol": "ESTUDIANTE",
+      "accion": "CREATE",
+      "modulo": "ESCUELA_JURIDICA",
+      "registroIdAfectado": "caso-acad-1793530134965-519d",
+      "descripcionDetallada": "Caso académico guardado: Análisis de Responsabilidad Civil Extracontractual en Accidente Fluvial (CIVIL)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530133934-ffc4ea",
+      "timestamp": "2026-11-01T10:48:53.934Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530132889-45ea87",
+      "timestamp": "2026-11-01T10:48:52.889Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530132887-eda9",
+      "descripcionDetallada": "Creación de cliente: Comercializadora Prueba S.A.S. 1793530132867 (NIT 901132867)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530132881-453e15",
+      "timestamp": "2026-11-01T10:48:52.881Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "CLIENTES",
+      "registroIdAfectado": "cli-1793530132879-77a8",
+      "descripcionDetallada": "Creación de cliente: Cliente Prueba Natural 1793530132867 (CC 80132867)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530132860-693622",
+      "timestamp": "2026-11-01T10:48:52.860Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530128421-7df529",
+      "timestamp": "2026-11-01T10:48:48.422Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "pag-1793530128419",
+      "descripcionDetallada": "Abono a honorarios: $5.000.000 COP (TRANSFERENCIA_BANCARIA)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530128412-e6c280",
+      "timestamp": "2026-11-01T10:48:48.412Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "HONORARIOS",
+      "registroIdAfectado": "hon-1793530128382-6678",
+      "descripcionDetallada": "Registro de acuerdo de honorarios: Representación en recurso extraordinario de casación ($20.000.000 COP)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530128365-d7396e",
+      "timestamp": "2026-11-01T10:48:48.365Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530122945-2c1725",
+      "timestamp": "2026-11-01T10:48:42.945Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530122923-5e0d",
+      "descripcionDetallada": "Término procesal marcado como CUMPLIDO: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530122934-f904cc",
+      "timestamp": "2026-11-01T10:48:42.934Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530122923-5e0d",
+      "descripcionDetallada": "Abogado titular verificó cómputo de término: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530122925-80b837",
+      "timestamp": "2026-11-01T10:48:42.925Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530122923-5e0d",
+      "descripcionDetallada": "Nuevo término registrado: Contestación de Demanda - Proceso Verbal Ordinario (Vencimiento: 2026-06-19)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530122902-526406",
+      "timestamp": "2026-11-01T10:48:42.902Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530095864-96704e",
+      "timestamp": "2026-11-01T10:48:15.864Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "UPDATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530095844-54a2",
+      "descripcionDetallada": "Término procesal marcado como CUMPLIDO: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530095855-1c1e52",
+      "timestamp": "2026-11-01T10:48:15.855Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CONFIRM_TERM",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530095844-54a2",
+      "descripcionDetallada": "Abogado titular verificó cómputo de término: Contestación de Demanda - Proceso Verbal Ordinario",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530095846-61740c",
+      "timestamp": "2026-11-01T10:48:15.847Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "AGENDA",
+      "registroIdAfectado": "term-1793530095844-54a2",
+      "descripcionDetallada": "Nuevo término registrado: Contestación de Demanda - Proceso Verbal Ordinario (Vencimiento: 2026-06-19)",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530095821-e89a15",
+      "timestamp": "2026-11-01T10:48:15.821Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530091930-37ee17",
+      "timestamp": "2026-11-01T10:48:11.930Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530091919-87f4",
+      "descripcionDetallada": "Nueva actuación registrada en EXP-2026-005: AUTO_ADMITE_DEMANDA",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530091921-8b5854",
+      "timestamp": "2026-11-01T10:48:11.921Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530091919-87f4",
+      "descripcionDetallada": "Apertura de expediente EXP-2026-005 (CIVIL) para cliente undefined",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530091902-322dc8",
+      "timestamp": "2026-11-01T10:48:11.902Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530072967-9bb19c",
+      "timestamp": "2026-11-01T10:47:52.967Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "CREATE",
+      "modulo": "EXPEDIENTES",
+      "registroIdAfectado": "exp-1793530072965-90f5",
+      "descripcionDetallada": "Apertura de expediente EXP-2026-004 (CIVIL) para cliente undefined",
+      "organizacionId": "org-jairrestaura-001"
+    },
+    {
+      "id": "aud-1793530072944-296c26",
+      "timestamp": "2026-11-01T10:47:52.944Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
+    {
+      "id": "aud-1793530040186-392c97",
+      "timestamp": "2026-11-01T10:47:20.186Z",
+      "usuarioId": "usr-jair-01",
+      "usuarioNombre": "Dr. Jair (Director Jurídico)",
+      "usuarioRol": "ADMIN_TITULAR",
+      "accion": "LOGIN",
+      "modulo": "SEGURIDAD",
+      "descripcionDetallada": "Inicio de sesión exitoso mediante credencial institucional segura (PBKDF2/SHA-512)",
+      "organizacionId": "org-jairrestaura-001",
+      "ipAddress": "127.0.0.1"
+    },
     {
       "id": "aud-1793476469461-3762c5",
       "timestamp": "2026-10-31T19:54:29.461Z",

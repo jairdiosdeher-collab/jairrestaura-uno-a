@@ -47,7 +47,10 @@ async function runDashboardTests() {
       'x-user-id': 'usr-jair-01',
     };
   } else {
-    headersAdmin = { 'x-user-id': 'usr-jair-01' };
+    headersAdmin = {
+      'Authorization': 'Bearer jairrestaura-demo-session-token-2026',
+      'x-user-id': 'usr-jair-01',
+    };
   }
 
   let statsData: any = null;

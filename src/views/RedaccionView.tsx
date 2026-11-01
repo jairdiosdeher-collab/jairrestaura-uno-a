@@ -170,39 +170,62 @@ export const RedaccionView: React.FC<RedaccionViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  // Imprimir / Exportar a PDF
+  // Imprimir / Exportar a PDF (mediante iframe protegido sin popups bloqueados)
   const handleImprimirPDF = () => {
-    const ventanaImpresion = window.open('', '_blank');
-    if (!ventanaImpresion) {
-      alert('Habilite las ventanas emergentes para imprimir');
+    let printFrame = document.getElementById('legalPrintIframe') as HTMLIFrameElement;
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'legalPrintIframe';
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = '0';
+      document.body.appendChild(printFrame);
+    }
+
+    const doc = printFrame.contentWindow?.document;
+    if (!doc) {
+      window.print();
       return;
     }
 
-    ventanaImpresion.document.write(`
+    doc.open();
+    doc.write(`
       <!DOCTYPE html>
       <html>
         <head>
           <title>${tituloDocumento}</title>
           <style>
-            body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.6; padding: 3cm; }
-            .encabezado { text-align: center; margin-bottom: 24pt; border-bottom: 1px solid #ccc; padding-bottom: 12pt; }
-            .firma { margin-top: 48pt; }
-            @media print { body { padding: 0; } }
+            @page { size: letter; margin: 2.5cm; }
+            body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.6; color: #111; margin: 0; }
+            .encabezado { text-align: center; margin-bottom: 24pt; border-bottom: 1.5px solid #111; padding-bottom: 12pt; }
+            .encabezado h3 { margin: 0; font-size: 14pt; letter-spacing: 0.5px; }
+            .encabezado p { margin: 4pt 0 0 0; font-size: 9.5pt; color: #444; }
+            .contenido { white-space: pre-wrap; text-align: justify; }
+            .pie-de-pagina { margin-top: 36pt; border-top: 1px solid #ccc; padding-top: 8pt; font-size: 8.5pt; color: #666; display: flex; justify-content: space-between; }
           </style>
         </head>
         <body>
           <div class="encabezado">
-            <h3 style="margin:0;">JAIRRESTAURA UNO A — DESPACHO JURÍDICO</h3>
-            <p style="margin:0; font-size: 10pt; color: #555;">República de Colombia · Documento Procesal Sujeto a Firma</p>
+            <h3>JAIRRESTAURA UNO A — DESPACHO JURÍDICO</h3>
+            <p>República de Colombia · Documento Procesal de Trabajo · Sujeto a Revisión y Firma Profesional</p>
           </div>
-          <div style="white-space: pre-wrap;">${textoBorrador}</div>
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
+          <div class="contenido">${textoBorrador.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+          <div class="pie-de-pagina">
+            <span>Fecha de Emisión: ${new Date().toLocaleDateString('es-CO')}</span>
+            <span>Documento generado en JAIRRESTAURA UNO A</span>
+          </div>
         </body>
       </html>
     `);
-    ventanaImpresion.document.close();
+    doc.close();
+
+    setTimeout(() => {
+      printFrame.contentWindow?.focus();
+      printFrame.contentWindow?.print();
+    }, 250);
   };
 
   const copiarTexto = () => {
