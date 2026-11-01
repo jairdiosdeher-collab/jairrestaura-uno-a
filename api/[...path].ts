@@ -23,7 +23,7 @@ const routes: Record<string, () => Promise<{ default: Handler }>> = {
 
 export default async function handler(req: any, res: any) {
   const pathname = String(req.url || "").split("?")[0];
-  const route = pathname.replace(/^\\/api\\/?/, "").replace(/\\/$/, "");
+  const route = (pathname.startsWith("/api/") ? pathname.slice(5) : pathname.replace(/^\/api$/, "")).replace(/\/$/, "");
   const load = routes[route];
 
   if (!load) {
