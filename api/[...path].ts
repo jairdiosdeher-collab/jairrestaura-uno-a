@@ -24,6 +24,22 @@ const routes: Record<string, () => Promise<{ default: Handler }>> = {
 export default async function handler(req: any, res: any) {
   const pathname = String(req.url || "").split("?")[0];
   const route = (pathname.startsWith("/api/") ? pathname.slice(5) : pathname.replace(/^\/api$/, "")).replace(/\/$/, "");
+  const rutasPublicas = new Set([
+    "health",
+    "orientador/orientar",
+    "orientador/generar-borrador",
+    "orientador/glosario",
+  ]);
+
+  // Bloqueo de seguridad temporal: los endpoints con datos de firma no se exponen
+  // hasta que exista autenticación verificada y autorización por organización/rol.
+  if (!rutasPublicas.has(route)) {
+    return res.status(401).json({
+      error: "Acceso administrativo protegido. La autenticación segura está pendiente de habilitación.",
+      codigo: "AUTHENTICATION_REQUIRED",
+    });
+  }
+
   const load = routes[route];
 
   if (!load) {
