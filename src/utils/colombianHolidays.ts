@@ -163,6 +163,27 @@ export function calcularTerminoColombiano(
   tipoDias: 'HABILES_JUDICIALES' | 'CALENDARIO' = 'HABILES_JUDICIALES',
   aplicaLey2213: boolean = true
 ): ResultadoCalculoTermino {
+  // Validación defensiva: evita fechas inválidas y bucles de cálculo sin límite.
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(fechaNotificacionStr)) {
+    throw new Error('La fecha debe tener el formato YYYY-MM-DD.');
+  }
+  const [yearInput, monthInput, dayInput] = fechaNotificacionStr.split('-').map(Number);
+  const fechaValidada = new Date(yearInput, monthInput - 1, dayInput);
+  if (
+    !Number.isInteger(yearInput) || yearInput < 1900 || yearInput > 2200 ||
+    fechaValidada.getFullYear() !== yearInput ||
+    fechaValidada.getMonth() !== monthInput - 1 ||
+    fechaValidada.getDate() !== dayInput
+  ) {
+    throw new Error('La fecha indicada no es válida.');
+  }
+  if (!Number.isInteger(diasTermino) || diasTermino < 1 || diasTermino > 3660) {
+    throw new Error('La duración debe ser un número entero entre 1 y 3660 días.');
+  }
+  if (tipoDias !== 'HABILES_JUDICIALES' && tipoDias !== 'CALENDARIO') {
+    throw new Error('El tipo de días solicitado no es válido.');
+  }
+
   const cronologia: ResultadoCalculoTermino['cronologiaDetallada'] = [];
   const diasSemanaNombres = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
