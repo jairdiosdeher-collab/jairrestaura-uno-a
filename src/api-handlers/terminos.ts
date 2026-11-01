@@ -8,7 +8,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { calcularTerminoColombiano } from '../src/utils/colombianHolidays.ts';
+import { calcularTerminoColombiano } from '../utils/colombianHolidays.ts';
 
 function getDBPath(): string {
   return path.join(process.cwd(), 'data', 'jairrestaura_db.json');

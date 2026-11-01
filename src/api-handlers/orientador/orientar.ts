@@ -10,12 +10,12 @@ import { GoogleGenAI } from '@google/genai';
 import { 
   detectarUrgenciasCiudadanas, 
   motorHeuristicoOrientacionCiudadana 
-} from '../../src/utils/orientadorCiudadanoData.ts';
-import { CORPUS_JURIDICO_COLOMBIA } from '../../src/utils/colombianLegalCorpus.ts';
+} from '../../utils/orientadorCiudadanoData.ts';
+import { CORPUS_JURIDICO_COLOMBIA } from '../../utils/colombianLegalCorpus.ts';
 import type { 
   ProblemaCiudadanoEntrada, 
   ResultadoOrientacionCiudadana 
-} from '../../src/types/legal.ts';
+} from '../../types/legal.ts';
 
 export default async function handler(req: any, res: any) {
   // Configuración de cabeceras CORS

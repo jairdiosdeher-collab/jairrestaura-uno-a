@@ -6,7 +6,7 @@
  * Retorna el catálogo pedagógico del glosario jurídico ciudadano con advertencias de casos hipotéticos.
  */
 
-import { GLOSARIO_CIUDADANO } from '../../src/utils/orientadorCiudadanoData.ts';
+import { GLOSARIO_CIUDADANO } from '../../utils/orientadorCiudadanoData.ts';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');

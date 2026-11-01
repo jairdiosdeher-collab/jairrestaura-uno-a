@@ -6,11 +6,11 @@
  * Generación de borradores pedagógicos ciudadanos (Derecho de Petición Art. 23 CP, Reclamación al Consumidor Ley 1480, etc.)
  */
 
-import { generarBorradorCiudadano } from '../../src/utils/orientadorCiudadanoData.ts';
+import { generarBorradorCiudadano } from '../../utils/orientadorCiudadanoData.ts';
 import type { 
   TipoBorradorCiudadano, 
   ProblemaCiudadanoEntrada 
-} from '../../src/types/legal.ts';
+} from '../../types/legal.ts';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
