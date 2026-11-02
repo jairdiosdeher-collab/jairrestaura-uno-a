@@ -2,20 +2,15 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  * JAIRRESTAURA UNO A — VERCEL SERVERLESS FUNCTION
- * Ruta: GET /api/health
+ * Ruta: /api/health (GET)
+ * Delegado al motor unificado Express de server.ts.
  */
 
-export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  return res.status(200).json({
-    status: 'ONLINE',
-    app: 'JAIRRESTAURA UNO A',
-    plataforma: 'Vercel Serverless',
-    timestamp: new Date().toISOString(),
-    servicios: {
-      orientadorCiudadano: 'OPERATIVO',
-      escuelaJuridica: 'OPERATIVO',
-      geminiAI: process.env.GEMINI_API_KEY ? 'CONFIGURADO' : 'MODO_HEURISTICO'
-    }
-  });
+import { app } from '../server.ts';
+
+export default function handler(req: any, res: any) {
+  if (req.url && !req.url.startsWith('/api')) {
+    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+  }
+  return app(req, res);
 }
