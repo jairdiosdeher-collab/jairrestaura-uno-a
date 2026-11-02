@@ -183,8 +183,27 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
         console.warn('Servicio remoto no disponible o con respuesta no-JSON. Activando motor jurídico local:', fetchErr);
       }
 
-      // Si el servidor no respondió con JSON válido (o estamos en modo estático/offline),
-      // se utiliza directamente el motor heurístico jurídico colombiano
+      // CORTAFUEGOS DE SEGURIDAD: una consulta con señales de violencia no puede
+      // degradarse silenciosamente a una clasificación jurídica genérica.
+      const textoConsultaSeguridad = payload.descripcionProblema.toLocaleLowerCase('es-CO');
+      const posibleViolencia = /\\b(le pega|me pega|me golpea|la golpea|golpea a|violencia intrafamiliar|maltrato (f[ií]sico|de pareja)|amenaza|me amenaza|tengo miedo de (mi pareja|mi esposo|mi esposa)|abuso f[ií]sico)\\b/i.test(textoConsultaSeguridad);
+      if (posibleViolencia) {
+        const textoRespuesta = orientacionFinal
+          ? JSON.stringify(orientacionFinal).toLocaleLowerCase('es-CO')
+          : '';
+        const respuestaEspecifica = /violencia|protecci[oó]n|comisar[ií]a|integridad|riesgo/.test(textoRespuesta);
+        if (!respuestaEspecifica) {
+          setErrorValidacion(
+            'No fue posible confirmar una ruta especializada de protección para una posible situación de violencia. No uses una orientación jurídica genérica para decidir qué hacer. Si existe peligro inmediato, busca un lugar seguro y contacta a emergencias (123) o a la autoridad local competente. En Colombia también puedes acudir a una Comisaría de Familia. La consulta no sustituye atención urgente.'
+          );
+          setResultado(null);
+          setAnalizando(false);
+          return;
+        }
+      }
+
+      // Para consultas ordinarias se conserva el motor local de respaldo.
+      // Las consultas con señales de violencia quedan protegidas por el cortafuegos anterior.
       if (!orientacionFinal) {
         orientacionFinal = motorHeuristicoOrientacionCiudadana(payload);
       }
