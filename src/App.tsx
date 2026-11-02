@@ -609,10 +609,20 @@ export default function App() {
 
   // Restaurar base de datos
   const handleRestaurarDatos = async () => {
-    const res = await fetch('/api/system/restore-default', { method: 'POST' });
-    if (res.ok) {
-      mostrarNotificacion('Datos semilla restaurados con éxito');
-      cargarDatos();
+    try {
+      const res = await fetch('/api/system/restore-default', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        mostrarNotificacion('Datos semilla restaurados con éxito');
+        await cargarDatos();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        mostrarNotificacion(err.error || 'Error al restaurar datos semilla');
+      }
+    } catch (e: any) {
+      mostrarNotificacion('Error de red al restaurar: ' + (e.message || 'desconocido'));
     }
   };
 

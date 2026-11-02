@@ -52,6 +52,7 @@ export const AsistenteIAView: React.FC<AsistenteIAViewProps> = ({
   const [cargandoAnalisis, setCargandoAnalisis] = useState(false);
   const [analisisResultado, setAnalisisResultado] = useState<any | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [errorHechos, setErrorHechos] = useState<string | null>(null);
 
   // Estado del Chat Jurídico
   const [mensajes, setMensajes] = useState<MensajeChat[]>([
@@ -71,9 +72,10 @@ Estoy configurado bajo el ordenamiento jurídico de la República de Colombia (C
   // 1. Ejecutar Análisis Riguroso de Hechos
   const handleEjecutarAnalisis = async () => {
     if (!hechosInput.trim()) {
-      alert('Por favor ingrese la relación de hechos a examinar.');
+      setErrorHechos('Por favor ingrese la relación de hechos a examinar antes de iniciar el análisis.');
       return;
     }
+    setErrorHechos(null);
 
     setCargandoAnalisis(true);
     try {
@@ -316,10 +318,25 @@ Estoy configurado bajo el ordenamiento jurídico de la República de Colombia (C
               </div>
             </div>
 
+            {errorHechos && (
+              <div className="mb-3 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between">
+                <span>{errorHechos}</span>
+                <button
+                  onClick={() => setErrorHechos(null)}
+                  className="ml-2 text-[11px] underline cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
+            )}
+
             <textarea
               rows={5}
               value={hechosInput}
-              onChange={(e) => setHechosInput(e.target.value)}
+              onChange={(e) => {
+                setHechosInput(e.target.value);
+                if (errorHechos) setErrorHechos(null);
+              }}
               placeholder="Describa los hechos fácticos tal como fueron narrados por el cliente o constan en el expediente (fechas, contratos suscritos, cartas, incumplimientos, pagos, omisiones)..."
               className="w-full p-3.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-amber-500"
             />

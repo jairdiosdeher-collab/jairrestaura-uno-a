@@ -34,25 +34,52 @@ export const SeguridadView: React.FC<SeguridadViewProps> = ({
 }) => {
   const [restaurando, setRestaurando] = useState(false);
   const [descargando, setDescargando] = useState(false);
+  const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
+  const [mensajeToast, setMensajeToast] = useState<{ tipo: 'exito' | 'error' | 'info'; texto: string } | null>(null);
 
-  const handleDescargarBackup = () => {
-    setDescargando(true);
-    window.location.href = '/api/system/backup';
-    setTimeout(() => setDescargando(false), 2000);
+  const mostrarAviso = (texto: string, tipo: 'exito' | 'error' | 'info' = 'info') => {
+    setMensajeToast({ tipo, texto });
+    setTimeout(() => setMensajeToast(null), 4000);
   };
 
-  const handleRestaurar = async () => {
-    const confirma = window.confirm(
-      '¿Está seguro de que desea reiniciar la base de datos a sus valores iniciales? Esta acción reestablecerá los expedientes y clientes de prueba.'
-    );
-    if (!confirma) return;
+  const handleDescargarBackup = async () => {
+    setDescargando(true);
+    try {
+      const res = await fetch('/api/system/backup', {
+        headers: {
+          'Authorization': 'Bearer jairrestaura-demo-session-token-2026',
+        },
+      });
 
+      if (!res.ok) {
+        throw new Error(`Servidor respondió con código ${res.status}`);
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_${organizacion.id || 'jairrestaura'}_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      mostrarAviso('Copia de respaldo descargada exitosamente en formato .json', 'exito');
+    } catch (err: any) {
+      mostrarAviso('Error al descargar copia de respaldo: ' + err.message, 'error');
+    } finally {
+      setDescargando(false);
+    }
+  };
+
+  const ejecutarRestauracion = async () => {
+    setMostrarModalConfirmacion(false);
     setRestaurando(true);
     try {
       await onRestaurarDatos();
-      alert('Base de datos restablecida correctamente');
+      mostrarAviso('Base de datos restablecida correctamente a sus valores predeterminados', 'exito');
     } catch (err: any) {
-      alert('Error al restablecer: ' + err.message);
+      mostrarAviso('Error al restablecer base de datos: ' + err.message, 'error');
     } finally {
       setRestaurando(false);
     }
@@ -60,6 +87,61 @@ export const SeguridadView: React.FC<SeguridadViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Toast Feedback */}
+      {mensajeToast && (
+        <div
+          className={`p-4 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+            mensajeToast.tipo === 'exito'
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+              : mensajeToast.tipo === 'error'
+              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+              : 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+          }`}
+        >
+          <span>{mensajeToast.texto}</span>
+          <button
+            onClick={() => setMensajeToast(null)}
+            className="ml-4 text-xs underline font-normal cursor-pointer"
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
+
+      {/* Modal de confirmación para restablecimiento */}
+      {mostrarModalConfirmacion && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+              <div className="p-2 bg-rose-100 dark:bg-rose-950/60 rounded-xl">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
+                Confirmar Restablecimiento
+              </h3>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              ¿Está seguro de que desea restablecer la base de datos a sus valores iniciales? Esta acción recargará los datos de prueba y clientes institucionales predeterminados.
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setMostrarModalConfirmacion(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={ejecutarRestauracion}
+                disabled={restaurando}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors cursor-pointer"
+              >
+                {restaurando ? 'Restableciendo...' : 'Sí, Restablecer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Declaración de Cumplimiento Normativo Colombiano */}
       <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -79,19 +161,19 @@ export const SeguridadView: React.FC<SeguridadViewProps> = ({
           <button
             onClick={handleDescargarBackup}
             disabled={descargando}
-            className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg inline-flex items-center gap-1.5 transition-colors"
+            className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Descargar Copia de Respaldo (.json)</span>
+            <span>{descargando ? 'Descargando...' : 'Descargar Copia de Respaldo (.json)'}</span>
           </button>
 
           <button
-            onClick={handleRestaurar}
+            onClick={() => setMostrarModalConfirmacion(true)}
             disabled={restaurando}
-            className="px-3.5 py-2 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 rounded-lg inline-flex items-center gap-1.5 transition-colors"
+            className="px-3.5 py-2 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Restablecer Datos Semilla</span>
+            <span>{restaurando ? 'Restableciendo...' : 'Restablecer Datos Semilla'}</span>
           </button>
         </div>
       </div>
