@@ -168,7 +168,11 @@ export function detectarPosibleViolencia(descripcion: string): boolean {
   const agresionEnContexto = /\b(pega|golpea|agrede|empuja|cachetea|asfixia|maltrata fisicamente)\b/.test(texto)
     && /\b(esposo|esposa|marido|pareja|novio|novia|expareja|ex pareja|familiar|padre|madre|hermano|hermana|hijo|hija)\b/.test(texto);
 
-  return violenciaExplicita || amenazaIntegridad || agresionEnContexto;
+  // Riesgo armado explícito, incluso en conflictos no familiares como arrendamientos.
+  const amenazaArmada = /\\b(revolver|arma de fuego|pistola|escopeta)\\b/.test(texto)
+    && /\\b(dispara|disparo|disparar|me apunta|la apunta|lo apunta|amenaza|amenazando|saca|exhibe|blande)\\b/.test(texto);
+
+  return violenciaExplicita || amenazaIntegridad || agresionEnContexto || amenazaArmada;
 }
 
 export function detectarUrgenciasCiudadanas(
@@ -376,6 +380,9 @@ export function motorHeuristicoOrientacionCiudadana(
   if (posibleViolencia) {
     const textoNormalizado = desc.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
     const mencionaDivorcio = /\\b(divorcio|divorciar|separarse|separacion|terminar el matrimonio)\\b/.test(textoNormalizado);
+    const amenazaArmada = /\\b(revolver|arma de fuego|pistola|escopeta)\\b/.test(textoNormalizado)
+      && /\\b(dispara|disparo|disparar|me apunta|la apunta|lo apunta|amenaza|amenazando|saca|exhibe|blande)\\b/.test(textoNormalizado);
+    const contextoFamiliar = /\\b(esposo|esposa|marido|pareja|novio|novia|expareja|ex pareja|familiar|padre|madre|hermano|hermana|hijo|hija)\\b/.test(textoNormalizado);
     const documentosFamilia: DocumentoRequeridoCiudadano[] = mencionaDivorcio ? [
       { id: 'registro-matrimonio', nombre: 'Registro civil de matrimonio', descripcion: 'Permite acreditar el vínculo matrimonial, si existe matrimonio civil o religioso con efectos civiles.', comoObtenerlo: 'Solicitar copia en la notaría o registraduría donde esté inscrito.', comoConservarlo: 'Guardar copia legible; no retrasar la protección por no tenerlo.', obligatorio: false },
       { id: 'registros-hijos', nombre: 'Registros civiles de nacimiento de hijos', descripcion: 'Solo si hay hijos menores o asuntos de filiación, custodia o alimentos por resolver.', comoObtenerlo: 'Solicitar copias en la Registraduría o notaría correspondiente.', comoConservarlo: 'Guardar copias legibles.', obligatorio: false },
@@ -392,13 +399,13 @@ export function motorHeuristicoOrientacionCiudadana(
         precauciones: ['No confrontar al presunto agresor.', 'No exponerse para conseguir pruebas.', 'No regresar a un lugar inseguro por documentos o pertenencias.']
       },
       {
-        orden: 2, titulo: 'Solicitar valoración y medidas de protección', paraQueSirve: 'Permitir que la autoridad competente valore los hechos y el riesgo.',
-        queHacer: 'Contactar a la Comisaría de Familia del municipio. Si la persona afectada es mujer, también puede solicitar orientación en la Línea 155. No necesita resolver primero el divorcio.',
+        orden: 2, titulo: amenazaArmada ? 'Reportar el riesgo armado a las autoridades' : 'Solicitar valoración y medidas de protección', paraQueSirve: amenazaArmada ? 'Poner en conocimiento de la Policía la presencia de un arma de fuego y disparos, para que valore y atienda el riesgo.' : 'Permitir que la autoridad competente valore los hechos y el riesgo.',
+        queHacer: amenazaArmada ? 'Informar a la Policía por el 123 sobre la presencia del arma y los disparos. Cuando no exista peligro inmediato, acudir a la Fiscalía para poner los hechos en conocimiento. El conflicto de arrendamiento se orienta por separado.' : 'Contactar a la Comisaría de Familia del municipio. Si la persona afectada es mujer, también puede solicitar orientación en la Línea 155. No necesita resolver primero el divorcio.',
         documentosAReunir: ['Documentos disponibles solo si es seguro obtenerlos; no son condición para pedir ayuda urgente.'],
-        anteQuien: 'Comisaría de Familia / Línea 155 cuando corresponda', canalOficial: 'Comisaría de Familia municipal / Línea 155',
-        enlaceCanalOficial: 'https://www.minjusticia.gov.co/', queEsperar: 'Valoración de la situación y determinación de las medidas que legalmente procedan.',
+        anteQuien: amenazaArmada ? 'Policía Nacional / Fiscalía General de la Nación' : 'Comisaría de Familia / Línea 155 cuando corresponda', canalOficial: amenazaArmada ? 'Emergencias 123 / Fiscalía' : 'Comisaría de Familia municipal / Línea 155',
+        enlaceCanalOficial: 'https://www.minjusticia.gov.co/', queEsperar: amenazaArmada ? 'Atención policial y valoración por las autoridades competentes. La aplicación no determina responsabilidad penal.' : 'Valoración de la situación y determinación de las medidas que legalmente procedan.',
         queHacerSiFalla: 'Solicitar orientación a la Personería o Defensoría del Pueblo.',
-        precauciones: ['No esperar a reunir documentos para pedir ayuda.', 'No anunciar planes si ello puede aumentar el riesgo.']
+        precauciones: amenazaArmada ? ['No acercarse al arma ni intentar desarmar o confrontar a la persona.', 'Alejarse del lugar si puede hacerlo sin aumentar el riesgo.', 'No regresar por documentos o pertenencias mientras exista peligro.'] : ['No esperar a reunir documentos para pedir ayuda.', 'No anunciar planes si ello puede aumentar el riesgo.']
       }
     ];
     if (mencionaDivorcio) {
@@ -450,13 +457,13 @@ export function motorHeuristicoOrientacionCiudadana(
         hipotesisYAlternativas: ['Posible violencia en el contexto familiar, pendiente de valoración por autoridad competente.', ...(mencionaDivorcio ? ['Posible trámite de divorcio por mutuo acuerdo o por la causal de sola voluntad; requiere revisar las circunstancias y sus efectos.'] : [])],
         recomendacionProfesional: 'Atender primero la seguridad. La protección y el divorcio son rutas relacionadas pero distintas; no debe retrasarse la solicitud de protección por iniciar un divorcio.'
       },
-      categoriasIdentificadas: ['POSIBLE VIOLENCIA EN EL CONTEXTO FAMILIAR', 'PROTECCIÓN DE DERECHOS', 'DERECHO DE FAMILIA', ...(mencionaDivorcio ? ['DIVORCIO'] : [])],
+      categoriasIdentificadas: [...(amenazaArmada ? ['POSIBLE AMENAZA CON ARMA DE FUEGO', 'SEGURIDAD PERSONAL'] : contextoFamiliar ? ['POSIBLE VIOLENCIA EN EL CONTEXTO FAMILIAR', 'PROTECCIÓN DE DERECHOS', 'DERECHO DE FAMILIA'] : ['POSIBLE AMENAZA O AGRESIÓN', 'SEGURIDAD PERSONAL']), ...(mencionaDivorcio ? ['DIVORCIO'] : [])],
       urgencia: {
         esUrgente: true, nivelUrgencia: 'ALTA',
-        motivoUrgencia: 'El relato contiene señales de posible agresión en contexto familiar o de pareja; se requiere valorar la seguridad.',
+        motivoUrgencia: amenazaArmada ? 'El relato menciona un arma de fuego y disparos durante un conflicto; existe un riesgo grave que debe valorar la autoridad.' : 'El relato contiene señales de posible agresión; se requiere valorar la seguridad.',
         plazoVerificar: 'Protección prioritaria: de inmediato si existe peligro actual; si no, contactar cuanto antes a una autoridad de protección.',
         advertenciaInmediata: 'ALERTA DE PROTECCIÓN PRIORITARIA. Si existe peligro inmediato, llamar al 123 y buscar un lugar seguro si puede hacerse sin aumentar el riesgo. Esta alerta no representa por sí misma un término judicial.',
-        accionesInmediatas: ['Si existe peligro actual, llamar al 123 y buscar un lugar seguro.', 'Contactar a la Comisaría de Familia para orientación y valoración de medidas de protección.', 'Si la persona afectada es mujer, puede llamar a la Línea 155.', 'Si hay lesiones o afectación de salud, acudir a urgencias.', 'No confrontar al presunto agresor ni exponerse para conseguir pruebas.']
+        accionesInmediatas: ['Si existe peligro actual, llamar al 123 y buscar un lugar seguro.', ...(amenazaArmada ? ['Avisar a la Policía por el 123 e informar que se mencionó un arma de fuego y disparos.'] : ['Contactar a la Comisaría de Familia para orientación y valoración de medidas de protección.', 'Si la persona afectada es mujer, puede llamar a la Línea 155.']), 'Si hay lesiones o afectación de salud, acudir a urgencias.', 'No confrontar al presunto agresor ni exponerse para conseguir pruebas.']
       },
       opcionesLegales: opcionesProteccion,
       queHacerPrimero: {
@@ -472,7 +479,7 @@ export function motorHeuristicoOrientacionCiudadana(
       },
       documentosRequeridos: documentosFamilia,
       dondeAcudir: [
-        { nombre: 'Comisaría de Familia', tipo: 'ADMINISTRATIVA', competencia: 'Valorar la situación familiar y tramitar las medidas de protección que correspondan.', sedeOCanal: 'Comisaría del municipio donde se encuentre la persona afectada.', esGratuita: true, enlaceOficial: 'https://www.minjusticia.gov.co/' },
+        ...(amenazaArmada ? [{ nombre: 'Policía Nacional', tipo: 'ADMINISTRATIVA' as const, competencia: 'Atender el riesgo inmediato reportado por presencia de arma de fuego y disparos.', sedeOCanal: 'Línea 123.', esGratuita: true, enlaceOficial: 'https://www.policia.gov.co/' }, { nombre: 'Fiscalía General de la Nación', tipo: 'ADMINISTRATIVA' as const, competencia: 'Recibir denuncia y orientar sobre los hechos puestos en conocimiento.', sedeOCanal: 'Canales oficiales de denuncia.', esGratuita: true, enlaceOficial: 'https://www.fiscalia.gov.co/' }] : [{ nombre: 'Comisaría de Familia', tipo: 'ADMINISTRATIVA' as const, competencia: 'Valorar la situación familiar y tramitar las medidas de protección que correspondan.', sedeOCanal: 'Comisaría del municipio donde se encuentre la persona afectada.', esGratuita: true, enlaceOficial: 'https://www.minjusticia.gov.co/' }]),
         { nombre: 'Policía Nacional', tipo: 'ADMINISTRATIVA', competencia: 'Atender emergencias y situaciones de peligro inmediato.', sedeOCanal: 'Línea 123.', esGratuita: true, enlaceOficial: 'https://www.policia.gov.co/' },
         ...(mencionaDivorcio ? [{ nombre: 'Consultorio Jurídico universitario / Personería', tipo: 'ORIENTACION_GRATUITA' as const, competencia: 'Orientar sobre divorcio, hijos, alimentos y sociedad conyugal según el caso.', sedeOCanal: 'Consultar el consultorio jurídico o Personería del municipio.', esGratuita: true, enlaceOficial: 'https://www.minjusticia.gov.co/' }] : [])
       ],
