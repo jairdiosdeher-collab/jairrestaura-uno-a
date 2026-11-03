@@ -353,12 +353,12 @@ export function motorHeuristicoOrientacionCiudadana(
   const desc = entrada.descripcionProblema.toLowerCase();
   const textoNormalizado = entrada.descripcionProblema
     .normalize('NFD')
-    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
-  const verboViolencia = /\\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\\b/.test(textoNormalizado);
-  const contextoFamiliar = /\\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\\b/.test(textoNormalizado);
+  const verboViolencia = /\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\b/.test(textoNormalizado);
+  const contextoFamiliar = /\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\b/.test(textoNormalizado);
   const posibleViolencia =
-    /\\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\\b/.test(textoNormalizado) ||
+    /\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\b/.test(textoNormalizado) ||
     (verboViolencia && contextoFamiliar);
 
   // Este retorno se ejecuta antes de cualquier clasificación civil genérica.
