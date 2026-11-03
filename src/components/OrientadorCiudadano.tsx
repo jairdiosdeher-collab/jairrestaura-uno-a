@@ -183,8 +183,31 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
         console.warn('Servicio remoto no disponible o con respuesta no-JSON. Activando motor jurídico local:', fetchErr);
       }
 
-      // Si el servidor no respondió con JSON válido (o estamos en modo estático/offline),
-      // se utiliza directamente el motor heurístico jurídico colombiano
+      // CORTAFUEGOS LOCAL: si el backend no responde o devuelve una orientación
+      // genérica, no mostrar una clasificación civil ante posibles señales de violencia.
+      const textoSeguridad = payload.descripcionProblema
+        .normalize('NFD')
+        .replace(/[\\u0300-\\u036f]/g, '')
+        .toLowerCase();
+      const verboViolencia = /\\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\\b/.test(textoSeguridad);
+      const contextoParejaFamilia = /\\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\\b/.test(textoSeguridad);
+      const posibleViolenciaLocal =
+        /\\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\\b/.test(textoSeguridad) ||
+        (verboViolencia && contextoParejaFamilia);
+      if (posibleViolenciaLocal) {
+        const respuesta = orientacionFinal ? JSON.stringify(orientacionFinal).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase() : '';
+        const esRutaProteccion = /violencia|proteccion|comisaria|linea 155|linea 123|integridad/.test(respuesta);
+        if (!esRutaProteccion) {
+          setErrorValidacion(
+            'La consulta menciona una posible situación de violencia. No es seguro mostrar una orientación jurídica genérica. Si existe peligro inmediato, llama al 123 y busca un lugar seguro. También puedes acudir a la Comisaría de Familia; si la persona afectada es mujer, puede llamar a la Línea 155. No te expongas para obtener pruebas.'
+          );
+          setResultado(null);
+          setAnalizando(false);
+          return;
+        }
+      }
+
+      // El fallback heurístico ordinario solo se usa cuando no hay señales de violencia.
       if (!orientacionFinal) {
         orientacionFinal = motorHeuristicoOrientacionCiudadana(payload);
       }
