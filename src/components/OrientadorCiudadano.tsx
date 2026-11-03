@@ -187,15 +187,15 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
       // genérica, no mostrar una clasificación civil ante posibles señales de violencia.
       const textoSeguridad = payload.descripcionProblema
         .normalize('NFD')
-        .replace(/[\\u0300-\\u036f]/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
-      const verboViolencia = /\\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\\b/.test(textoSeguridad);
-      const contextoParejaFamilia = /\\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\\b/.test(textoSeguridad);
+      const verboViolencia = /\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\b/.test(textoSeguridad);
+      const contextoParejaFamilia = /\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\b/.test(textoSeguridad);
       const posibleViolenciaLocal =
-        /\\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\\b/.test(textoSeguridad) ||
+        /\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\b/.test(textoSeguridad) ||
         (verboViolencia && contextoParejaFamilia);
       if (posibleViolenciaLocal) {
-        const respuesta = orientacionFinal ? JSON.stringify(orientacionFinal).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase() : '';
+        const respuesta = orientacionFinal ? JSON.stringify(orientacionFinal).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
         const esRutaProteccion = /violencia|proteccion|comisaria|linea 155|linea 123|integridad/.test(respuesta);
         if (!esRutaProteccion) {
           setErrorValidacion(
