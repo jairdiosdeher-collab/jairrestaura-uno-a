@@ -16,7 +16,8 @@ import { CORPUS_JURIDICO_COLOMBIA, PORTALES_OFICIALES_COLOMBIA } from './src/uti
 import { PLANTILLAS_JURIDICAS } from './src/utils/colombianLegalDrafting.ts';
 import { 
   GLOSARIO_CIUDADANO, 
-  detectarUrgenciasCiudadanas, 
+  detectarUrgenciasCiudadanas,
+  detectarPosibleViolencia, 
   clasificarAutogestion, 
   motorHeuristicoOrientacionCiudadana, 
   generarBorradorCiudadano 
@@ -3862,6 +3863,20 @@ app.post('/api/orientador/orientar', optionalAuth, async (req: Request, res: Res
 
   // 1. Detección inmediata de urgencias con el motor procedimental colombiano
   const urgenciaHeuristica = detectarUrgenciasCiudadanas(entrada);
+
+  // 1A. PRIORIDAD DE PROTECCIÓN: no enviar relatos de posible violencia a la
+  // clasificación civil genérica ni permitir que Gemini desplace esta ruta.
+  const posibleViolencia = detectarPosibleViolencia(entrada.descripcionProblema);
+
+  if (posibleViolencia) {
+    // Una sola fuente de verdad: el motor local especializado construye la ruta
+    // de protección y, cuando corresponda, añade orientación específica de divorcio.
+    const orientacionProteccion = motorHeuristicoOrientacionCiudadana(entrada);
+    return res.status(200).json({
+      orientacion: orientacionProteccion,
+      origen: 'CAPA_SEGURIDAD_Y_FAMILIA'
+    });
+  }
 
   // 2. Si Gemini AI está configurado, generar análisis personalizado
   if (aiClient) {

@@ -49,6 +49,7 @@ import type {
 import {
   GLOSARIO_CIUDADANO,
   motorHeuristicoOrientacionCiudadana,
+  detectarPosibleViolencia,
   generarBorradorCiudadano
 } from '../utils/orientadorCiudadanoData.ts';
 
@@ -183,8 +184,24 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
         console.warn('Servicio remoto no disponible o con respuesta no-JSON. Activando motor jurídico local:', fetchErr);
       }
 
-      // Si el servidor no respondió con JSON válido (o estamos en modo estático/offline),
-      // se utiliza directamente el motor heurístico jurídico colombiano
+      // CORTAFUEGOS LOCAL: si el backend no responde o devuelve una orientación
+      // genérica, no mostrar una clasificación civil ante posibles señales de violencia.
+      const posibleViolenciaLocal = detectarPosibleViolencia(payload.descripcionProblema);
+      if (posibleViolenciaLocal) {
+        // La ruta de protección válida se presenta como resultado; no se bloquea
+        // la consulta por diferencias de redacción entre backend y frontend.
+        const respuesta = orientacionFinal
+          ? JSON.stringify(orientacionFinal).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+          : '';
+        const esRutaProteccion = /violencia|proteccion|comisaria|linea 155|linea 123|integridad/.test(respuesta);
+        if (!esRutaProteccion) {
+          // El motor local usa el mismo detector contextual y genera la ruta
+          // prioritaria cuando el servidor no responde o entrega algo genérico.
+          orientacionFinal = motorHeuristicoOrientacionCiudadana(payload);
+        }
+      }
+
+      // El fallback heurístico ordinario solo se usa cuando no hay señales de violencia.
       if (!orientacionFinal) {
         orientacionFinal = motorHeuristicoOrientacionCiudadana(payload);
       }
@@ -608,7 +625,7 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
       {/* 3. RESULTADO DE ORIENTACIÓN: 9 SECCIONES ESTRUCTURADAS (A - I) */}
       {resultado && (
         <div className="space-y-8 animate-fadeIn">
-          {/* BANNER DE URGENCIA / TÉRMINO PERENTORIO EN CURSO */}
+          {/* BANNER DE URGENCIA: diferencia protección de términos procesales */}
           {resultado.urgencia.esUrgente && (
             <div className="rounded-2xl bg-red-500/10 dark:bg-red-950/30 border-2 border-red-500/50 p-6 shadow-lg space-y-4">
               <div className="flex items-start gap-4">
@@ -618,7 +635,7 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-600 text-white">
-                      ALERTA DE TÉRMINO EN CURSO · {resultado.urgencia.nivelUrgencia}
+                      {/(protección prioritaria|posible agresión|violencia)/i.test(resultado.urgencia.motivoUrgencia + ' ' + resultado.urgencia.advertenciaInmediata) ? 'ALERTA DE PROTECCIÓN PRIORITARIA' : 'ALERTA DE TÉRMINO EN CURSO'} · {resultado.urgencia.nivelUrgencia}
                     </span>
                     {resultado.urgencia.plazoVerificar && (
                       <span className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1">

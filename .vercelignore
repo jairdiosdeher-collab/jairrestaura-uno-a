@@ -1,0 +1,13 @@
+# Consolidated by api/[...path].ts through the existing Express app.
+# Exclude redundant wrappers so Hobby creates only the catch-all function.
+api/audit-log.ts
+api/auth/**
+api/clientes.ts
+api/dashboard/**
+api/documentos.ts
+api/expedientes.ts
+api/health.ts
+api/honorarios.ts
+api/index.ts
+api/orientador/**
+api/terminos.ts

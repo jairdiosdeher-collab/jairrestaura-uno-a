@@ -153,6 +153,28 @@ export const GLOSARIO_CIUDADANO: ConceptoGlosarioCiudadano[] = [
 // ============================================================
 // 2. DETECCIÓN DE URGENCIAS Y TÉRMINOS PERENTORIOS
 // ============================================================
+/**
+ * Clasifica señales explícitas de violencia física o amenazas contra la integridad.
+ * No activa la ruta por expresiones jurídicas ambiguas como "amenaza de demanda".
+ */
+export function detectarPosibleViolencia(descripcion: string): boolean {
+  const texto = (descripcion || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  const violenciaExplicita = /\b(violencia intrafamiliar|maltrato fisico|agresion fisica|abuso fisico|me pega|me golpea|me agrede|me empuja|me cachetea|me asfixia|le pega|la golpea|la agrede|la empuja|la cachetea|la asfixia|me maltrata fisicamente|la maltrata fisicamente)\b/.test(texto);
+  const amenazaIntegridad = /\b(amenaza de muerte|amenaza con matarme|amenaza con asesinarme|amenaza con golpearme|amenaza con hacerme dano|amenaza con agredirme|amenaza con pegarme|temo por mi vida|temo por mi integridad|amenaza y temo por mi seguridad)\b/.test(texto);
+  const agresionEnContexto = /\b(pega|golpea|agrede|empuja|cachetea|asfixia|maltrata fisicamente)\b/.test(texto)
+    && /\b(esposo|esposa|marido|pareja|novio|novia|expareja|ex pareja|familiar|padre|madre|hermano|hermana|hijo|hija)\b/.test(texto);
+
+  // Riesgo armado explícito, incluso en conflictos no familiares como arrendamientos.
+  const amenazaArmada = /\\b(revolver|arma de fuego|pistola|escopeta)\\b/.test(texto)
+    && /\\b(dispara|disparo|disparar|me apunta|la apunta|lo apunta|amenaza|amenazando|saca|exhibe|blande)\\b/.test(texto);
+
+  return violenciaExplicita || amenazaIntegridad || agresionEnContexto || amenazaArmada;
+}
+
 export function detectarUrgenciasCiudadanas(
   entrada: ProblemaCiudadanoEntrada
 ): UrgenciaCiudadana {
@@ -351,6 +373,134 @@ export function motorHeuristicoOrientacionCiudadana(
   entrada: ProblemaCiudadanoEntrada
 ): ResultadoOrientacionCiudadana {
   const desc = entrada.descripcionProblema.toLowerCase();
+  const posibleViolencia = detectarPosibleViolencia(entrada.descripcionProblema);
+
+  // Este retorno se ejecuta antes de cualquier clasificación civil genérica.
+  // También protege el funcionamiento sin conexión o si la API falla.
+  if (posibleViolencia) {
+    const textoNormalizado = desc.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+    const mencionaDivorcio = /\\b(divorcio|divorciar|separarse|separacion|terminar el matrimonio)\\b/.test(textoNormalizado);
+    const amenazaArmada = /\\b(revolver|arma de fuego|pistola|escopeta)\\b/.test(textoNormalizado)
+      && /\\b(dispara|disparo|disparar|me apunta|la apunta|lo apunta|amenaza|amenazando|saca|exhibe|blande)\\b/.test(textoNormalizado);
+    const contextoFamiliar = /\\b(esposo|esposa|marido|pareja|novio|novia|expareja|ex pareja|familiar|padre|madre|hermano|hermana|hijo|hija)\\b/.test(textoNormalizado);
+    const documentosFamilia: DocumentoRequeridoCiudadano[] = mencionaDivorcio ? [
+      { id: 'registro-matrimonio', nombre: 'Registro civil de matrimonio', descripcion: 'Permite acreditar el vínculo matrimonial, si existe matrimonio civil o religioso con efectos civiles.', comoObtenerlo: 'Solicitar copia en la notaría o registraduría donde esté inscrito.', comoConservarlo: 'Guardar copia legible; no retrasar la protección por no tenerlo.', obligatorio: false },
+      { id: 'registros-hijos', nombre: 'Registros civiles de nacimiento de hijos', descripcion: 'Solo si hay hijos menores o asuntos de filiación, custodia o alimentos por resolver.', comoObtenerlo: 'Solicitar copias en la Registraduría o notaría correspondiente.', comoConservarlo: 'Guardar copias legibles.', obligatorio: false },
+      { id: 'bienes-deudas', nombre: 'Información de bienes y deudas comunes', descripcion: 'Relación inicial de bienes, obligaciones y documentos patrimoniales, si existen.', comoObtenerlo: 'Reunir únicamente documentos a los que tenga acceso legítimo y seguro.', comoConservarlo: 'Guardar copias sin alterar y sin exponerse a confrontaciones.', obligatorio: false },
+      { id: 'notificacion-divorcio', nombre: 'Demanda o notificación judicial', descripcion: 'Solo si ya recibió documentos de un juzgado relacionados con el divorcio.', comoObtenerlo: 'Conservar el mensaje, sobre o documento recibido y anotar la fecha.', comoConservarlo: 'Guardar el documento completo y consultar pronto a un profesional.', obligatorio: false }
+    ] : [];
+    const pasosProteccion: PasoRutaCiudadana[] = [
+      {
+        orden: 1, titulo: 'Priorizar la seguridad inmediata', paraQueSirve: 'Atender cualquier peligro actual antes de abordar decisiones de pareja o trámites.',
+        queHacer: 'Si existe peligro inmediato, llamar al 123 y buscar un lugar seguro si puede hacerlo sin aumentar el riesgo.',
+        documentosAReunir: [], anteQuien: 'Línea de emergencias 123 / Policía Nacional', canalOficial: '123',
+        enlaceCanalOficial: 'https://www.policia.gov.co/', queEsperar: 'Atención de emergencia según la valoración de la autoridad.',
+        queHacerSiFalla: 'Acudir a un servicio de urgencias o pedir apoyo a una autoridad local segura.',
+        precauciones: ['No confrontar al presunto agresor.', 'No exponerse para conseguir pruebas.', 'No regresar a un lugar inseguro por documentos o pertenencias.']
+      },
+      {
+        orden: 2, titulo: amenazaArmada ? 'Reportar el riesgo armado a las autoridades' : 'Solicitar valoración y medidas de protección', paraQueSirve: amenazaArmada ? 'Poner en conocimiento de la Policía la presencia de un arma de fuego y disparos, para que valore y atienda el riesgo.' : 'Permitir que la autoridad competente valore los hechos y el riesgo.',
+        queHacer: amenazaArmada ? 'Informar a la Policía por el 123 sobre la presencia del arma y los disparos. Cuando no exista peligro inmediato, acudir a la Fiscalía para poner los hechos en conocimiento. El conflicto de arrendamiento se orienta por separado.' : 'Contactar a la Comisaría de Familia del municipio. Si la persona afectada es mujer, también puede solicitar orientación en la Línea 155. No necesita resolver primero el divorcio.',
+        documentosAReunir: ['Documentos disponibles solo si es seguro obtenerlos; no son condición para pedir ayuda urgente.'],
+        anteQuien: amenazaArmada ? 'Policía Nacional / Fiscalía General de la Nación' : 'Comisaría de Familia / Línea 155 cuando corresponda', canalOficial: amenazaArmada ? 'Emergencias 123 / Fiscalía' : 'Comisaría de Familia municipal / Línea 155',
+        enlaceCanalOficial: 'https://www.minjusticia.gov.co/', queEsperar: amenazaArmada ? 'Atención policial y valoración por las autoridades competentes. La aplicación no determina responsabilidad penal.' : 'Valoración de la situación y determinación de las medidas que legalmente procedan.',
+        queHacerSiFalla: 'Solicitar orientación a la Personería o Defensoría del Pueblo.',
+        precauciones: amenazaArmada ? ['No acercarse al arma ni intentar desarmar o confrontar a la persona.', 'Alejarse del lugar si puede hacerlo sin aumentar el riesgo.', 'No regresar por documentos o pertenencias mientras exista peligro.'] : ['No esperar a reunir documentos para pedir ayuda.', 'No anunciar planes si ello puede aumentar el riesgo.']
+      }
+    ];
+    if (mencionaDivorcio) {
+      pasosProteccion.push({
+        orden: 3, titulo: 'Orientarse sobre la decisión de divorcio cuando exista seguridad', paraQueSirve: 'Conocer las vías legales y los efectos personales, económicos y familiares.',
+        queHacer: 'En Colombia, la Ley 2442 de 2024 incorporó como causal la sola voluntad de cualquiera de los cónyuges. La demanda judicial debe acompañarse de una propuesta sobre los efectos del divorcio. Si ambos están de acuerdo, pueden consultar la vía de mutuo acuerdo ante notaría o juez. La ruta concreta depende de la situación y debe revisarse con asesoría jurídica.',
+        documentosAReunir: ['Registro civil de matrimonio, si está disponible.', 'Registros civiles de hijos, si los hay.', 'Información de bienes y deudas comunes, si existen.', 'Demanda o notificación judicial, si ya fue recibida.'],
+        anteQuien: 'Consultorio Jurídico universitario, Personería o abogado/a de familia; notaría si existe acuerdo y se cumplen los requisitos.',
+        canalOficial: 'MinJusticia / LegalApp y consultorio jurídico', enlaceCanalOficial: 'https://www.minjusticia.gov.co/',
+        queEsperar: 'Identificar si procede divorcio de mutuo acuerdo o demanda judicial y definir los asuntos de hijos, alimentos y sociedad conyugal.',
+        queHacerSiFalla: 'Solicitar orientación en otro consultorio jurídico o en la Personería municipal.',
+        precauciones: ['No firmar acuerdos que no comprenda.', 'No aceptar renuncias sobre hijos, alimentos o bienes sin asesoría.', 'Si ya existe notificación judicial, revisar de inmediato la fecha y el término aplicable.']
+      });
+    }
+    const opcionesProteccion: OpcionLegalCiudadana[] = [
+      {
+        titulo: 'Solicitar valoración y medidas de protección',
+        descripcion: 'Acudir a la Comisaría de Familia para que valore la situación y determine las medidas que procedan.',
+        consecuencias: 'La autoridad competente valora los hechos y el riesgo; la aplicación no predetermina el resultado.',
+        pros: ['Permite acudir a una autoridad especializada.', 'No es necesario resolver primero el divorcio para solicitar protección.'],
+        contras: ['Las medidas concretas dependen de la valoración institucional.']
+      }
+    ];
+    if (mencionaDivorcio) opcionesProteccion.push({
+      titulo: 'Consultar la vía legal de divorcio',
+      descripcion: 'La Ley 2442 de 2024 reconoce la sola voluntad de cualquiera de los cónyuges como causal de divorcio. Puede existir trámite judicial unilateral; si hay acuerdo, se puede estudiar la vía de mutuo acuerdo ante notaría o juez.',
+      consecuencias: 'La propuesta de divorcio debe abordar, cuando corresponda, alimentos, hijos, custodia, visitas y liquidación de la sociedad conyugal. La autoridad define los efectos conforme a la ley.',
+      pros: ['No exige que ambos quieran divorciarse para acudir a la causal de voluntad unilateral.', 'Permite ordenar jurídicamente los efectos del divorcio.'],
+      contras: ['La vía y los requisitos dependen de los hechos, del tipo de matrimonio y de si hay acuerdo. Requiere revisión jurídica individual.']
+    });
+    return {
+      id: `orient-local-proteccion-${Date.now()}`, fechaOrientacion: new Date().toISOString(),
+      resumenSituacion: {
+        loQueEntendemos: mencionaDivorcio
+          ? 'El relato refiere posibles agresiones en una relación de pareja y expresa una intención de divorcio. Primero debe atenderse la seguridad; después puede estudiarse la ruta de divorcio.'
+          : 'El relato menciona posibles agresiones en un contexto familiar o de pareja. La prioridad es verificar la seguridad y solicitar valoración de protección.',
+        datosFaltantesPorConfirmar: [
+          'Si la persona afectada está en un lugar seguro ahora y si existe peligro inmediato.',
+          'Municipio donde se encuentra la persona afectada.',
+          'Si hay niñas, niños o adolescentes expuestos.',
+          'Si necesita atención médica.',
+          ...(mencionaDivorcio ? ['Si existe matrimonio civil o religioso con efectos civiles.', 'Si el otro cónyuge solo expresó que quiere divorciarse o ya presentó demanda.', 'Si hay hijos menores, bienes o deudas comunes.', 'Si existe posibilidad de acuerdo sobre los efectos del divorcio.'] : [])
+        ],
+        hechosRelatados: [entrada.descripcionProblema],
+        pruebasRevisadas: ['No se aportaron ni revisaron documentos en esta consulta.'],
+        suposiciones: ['No se presume que los hechos estén comprobados ni se atribuye responsabilidad.'],
+        hechosNoComprobados: ['La aplicación no verifica los hechos ni determina responsabilidades.'],
+        normasAplicables: ['Ley 294 de 1996 y sus modificaciones.', 'Ley 2126 de 2021.', ...(mencionaDivorcio ? ['Ley 2442 de 2024; Código Civil, artículos 154 y 156, modificados por dicha ley.'] : [])],
+        hipotesisYAlternativas: ['Posible violencia en el contexto familiar, pendiente de valoración por autoridad competente.', ...(mencionaDivorcio ? ['Posible trámite de divorcio por mutuo acuerdo o por la causal de sola voluntad; requiere revisar las circunstancias y sus efectos.'] : [])],
+        recomendacionProfesional: 'Atender primero la seguridad. La protección y el divorcio son rutas relacionadas pero distintas; no debe retrasarse la solicitud de protección por iniciar un divorcio.'
+      },
+      categoriasIdentificadas: [...(amenazaArmada ? ['POSIBLE AMENAZA CON ARMA DE FUEGO', 'SEGURIDAD PERSONAL'] : contextoFamiliar ? ['POSIBLE VIOLENCIA EN EL CONTEXTO FAMILIAR', 'PROTECCIÓN DE DERECHOS', 'DERECHO DE FAMILIA'] : ['POSIBLE AMENAZA O AGRESIÓN', 'SEGURIDAD PERSONAL']), ...(mencionaDivorcio ? ['DIVORCIO'] : [])],
+      urgencia: {
+        esUrgente: true, nivelUrgencia: 'ALTA',
+        motivoUrgencia: amenazaArmada ? 'El relato menciona un arma de fuego y disparos durante un conflicto; existe un riesgo grave que debe valorar la autoridad.' : 'El relato contiene señales de posible agresión; se requiere valorar la seguridad.',
+        plazoVerificar: 'Protección prioritaria: de inmediato si existe peligro actual; si no, contactar cuanto antes a una autoridad de protección.',
+        advertenciaInmediata: 'ALERTA DE PROTECCIÓN PRIORITARIA. Si existe peligro inmediato, llamar al 123 y buscar un lugar seguro si puede hacerse sin aumentar el riesgo. Esta alerta no representa por sí misma un término judicial.',
+        accionesInmediatas: ['Si existe peligro actual, llamar al 123 y buscar un lugar seguro.', ...(amenazaArmada ? ['Avisar a la Policía por el 123 e informar que se mencionó un arma de fuego y disparos.'] : ['Contactar a la Comisaría de Familia para orientación y valoración de medidas de protección.', 'Si la persona afectada es mujer, puede llamar a la Línea 155.']), 'Si hay lesiones o afectación de salud, acudir a urgencias.', 'No confrontar al presunto agresor ni exponerse para conseguir pruebas.']
+      },
+      opcionesLegales: opcionesProteccion,
+      queHacerPrimero: {
+        accion: 'Confirmar si la persona afectada está segura ahora; si hay peligro inmediato, activar emergencias.',
+        porQueEsImportante: 'La vida e integridad personal tienen prioridad sobre cualquier trámite de separación o divorcio.',
+        plazoRecomendado: 'Ahora mismo si hay peligro; de lo contrario, cuanto antes.'
+      },
+      procedimientoPasoAPaso: pasosProteccion,
+      clasificacionAutogestion: {
+        nivel: 'CONVIENE_ASESORIA',
+        justificacion: 'La persona puede acudir directamente a las autoridades para pedir ayuda y protección. Para definir y tramitar el divorcio y sus efectos, conviene asesoría de familia.',
+        advertenciaRepresentacion: 'No se debe exigir abogado para pedir ayuda urgente o acudir a la Comisaría de Familia. La representación y los requisitos del trámite de divorcio deben verificarse según la vía elegida.'
+      },
+      documentosRequeridos: documentosFamilia,
+      dondeAcudir: [
+        ...(amenazaArmada ? [{ nombre: 'Policía Nacional', tipo: 'ADMINISTRATIVA' as const, competencia: 'Atender el riesgo inmediato reportado por presencia de arma de fuego y disparos.', sedeOCanal: 'Línea 123.', esGratuita: true, enlaceOficial: 'https://www.policia.gov.co/' }, { nombre: 'Fiscalía General de la Nación', tipo: 'ADMINISTRATIVA' as const, competencia: 'Recibir denuncia y orientar sobre los hechos puestos en conocimiento.', sedeOCanal: 'Canales oficiales de denuncia.', esGratuita: true, enlaceOficial: 'https://www.fiscalia.gov.co/' }] : [{ nombre: 'Comisaría de Familia', tipo: 'ADMINISTRATIVA' as const, competencia: 'Valorar la situación familiar y tramitar las medidas de protección que correspondan.', sedeOCanal: 'Comisaría del municipio donde se encuentre la persona afectada.', esGratuita: true, enlaceOficial: 'https://www.minjusticia.gov.co/' }]),
+        { nombre: 'Policía Nacional', tipo: 'ADMINISTRATIVA', competencia: 'Atender emergencias y situaciones de peligro inmediato.', sedeOCanal: 'Línea 123.', esGratuita: true, enlaceOficial: 'https://www.policia.gov.co/' },
+        ...(mencionaDivorcio ? [{ nombre: 'Consultorio Jurídico universitario / Personería', tipo: 'ORIENTACION_GRATUITA' as const, competencia: 'Orientar sobre divorcio, hijos, alimentos y sociedad conyugal según el caso.', sedeOCanal: 'Consultar el consultorio jurídico o Personería del municipio.', esGratuita: true, enlaceOficial: 'https://www.minjusticia.gov.co/' }] : [])
+      ],
+      orientacionGratuitaDisponible: [
+        { entidad: 'Línea 155', descripcion: 'Orientación a mujeres víctimas de violencia.', requisitos: 'No retrasar la búsqueda de ayuda por falta de documentos.', canal: 'Llamada a la Línea 155.', enlaceOficial: 'https://www.policia.gov.co/' },
+        { entidad: 'Personería municipal', descripcion: 'Orientación y acompañamiento institucional.', requisitos: 'Consultar los canales de atención del municipio.', canal: 'Atención presencial o institucional.' },
+        ...(mencionaDivorcio ? [{ entidad: 'Consultorio Jurídico universitario', descripcion: 'Orientación jurídica sobre divorcio y sus efectos familiares y patrimoniales, según competencia.', requisitos: 'Consultar criterios de atención y documentos disponibles.', canal: 'Universidad con consultorio jurídico autorizado.', enlaceOficial: 'https://www.minjusticia.gov.co/' }] : [])
+      ],
+      queHacerDespues: [
+        'Cuando exista seguridad, revisar por separado la decisión de divorcio y sus efectos sobre hijos, alimentos, vivienda y sociedad conyugal, si corresponde.',
+        'Conservar de forma segura los documentos y constancias que ya tenga; no arriesgarse para obtener nuevas pruebas.'
+      ],
+      proximoPasoInmediato: 'Confirmar si la persona afectada está en un lugar seguro ahora mismo.',
+      fuentesOficiales: [
+        { id: 'ley-294-1996', nombreFuente: 'SUIN_JURISCOL', tipoNormaOProvidencia: 'LEY', identificador: 'Ley 294 de 1996', autoridadEmisora: 'Congreso de Colombia', fechaExpedicion: '1996-07-16', epigrafeOTitulo: 'Prevención, remedio y sanción de la violencia intrafamiliar', articulosOFundamentosClave: 'Medidas de protección y procedimiento', enlaceVerificado: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=5387', enlaceOficial: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=5387', estadoVigenciaComprobado: 'VIGENTE', fechaUltimaConsulta: new Date().toISOString().slice(0,10), resumenExtracto: 'Marco legal de protección frente a la violencia intrafamiliar, con modificaciones posteriores.', materias: ['Familia', 'Protección'] },
+        { id: 'ley-2126-2021', nombreFuente: 'SUIN_JURISCOL', tipoNormaOProvidencia: 'LEY', identificador: 'Ley 2126 de 2021', autoridadEmisora: 'Congreso de Colombia', fechaExpedicion: '2021-08-04', epigrafeOTitulo: 'Creación, conformación y funcionamiento de las Comisarías de Familia', articulosOFundamentosClave: 'Competencia en violencia en contexto familiar', enlaceVerificado: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=167990', enlaceOficial: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=167990', estadoVigenciaComprobado: 'VIGENTE', fechaUltimaConsulta: new Date().toISOString().slice(0,10), resumenExtracto: 'Define competencias de las Comisarías de Familia frente a violencia en contexto familiar.', materias: ['Familia', 'Protección'] },
+        ...(mencionaDivorcio ? [{ id: 'ley-2442-2024', nombreFuente: 'SUIN_JURISCOL' as const, tipoNormaOProvidencia: 'LEY' as const, identificador: 'Ley 2442 de 2024', autoridadEmisora: 'Congreso de Colombia', fechaExpedicion: '2024-12-27', epigrafeOTitulo: 'Permite el divorcio por la sola voluntad de cualquiera de los cónyuges', articulosOFundamentosClave: 'Artículos 154 y 156 del Código Civil; propuesta de divorcio y efectos', enlaceVerificado: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=257036', enlaceOficial: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=257036', estadoVigenciaComprobado: 'VIGENTE' as const, fechaUltimaConsulta: new Date().toISOString().slice(0,10), resumenExtracto: 'Incorpora como causal de divorcio la sola voluntad de cualquiera de los cónyuges y regula la propuesta sobre sus efectos.', materias: ['Familia', 'Divorcio'] }] : [])
+      ],
+      avisoLegal: 'Orientación automatizada inicial. No sustituye la atención de emergencia, la valoración de la autoridad ni la asesoría jurídica individual. La calificación jurídica de los hechos corresponde a las autoridades competentes.'
+    };
+  }
   const urgencia = detectarUrgenciasCiudadanas(entrada);
 
   let categorias: string[] = [];
