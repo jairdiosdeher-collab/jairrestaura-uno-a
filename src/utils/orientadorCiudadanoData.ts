@@ -153,6 +153,24 @@ export const GLOSARIO_CIUDADANO: ConceptoGlosarioCiudadano[] = [
 // ============================================================
 // 2. DETECCIÓN DE URGENCIAS Y TÉRMINOS PERENTORIOS
 // ============================================================
+/**
+ * Clasifica señales explícitas de violencia física o amenazas contra la integridad.
+ * No activa la ruta por expresiones jurídicas ambiguas como "amenaza de demanda".
+ */
+export function detectarPosibleViolencia(descripcion: string): boolean {
+  const texto = (descripcion || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  const violenciaExplicita = /\b(violencia intrafamiliar|maltrato fisico|agresion fisica|abuso fisico|me pega|me golpea|me agrede|me empuja|me cachetea|me asfixia|le pega|la golpea|la agrede|la empuja|la cachetea|la asfixia|me maltrata fisicamente|la maltrata fisicamente)\b/.test(texto);
+  const amenazaIntegridad = /\b(amenaza de muerte|amenaza con matarme|amenaza con asesinarme|amenaza con golpearme|amenaza con hacerme dano|amenaza con agredirme|amenaza con pegarme|temo por mi vida|temo por mi integridad|amenaza y temo por mi seguridad)\b/.test(texto);
+  const agresionEnContexto = /\b(pega|golpea|agrede|empuja|cachetea|asfixia|maltrata fisicamente)\b/.test(texto)
+    && /\b(esposo|esposa|marido|pareja|novio|novia|expareja|ex pareja|familiar|padre|madre|hermano|hermana|hijo|hija)\b/.test(texto);
+
+  return violenciaExplicita || amenazaIntegridad || agresionEnContexto;
+}
+
 export function detectarUrgenciasCiudadanas(
   entrada: ProblemaCiudadanoEntrada
 ): UrgenciaCiudadana {
@@ -351,15 +369,7 @@ export function motorHeuristicoOrientacionCiudadana(
   entrada: ProblemaCiudadanoEntrada
 ): ResultadoOrientacionCiudadana {
   const desc = entrada.descripcionProblema.toLowerCase();
-  const textoNormalizado = entrada.descripcionProblema
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-  const verboViolencia = /\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\b/.test(textoNormalizado);
-  const contextoFamiliar = /\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\b/.test(textoNormalizado);
-  const posibleViolencia =
-    /\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\b/.test(textoNormalizado) ||
-    (verboViolencia && contextoFamiliar);
+  const posibleViolencia = detectarPosibleViolencia(entrada.descripcionProblema);
 
   // Este retorno se ejecuta antes de cualquier clasificación civil genérica.
   // También protege el funcionamiento sin conexión o si la API falla.
