@@ -16,7 +16,8 @@ import { CORPUS_JURIDICO_COLOMBIA, PORTALES_OFICIALES_COLOMBIA } from './src/uti
 import { PLANTILLAS_JURIDICAS } from './src/utils/colombianLegalDrafting.ts';
 import { 
   GLOSARIO_CIUDADANO, 
-  detectarUrgenciasCiudadanas, 
+  detectarUrgenciasCiudadanas,
+  detectarPosibleViolencia, 
   clasificarAutogestion, 
   motorHeuristicoOrientacionCiudadana, 
   generarBorradorCiudadano 
@@ -3865,14 +3866,7 @@ app.post('/api/orientador/orientar', optionalAuth, async (req: Request, res: Res
 
   // 1A. PRIORIDAD DE PROTECCIÓN: no enviar relatos de posible violencia a la
   // clasificación civil genérica ni permitir que Gemini desplace esta ruta.
-  const relatoNormalizado = entrada.descripcionProblema
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-  const posibleViolencia =
-    /\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea|agrede|amenaza|me amenaza|la amenaza|empuja|cachetea|asfixia)\b/.test(relatoNormalizado) ||
-    (/\b(pega|golpea|agrede|amenaza|empuja|maltrata)\b/.test(relatoNormalizado) &&
-      /\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\b/.test(relatoNormalizado));
+  const posibleViolencia = detectarPosibleViolencia(entrada.descripcionProblema);
 
   if (posibleViolencia) {
     const orientacionProteccion: ResultadoOrientacionCiudadana = {
