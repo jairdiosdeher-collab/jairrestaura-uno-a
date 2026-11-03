@@ -49,6 +49,7 @@ import type {
 import {
   GLOSARIO_CIUDADANO,
   motorHeuristicoOrientacionCiudadana,
+  detectarPosibleViolencia,
   generarBorradorCiudadano
 } from '../utils/orientadorCiudadanoData.ts';
 
@@ -185,25 +186,18 @@ export const OrientadorCiudadano: React.FC<OrientadorCiudadanoProps> = ({
 
       // CORTAFUEGOS LOCAL: si el backend no responde o devuelve una orientación
       // genérica, no mostrar una clasificación civil ante posibles señales de violencia.
-      const textoSeguridad = payload.descripcionProblema
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-      const verboViolencia = /\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\b/.test(textoSeguridad);
-      const contextoParejaFamilia = /\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\b/.test(textoSeguridad);
-      const posibleViolenciaLocal =
-        /\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\b/.test(textoSeguridad) ||
-        (verboViolencia && contextoParejaFamilia);
+      const posibleViolenciaLocal = detectarPosibleViolencia(payload.descripcionProblema);
       if (posibleViolenciaLocal) {
-        const respuesta = orientacionFinal ? JSON.stringify(orientacionFinal).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
+        // La ruta de protección válida se presenta como resultado; no se bloquea
+        // la consulta por diferencias de redacción entre backend y frontend.
+        const respuesta = orientacionFinal
+          ? JSON.stringify(orientacionFinal).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+          : '';
         const esRutaProteccion = /violencia|proteccion|comisaria|linea 155|linea 123|integridad/.test(respuesta);
         if (!esRutaProteccion) {
-          setErrorValidacion(
-            'La consulta menciona una posible situación de violencia. No es seguro mostrar una orientación jurídica genérica. Si existe peligro inmediato, llama al 123 y busca un lugar seguro. También puedes acudir a la Comisaría de Familia; si la persona afectada es mujer, puede llamar a la Línea 155. No te expongas para obtener pruebas.'
-          );
-          setResultado(null);
-          setAnalizando(false);
-          return;
+          // El motor local usa el mismo detector contextual y genera la ruta
+          // prioritaria cuando el servidor no responde o entrega algo genérico.
+          orientacionFinal = motorHeuristicoOrientacionCiudadana(payload);
         }
       }
 
