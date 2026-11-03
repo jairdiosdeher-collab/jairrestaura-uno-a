@@ -10,7 +10,28 @@ const casos = [
   'Mi esposo me golpea y tengo miedo.',
   'Mi pareja me amenaza y necesito protección.'
 ];
+const casosNoViolencia = [
+  'La empresa amenaza con iniciar una demanda por incumplimiento contractual.',
+  'El banco amenaza con reportarme y embargar mi cuenta por una deuda.',
+  'Recibí una amenaza de sanción administrativa por no entregar documentos.'
+];
 async function main() {
+  for (const descripcionProblema of casosNoViolencia) {
+    const response = await fetch(`${BASE_URL}/api/orientador/orientar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ descripcionProblema })
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    const orientacion = data?.orientacion;
+    if (!orientacion) throw new Error('Respuesta sin objeto orientacion');
+    const categorias = (orientacion.categoriasIdentificadas || []).join(' ').toLowerCase();
+    if (/violencia intrafamiliar|posible violencia/.test(categorias)) {
+      throw new Error('Falso positivo: una amenaza jurídica fue clasificada como violencia');
+    }
+    console.log('OK: amenaza jurídica no activa ruta de violencia');
+  }
   for (const descripcionProblema of casos) {
     const response = await fetch(`${BASE_URL}/api/orientador/orientar`, {
       method: 'POST',
