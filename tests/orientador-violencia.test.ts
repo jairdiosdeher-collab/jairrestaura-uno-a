@@ -8,7 +8,8 @@ const BASE_URL = process.env.ORIENTADOR_BASE_URL || 'http://localhost:3000';
 const casos = [
   'Ella dice que el marido le pega, ¿qué debe hacer?',
   'Mi esposo me golpea y tengo miedo.',
-  'Mi pareja me amenaza y necesito protección.'
+  'Mi pareja me amenaza y necesito protección.',
+  'El marido la golpea duro y se quiere divorciar. ¿Qué debe hacer?'
 ];
 const casosNoViolencia = [
   'La empresa amenaza con iniciar una demanda por incumplimiento contractual.',
@@ -48,6 +49,12 @@ async function main() {
     }
     if (/derecho civil y obligaciones generales/.test((orientacion.categoriasIdentificadas || []).join(' ').toLowerCase())) {
       throw new Error('La consulta fue clasificada como asunto civil genérico');
+    }
+    if (descripcionProblema.toLowerCase().includes('divorciar')) {
+      if (!/divorcio/i.test(text)) throw new Error('No se incluyó orientación específica sobre divorcio');
+      if (!/Ley 2442 de 2024/.test(text)) throw new Error('No se identificó la Ley 2442 de 2024');
+      if (!/registro civil de matrimonio/i.test(text)) throw new Error('Falta documento familiar pertinente');
+      if (/ALERTA DE TÉRMINO EN CURSO/.test(text)) throw new Error('Se confundió protección con término procesal');
     }
     console.log('OK: ruta prioritaria de protección');
   }
