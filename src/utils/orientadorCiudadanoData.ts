@@ -351,6 +351,144 @@ export function motorHeuristicoOrientacionCiudadana(
   entrada: ProblemaCiudadanoEntrada
 ): ResultadoOrientacionCiudadana {
   const desc = entrada.descripcionProblema.toLowerCase();
+  const textoNormalizado = entrada.descripcionProblema
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .toLowerCase();
+  const verboViolencia = /\\b(pega|golpea|agrede|amenaza|empuja|maltrata|cachetea|asfixia)\\b/.test(textoNormalizado);
+  const contextoFamiliar = /\\b(esposo|esposa|marido|pareja|novio|novia|familia|mujer|ella|intrafamiliar)\\b/.test(textoNormalizado);
+  const posibleViolencia =
+    /\\b(violencia intrafamiliar|maltrato fisico|agresion fisica|el marido le pega|el esposo le pega|le pega|me pega|la golpea|me golpea|le golpea)\\b/.test(textoNormalizado) ||
+    (verboViolencia && contextoFamiliar);
+
+  // Este retorno se ejecuta antes de cualquier clasificación civil genérica.
+  // También protege el funcionamiento sin conexión o si la API falla.
+  if (posibleViolencia) {
+    return {
+      id: `orient-local-proteccion-${Date.now()}`,
+      fechaOrientacion: new Date().toISOString(),
+      resumenSituacion: {
+        loQueEntendemos: 'El relato menciona posibles agresiones o amenazas en una relación familiar o de pareja. La prioridad es la seguridad y la ruta de protección.',
+        datosFaltantesPorConfirmar: [
+          'Si la persona afectada está en un lugar seguro ahora.',
+          'Si existe peligro inmediato o el presunto agresor está cerca.',
+          'Municipio donde se encuentra la persona afectada.',
+          'Si hay niñas, niños o adolescentes expuestos.',
+          'Si necesita atención médica.'
+        ],
+        hechosRelatados: [entrada.descripcionProblema],
+        pruebasRevisadas: ['No se aportaron ni revisaron documentos en esta consulta.'],
+        suposiciones: ['No se presume que los hechos estén comprobados ni se atribuye responsabilidad.'],
+        hechosNoComprobados: ['La aplicación no verifica los hechos ni determina responsabilidades.'],
+        normasAplicables: ['Ley 294 de 1996 y sus modificaciones.', 'Ley 2126 de 2021 sobre Comisarías de Familia.'],
+        hipotesisYAlternativas: ['Posible situación de violencia intrafamiliar o basada en género, pendiente de valoración por autoridad competente.'],
+        recomendacionProfesional: 'Priorizar seguridad y solicitar valoración de protección. La separación o el divorcio se orientan por separado, sin retrasar la protección.'
+      },
+      categoriasIdentificadas: ['POSIBLE VIOLENCIA INTRAFAMILIAR', 'PROTECCIÓN DE DERECHOS', 'DERECHO DE FAMILIA'],
+      urgencia: {
+        esUrgente: true,
+        nivelUrgencia: 'ALTA',
+        motivoUrgencia: 'El relato contiene señales de posible agresión o amenaza en contexto familiar o de pareja.',
+        plazoVerificar: 'De inmediato si existe peligro actual; en otro caso, contactar cuanto antes a una autoridad de protección.',
+        advertenciaInmediata: 'Si existe peligro inmediato, llamar al 123 y buscar un lugar seguro si puede hacerse sin aumentar el riesgo.',
+        accionesInmediatas: [
+          'Si existe peligro actual, llamar al 123 y buscar un lugar seguro.',
+          'Contactar a la Comisaría de Familia del municipio para orientación y valoración de medidas de protección.',
+          'Si la persona afectada es mujer, puede llamar a la Línea 155 para orientación.',
+          'Si hay lesiones o afectación de salud, acudir a un servicio de urgencias.'
+        ]
+      },
+      opcionesLegales: [
+        {
+          titulo: 'Solicitar valoración y medidas de protección',
+          descripcion: 'Acudir a la Comisaría de Familia para que valore la situación y determine las medidas que procedan.',
+          consecuencias: 'La autoridad competente valora los hechos y el riesgo; esta aplicación no predetermina el resultado.',
+          pros: ['Permite acudir a una autoridad especializada.', 'No es necesario resolver primero el divorcio para solicitar protección.'],
+          contras: ['Las medidas concretas dependen de la valoración institucional.']
+        }
+      ],
+      queHacerPrimero: {
+        accion: 'Verificar si la persona afectada está segura y activar la ruta de emergencia o protección correspondiente.',
+        porQueEsImportante: 'La seguridad e integridad personal tienen prioridad sobre cualquier trámite civil.',
+        plazoRecomendado: 'Ahora mismo si existe peligro; de lo contrario, cuanto antes.'
+      },
+      procedimientoPasoAPaso: [
+        {
+          orden: 1,
+          titulo: 'Priorizar la seguridad inmediata',
+          paraQueSirve: 'Evitar que la persona quede expuesta a un peligro actual.',
+          queHacer: 'Si existe peligro inmediato, llamar al 123 y buscar un lugar seguro si puede hacerlo sin aumentar el riesgo.',
+          documentosAReunir: [],
+          anteQuien: 'Emergencias 123 / Policía Nacional',
+          canalOficial: '123',
+          enlaceCanalOficial: 'https://www.policia.gov.co/',
+          queEsperar: 'Atención de emergencia según la valoración de la autoridad.',
+          queHacerSiFalla: 'Acudir a un servicio de urgencias o a una autoridad local segura.',
+          precauciones: ['No confrontar al presunto agresor.', 'No exponerse para conseguir pruebas.', 'No regresar a un lugar inseguro por documentos.']
+        },
+        {
+          orden: 2,
+          titulo: 'Solicitar orientación de protección',
+          paraQueSirve: 'Conocer y activar las medidas institucionales disponibles.',
+          queHacer: 'Contactar a la Comisaría de Familia del municipio. Si la persona afectada es mujer, también puede llamar a la Línea 155.',
+          documentosAReunir: ['Documentos disponibles, únicamente si es seguro obtenerlos. No son condición para pedir ayuda urgente.'],
+          anteQuien: 'Comisaría de Familia / Línea 155 cuando corresponda',
+          canalOficial: 'Comisaría de Familia municipal / Línea 155',
+          enlaceCanalOficial: 'https://www.minjusticia.gov.co/',
+          queEsperar: 'Orientación y valoración de las medidas que legalmente procedan.',
+          queHacerSiFalla: 'Solicitar orientación a la Personería municipal o Defensoría del Pueblo.',
+          precauciones: ['No esperar a reunir pruebas para pedir ayuda.', 'No anunciar planes si ello aumenta el riesgo.']
+        }
+      ],
+      clasificacionAutogestion: {
+        nivel: 'CONVIENE_ASESORIA',
+        justificacion: 'La persona puede acudir directamente a las autoridades para pedir ayuda; conviene acompañamiento especializado por la posible situación de violencia.',
+        advertenciaRepresentacion: 'No se debe exigir abogado para pedir ayuda urgente o acudir a la Comisaría de Familia.'
+      },
+      documentosRequeridos: [],
+      dondeAcudir: [
+        {
+          nombre: 'Comisaría de Familia',
+          tipo: 'ADMINISTRATIVA',
+          competencia: 'Valorar la situación familiar y tramitar las medidas de protección que correspondan.',
+          sedeOCanal: 'Comisaría del municipio donde se encuentre la persona afectada.',
+          esGratuita: true,
+          enlaceOficial: 'https://www.minjusticia.gov.co/'
+        },
+        {
+          nombre: 'Policía Nacional',
+          tipo: 'ADMINISTRATIVA',
+          competencia: 'Atender emergencias y situaciones de peligro inmediato.',
+          sedeOCanal: 'Línea 123.',
+          esGratuita: true,
+          enlaceOficial: 'https://www.policia.gov.co/'
+        }
+      ],
+      orientacionGratuitaDisponible: [
+        {
+          entidad: 'Línea 155',
+          descripcion: 'Orientación a mujeres víctimas de violencia.',
+          requisitos: 'No retrasar la búsqueda de ayuda por falta de documentos.',
+          canal: 'Llamada a la Línea 155.',
+          enlaceOficial: 'https://www.policia.gov.co/'
+        },
+        {
+          entidad: 'Personería municipal',
+          descripcion: 'Orientación y acompañamiento institucional.',
+          requisitos: 'Consultar los canales de atención del municipio.',
+          canal: 'Atención presencial o institucional.'
+        }
+      ],
+      queHacerDespues: [
+        'Cuando exista seguridad, solicitar orientación jurídica separada sobre separación o divorcio, custodia, alimentos y vivienda, según corresponda.',
+        'Conservar de forma segura las constancias que ya tenga; no arriesgarse para obtener nuevas pruebas.'
+      ],
+      proximoPasoInmediato: 'Confirmar si la persona afectada está en un lugar seguro ahora.',
+      fuentesOficiales: [],
+      avisoLegal: 'Orientación automatizada inicial. No sustituye la atención de emergencia, la valoración de la autoridad ni la asesoría jurídica individual.'
+    };
+  }
+
   const urgencia = detectarUrgenciasCiudadanas(entrada);
 
   let categorias: string[] = [];
